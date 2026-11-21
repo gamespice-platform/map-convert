@@ -36,7 +36,7 @@ What a class becomes:
 | `worldspawn` | 105 | the world: every compiled brush, func_detail included, and the map's sky name and keys | `world` |  |
 | `light` | 95 | a point light: `_light` colour and brightness | `point` |  |
 | `prop_static` | 87 | a placed model (the static props game lump); models are studied, a game places its own | `point` |  |
-| `func_breakable` | 83 | a brush that breaks when damaged; drawn and solid where it stands | `world`: listed in the manifest's `breakables`; an all-glass one is a DotMapGlass, any other breaking is the game's (ZZ: barricades) |  |
+| `func_breakable` | 83 | a brush that breaks when damaged; drawn and solid where it stands | `world`: listed in the manifest's `breakables`; an all-glass one is a GSMapGlass, any other breaking is the game's (ZZ: barricades) |  |
 | `light_environment` | 82 | the sun and sky light of an outdoor map: direction, colour, ambient | `point` |  |
 | `ambient_generic` | 81 | a sound played at a point, looped or on input | `point` |  |
 | `func_button` | 77 | a button: pressed by use or touch, moves along `movedir` by its size minus `lip`, fires OnPressed | `mover` |  |
@@ -52,9 +52,9 @@ What a class becomes:
 | `func_rotating` | 56 | a brush that spins about one axis at `maxspeed` (fans, wheels, rotating platforms) | `mover` |  |
 | `light_spot` | 55 | a spot light: cone, direction, colour | `point` |  |
 | `func_illusionary` | 53 | a brush that is drawn and never solid (foliage, light shafts, fake walls); one painted with water is water | `drawn` |  |
-| `logic_auto` | 53 | fires outputs when the map starts | `data`: logic | `DotMapAuto` |
+| `logic_auto` | 53 | fires outputs when the map starts | `data`: logic | `GSMapAuto` |
 | `func_door_rotating` | 52 | a hinged door: turns `distance` degrees about its origin's axis at `speed` | `mover` |  |
-| `trigger_multiple` | 52 | fires outputs each time a body enters, then waits `wait` seconds | `volume` | `DotMapTrigger` |
+| `trigger_multiple` | 52 | fires outputs each time a body enters, then waits `wait` seconds | `volume` | `GSMapTrigger` |
 | `trigger_push` | 50 | pushes a body inside along `pushdir` at `speed` | `volume` |  |
 | `func_physbox` | 48 | a brush simulated as a physics object; drawn and solid where it rests, not simulated | `world` |  |
 | `info_player_start` | 48 | a spawn | `point` |  |
@@ -62,11 +62,11 @@ What a class becomes:
 | `info_observer_point` | 0 | a spectator camera spot of the original game -- the converted game has its own spectator | `point` |  |
 | `prop_physics_override` | 48 | as prop_physics | `point` |  |
 | `info_teleport_destination` | 47 | where a teleport sends a body | `point` |  |
-| `trigger_once` | 46 | fires outputs the first time a body enters | `volume` | `DotMapTrigger` |
+| `trigger_once` | 46 | fires outputs the first time a body enters | `volume` | `GSMapTrigger` |
 | `env_sprite` | 45 | a glow sprite (a lamp's halo) | `point` |  |
 | `func_brush` | 45 | a toggleable brush; drawn and solid unless `Solidity` 1, rendermode 10 or StartDisabled | `world`: toggling is the map's logic |  |
 | `info_ladder` | 44 | a ladder volume as a point entity (mins and maxs keys) | `point` |  |
-| `logic_timer` | 43 | fires outputs on a timer | `data`: logic | `DotMapTimer` |
+| `logic_timer` | 43 | fires outputs on a timer | `data`: logic | `GSMapTimer` |
 | `sky_camera` | 42 | the 3D skybox's camera: where the miniature backdrop is and its scale (`mesh.skybox_of`) | `point` |  |
 | `path_track` | 41 | a corner of a train's path; read by the movers for func_tracktrain | `data` |  |
 | `point_spotlight` | 41 | a visible light beam and its light | `point` |  |
@@ -74,30 +74,30 @@ What a class becomes:
 | `func_tracktrain` | 37 | a train that runs along `path_track` corners (lifts, boats, trucks); the path is in `movers` | `mover` |  |
 | `env_fog_controller` | 35 | distance fog: colour, start and end | `point` |  |
 | `move_rope` | 35 | a rope or cable's first point, with its look | `point` |  |
-| `point_template` | 35 | a template that spawns copies of entities | `data`: logic | `DotMapTemplate` |
+| `point_template` | 35 | a template that spawns copies of entities | `data`: logic | `GSMapTemplate` |
 | `prop_door_rotating` | 35 | a model door that swings; converted like func_door_rotating with its model studied | `mover` |  |
-| `env_explosion` | 34 | an explosion by input | `data`: logic with a position | `DotMapEffect` |
+| `env_explosion` | 34 | an explosion by input | `data`: logic with a position | `GSMapEffect` |
 | `prop_dynamic_override` | 34 | as prop_dynamic | `point` |  |
 | `env_spark` | 32 | sparks | `point`: an effect position |  |
-| `point_servercommand` | 31 | runs a server console command | `dropped`: a map does not run commands on this server | `DotMapServerCommand` |
+| `point_servercommand` | 31 | runs a server console command | `dropped`: a map does not run commands on this server | `GSMapServerCommand` |
 | `env_fire` | 29 | a fire that burns and hurts | `point`: an effect position |  |
 | `game_player_equip` | 29 | gives players weapons on spawn | `data`: the game decides kits |  |
 | `env_soundscape` | 28 | an ambient soundscape in reach | `point` |  |
 | `env_spritetrail` | 28 | a sprite trail on a moving thing | `point`: an effect position |  |
-| `logic_relay` | 28 | relays inputs to outputs | `data`: logic | `DotMapRelay` |
+| `logic_relay` | 28 | relays inputs to outputs | `data`: logic | `GSMapRelay` |
 | `env_steam` | 27 | a steam jet | `point`: an effect position a game may fill |  |
 | `func_dustmotes` | 27 | a particle volume of floating dust | `dropped`: effects, left to a game (an open item for the look) |  |
 | `env_laser` | 26 | a laser beam that may hurt | `point`: an effect |  |
-| `logic_case` | 26 | picks an output by value | `data`: logic | `DotMapCase` |
+| `logic_case` | 26 | picks an output by value | `data`: logic | `GSMapCase` |
 | `func_areaportal` | 25 | a visibility portal (a door closes it); the renderer here culls on its own | `dropped` |  |
 | `point_viewcontrol` | 25 | a scripted camera | `data`: logic |  |
 | `shadow_control` | 25 | the direction and colour of dynamic shadows | `point` |  |
 | `filter_activator_team` | 24 | passes activators by team | `data`: logic |  |
 | `func_movelinear` | 24 | a brush moved between two positions by inputs (lifts, crushers): `movedir`, `movedistance`, `speed` | `mover` |  |
 | `func_buyzone` | 23 | where a round-based shooter's team may buy weapons; no shop here | `dropped` |  |
-| `math_counter` | 22 | a counter with outputs | `data`: logic | `DotMapCounter` |
+| `math_counter` | 22 | a counter with outputs | `data`: logic | `GSMapCounter` |
 | `keyframe_rope` | 21 | a rope's next point | `point` |  |
-| `env_shake` | 19 | shakes the screen | `data`: logic | `DotMapEffect` |
+| `env_shake` | 19 | shakes the screen | `data`: logic | `GSMapEffect` |
 | `env_sun` | 19 | the sun's sprite in the sky: its direction and colour | `point` |  |
 | `player_speedmod` | 19 | changes a player's speed by input | `data`: logic |  |
 | `env_tonemap_controller` | 17 | exposure limits and bloom | `point` |  |
@@ -107,11 +107,11 @@ What a class becomes:
 | `filter_activator_name` | 15 | passes activators by name | `data`: logic |  |
 | `func_wall_toggle` | 15 | a wall an input shows or hides; drawn and solid unless it starts off (spawnflag 1) | `world` |  |
 | `func_water_analog` | 15 | water as a movable brush; swum in, it does not move here | `volume` |  |
-| `logic_compare` | 14 | compares a value | `data`: logic | `DotMapCompare` |
-| `env_fade` | 13 | fades the screen by input | `data`: logic | `DotMapEffect` |
+| `logic_compare` | 14 | compares a value | `data`: logic | `GSMapCompare` |
+| `env_fade` | 13 | fades the screen by input | `data`: logic | `GSMapEffect` |
 | `phys_thruster` | 13 | pushes a physics object | `data`: nothing is simulated |  |
-| `func_breakable_surf` | 12 | breakable glass panes; drawn and solid | `world`: listed in the manifest's `breakables`; DotMapGlass breaks it |  |
-| `game_score` | 12 | adds score by input | `data`: logic | `DotMapGameScore` |
+| `func_breakable_surf` | 12 | breakable glass panes; drawn and solid | `world`: listed in the manifest's `breakables`; GSMapGlass breaks it |  |
+| `game_score` | 12 | adds score by input | `data`: logic | `GSMapGameScore` |
 | `prop_ragdoll` | 12 | a placed ragdoll (a corpse); models are studied | `point` |  |
 | `env_entity_maker` | 11 | spawns a template at a point | `data`: logic |  |
 | `env_lightglow` | 11 | a glow seen around a light | `point` |  |
@@ -126,7 +126,7 @@ What a class becomes:
 | `color_correction` | 9 | a colour grade with falloff; the grade's lookup file is the source's own and never shipped, its presence is kept | `point` |  |
 | `func_dustcloud` | 9 | a particle volume of dust clouds | `dropped`: effects, as func_dustmotes |  |
 | `func_occluder` | 9 | a visibility occluder; the renderer here culls on its own | `dropped` |  |
-| `game_ui` | 9 | takes a player's controls for logic | `data` | `DotMapGameUi` |
+| `game_ui` | 9 | takes a player's controls for logic | `data` | `GSMapGameUi` |
 | `light_dynamic` | 9 | a light that may move or switch at run time | `point` |  |
 | `point_camera` | 9 | a camera a monitor shows | `data`: logic |  |
 | `env_beam` | 8 | a beam between two points | `point`: an effect |  |
@@ -135,13 +135,13 @@ What a class becomes:
 | `env_wind` | 8 | wind for trees and particles | `point` |  |
 | `filter_damage_type` | 8 | passes damage by type | `data`: logic |  |
 | `func_wall` | 8 | a brush entity that is just a wall | `world` |  |
-| `logic_branch` | 8 | a boolean switch | `data`: logic | `DotMapBranch` |
+| `logic_branch` | 8 | a boolean switch | `data`: logic | `GSMapBranch` |
 | `point_tesla` | 8 | electric arcs | `point`: an effect position |  |
 | `env_bubbles` | 7 | a particle volume of bubbles | `dropped`: effects |  |
 | `func_precipitation` | 7 | rain or snow in a volume; kept so a game can make weather (its bounds are the model's) | `data` |  |
 | `func_smokevolume` | 7 | a particle volume of smoke | `dropped`: effects, as func_dustmotes |  |
 | `player_weaponstrip` | 7 | takes weapons by input | `data`: logic |  |
-| `trigger_soundscape` | 7 | switches the ambient soundscape in a volume | `data`: sound logic | `DotMapTriggerSoundscape` |
+| `trigger_soundscape` | 7 | switches the ambient soundscape in a volume | `data`: sound logic | `GSMapTriggerSoundscape` |
 | `zombiegasses` | 7 | a mode script's zombie gas spawner | `data` |  |
 | `env_embers` | 6 | a particle volume of embers | `dropped`: effects |  |
 | `env_soundscape_triggerable` | 6 | a soundscape switched by triggers | `point` |  |
@@ -164,7 +164,7 @@ What a class becomes:
 | `info_ladder_dismount` | 4 | where a ladder is left | `point` |  |
 | `info_player_deathmatch` | 4 | a spawn | `point` |  |
 | `info_player_zombie_boss` | 4 | a boss zombie's spawn | `point` |  |
-| `lua_run` | 4 | runs a script on the server | `data`: never executed; template-matched snippets become whitelisted operations, the rest are reported (`DotMapScript`) | `DotMapScript` |
+| `lua_run` | 4 | runs a script on the server | `data`: never executed; template-matched snippets become whitelisted operations, the rest are reported (`GSMapScript`) | `GSMapScript` |
 | `npc_template_maker` | 4 | spawns monsters from a template | `data`: the game's director decides monsters |  |
 | `aiscripted_schedule` | 3 | AI logic | `data` |  |
 | `env_blood` | 3 | sprays blood by input | `data`: logic |  |
@@ -178,8 +178,8 @@ What a class becomes:
 | `ai_changetarget` | 2 | AI logic | `data` |  |
 | `color_correction_volume` | 2 | a colour grade inside a volume; its lookup file is the source's own and never shipped | `data` |  |
 | `env_citadel_energy_core` | 2 | an energy effect | `point`: an effect position |  |
-| `env_screenoverlay` | 2 | puts an overlay on the screen | `data`: logic; its material is never shipped | `DotMapEffect` |
-| `vgui_slideshow_display` | 1 | a screen in the world that cycles through a folder of images | `data`: kept as data (its size and image folder); the images are the author's own art and are never shipped | `DotMapEntity` |
+| `env_screenoverlay` | 2 | puts an overlay on the screen | `data`: logic; its material is never shipped | `GSMapEffect` |
+| `vgui_slideshow_display` | 1 | a screen in the world that cycles through a folder of images | `data`: kept as data (its size and image folder); the images are the author's own art and are never shipped | `GSMapEntity` |
 | `env_texturetoggle` | 2 | switches a brush's texture frame | `data`: logic |  |
 | `func_bomb_target` | 2 | a bomb site of a round-based shooter; another game's objective | `dropped` |  |
 | `func_hostage_rescue` | 2 | a hostage rescue zone; another game's objective | `dropped` |  |
@@ -187,18 +187,18 @@ What a class becomes:
 | `info_player_phx_spectator` | 2 | a spectator spawn of a mode script | `point` |  |
 | `info_player_redeemed` | 2 | a returned survivor's spawn | `point` |  |
 | `logic_gamerules` | 2 | a mode script's rules entity | `data` |  |
-| `logic_winlose` | 2 | a mode script's round end | `data` | `DotMapWinLose` |
-| `math_colorblend` | 2 | maps a value to a colour | `data`: logic | `DotMapColorBlend` |
+| `logic_winlose` | 2 | a mode script's round end | `data` | `GSMapWinLose` |
+| `math_colorblend` | 2 | maps a value to a colour | `data`: logic | `GSMapColorBlend` |
 | `phys_constraint` | 2 | a fixed constraint | `data`: nothing is simulated |  |
 | `phys_lengthconstraint` | 2 | a rope-length constraint | `data`: nothing is simulated |  |
 | `phys_ragdollconstraint` | 2 | ties a ragdoll | `data`: nothing is simulated |  |
-| `point_clientcommand` | 2 | runs a command on a client | `dropped`: refused for the same reason | `DotMapServerCommand` |
+| `point_clientcommand` | 2 | runs a command on a client | `dropped`: refused for the same reason | `GSMapServerCommand` |
 | `prop_vehicle_jeep` | 2 | a drivable vehicle | `data` |  |
 | `scripted_sequence` | 2 | a scripted animation | `data`: logic |  |
 | `trigger_look` | 2 | fires when a player looks at a target | `data`: logic |  |
 | `env_ar2explosion` | 1 | an explosion effect by input | `data`: logic |  |
 | `env_dustpuff` | 1 | a dust puff | `point`: an effect position |  |
-| `env_global` | 1 | sets a global state | `data`: logic | `DotMapGlobal` |
+| `env_global` | 1 | sets a global state | `data`: logic | `GSMapGlobal` |
 | `env_headcrabcanister` | 1 | a scripted canister drop | `data`: logic |  |
 | `env_microphone` | 1 | relays sound to a speaker | `data`: logic |  |
 | `env_muzzleflash` | 1 | a muzzle flash | `point`: an effect position |  |
@@ -223,10 +223,10 @@ What a class becomes:
 | `info_player_props` | 1 | the hiders' spawn of a hide-and-seek mode | `point` |  |
 | `info_player_undead` | 1 | a zombies' spawn | `point` |  |
 | `ins_spawnpoint` | 1 | a tactical mode's spawn | `point` |  |
-| `logic_beats` | 1 | a mode script's music beats | `data` | `DotMapBeats` |
+| `logic_beats` | 1 | a mode script's music beats | `data` | `GSMapBeats` |
 | `logic_branch_listener` | 1 | watches branches | `data`: logic |  |
-| `logic_collision_pair` | 1 | disables collision between two objects | `data`: logic | `DotMapCollisionPair` |
-| `logic_measure_movement` | 1 | copies one entity's movement to another | `data`: logic | `DotMapMeasureMovement` |
+| `logic_collision_pair` | 1 | disables collision between two objects | `data`: logic | `GSMapCollisionPair` |
+| `logic_measure_movement` | 1 | copies one entity's movement to another | `data`: logic | `GSMapMeasureMovement` |
 | `npc_maker` | 1 | spawns monsters | `data`: as npc_template_maker |  |
 | `phys_constraintsystem` | 1 | groups constraints | `data`: nothing is simulated |  |
 | `phys_magnet` | 1 | a physics magnet | `data`: nothing is simulated |  |

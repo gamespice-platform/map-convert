@@ -384,7 +384,7 @@ def decal_kind(generic):
 
 import os as _os
 
-# Metres of a drawn-world cell across (x, z) and up (y). A cell is the unit the renderer and DotMapVisibility cull, so
+# Metres of a drawn-world cell across (x, z) and up (y). A cell is the unit the renderer and GSMapVisibility cull, so
 # it is as small as the draw-call cost of a map seen whole allows; DOTBSP_CHUNK / DOTBSP_CHUNK_Y override for measuring.
 CHUNK = float(_os.environ.get("DOTBSP_CHUNK", "16"))
 CHUNK_Y = float(_os.environ.get("DOTBSP_CHUNK_Y", "6"))
@@ -1186,7 +1186,7 @@ def breakables(bsp, mesh):
     `entity`, `classname`, `targetname`, `health` (the map's, else 1: one hit breaks a pane),
     `glass` (the kind when every drawn surface of the model is glass, else None) and `material`
     (the entity's own material number). The game decides what each does; a glass one is what
-    `DotMapGlass` breaks."""
+    `GSMapGlass` breaks."""
     drawn = collections.defaultdict(list)
     for s in mesh.surfaces:
         drawn[s.model].append(s)

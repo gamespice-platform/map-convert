@@ -1,11 +1,11 @@
-# class or prefix*, treatment, what it is in the source engine (and, after ' -- ', why this treatment), runtime component (blank: DotMapEntity)
+# class or prefix*, treatment, what it is in the source engine (and, after ' -- ', why this treatment), runtime component (blank: GSMapEntity)
 worldspawn	world	the world: every compiled brush, func_detail included, and the map's sky name and keys	
 func_detail	world	detail brushes; compiled into the world by the map compiler, so never seen as an entity	
 func_wall	world	a brush entity that is just a wall	
 func_brush	world	a toggleable brush; drawn and solid unless `Solidity` 1, rendermode 10 or StartDisabled -- toggling is the map's logic	
 func_wall_toggle	world	a wall an input shows or hides; drawn and solid unless it starts off (spawnflag 1)	
-func_breakable	world	a brush that breaks when damaged; drawn and solid where it stands -- listed in the manifest's `breakables`; an all-glass one is a DotMapGlass, any other breaking is the game's (ZZ: barricades)	
-func_breakable_surf	world	breakable glass panes; drawn and solid -- listed in the manifest's `breakables`; DotMapGlass breaks it	
+func_breakable	world	a brush that breaks when damaged; drawn and solid where it stands -- listed in the manifest's `breakables`; an all-glass one is a GSMapGlass, any other breaking is the game's (ZZ: barricades)	
+func_breakable_surf	world	breakable glass panes; drawn and solid -- listed in the manifest's `breakables`; GSMapGlass breaks it	
 func_physbox	world	a brush simulated as a physics object; drawn and solid where it rests, not simulated	
 func_physbox_multiplayer	world	the networked physbox; as func_physbox	
 func_pushable	world	a brush a player can push; drawn and solid where it rests, not simulated	
@@ -41,10 +41,10 @@ func_water_analog	volume	water as a movable brush; swum in, it does not move her
 func_water	volume	older water brush; swum in	
 func_ladder	volume	a climbable volume	
 func_useableladder	volume	a ladder climbed by using it; as func_ladder between its two points	
-trigger_multiple	volume	fires outputs each time a body enters, then waits `wait` seconds	DotMapTrigger
-trigger_once	volume	fires outputs the first time a body enters	DotMapTrigger
+trigger_multiple	volume	fires outputs each time a body enters, then waits `wait` seconds	GSMapTrigger
+trigger_once	volume	fires outputs the first time a body enters	GSMapTrigger
 trigger_look	data	fires when a player looks at a target -- logic	
-trigger_soundscape	data	switches the ambient soundscape in a volume -- sound logic	DotMapTriggerSoundscape
+trigger_soundscape	data	switches the ambient soundscape in a volume -- sound logic	GSMapTriggerSoundscape
 trigger_vphysics_motion	data	applies forces to physics objects inside -- props are not simulated	
 trigger_remove	data	removes entities that enter -- logic	
 trigger_autosave	dropped	saves a single-player game; no saves here	
@@ -149,56 +149,56 @@ info_camera_link	data	links a camera to a monitor -- logic
 point_viewcontrol	data	a scripted camera -- logic	
 point_camera	data	a camera a monitor shows -- logic	
 point_devshot_camera	dropped	a developer screenshot camera	
-point_template	data	a template that spawns copies of entities -- logic	DotMapTemplate
+point_template	data	a template that spawns copies of entities -- logic	GSMapTemplate
 env_entity_maker	data	spawns a template at a point -- logic	
 point_teleport	data	teleports an entity by input -- logic	
 point_hurt	data	hurts in a radius by input -- logic	
-point_servercommand	dropped	runs a server console command -- a map does not run commands on this server	DotMapServerCommand
-point_clientcommand	dropped	runs a command on a client -- refused for the same reason	DotMapServerCommand
-lua_run	data	runs a script on the server -- never executed; a template-matched snippet becomes whitelisted operations (DotMapScript), the rest is reported	DotMapScript
+point_servercommand	dropped	runs a server console command -- a map does not run commands on this server	GSMapServerCommand
+point_clientcommand	dropped	runs a command on a client -- refused for the same reason	GSMapServerCommand
+lua_run	data	runs a script on the server -- never executed; a template-matched snippet becomes whitelisted operations (GSMapScript), the rest is reported	GSMapScript
 point_worldhint	data	a hint shown to a player	
 point_zsmessage	data	a mode script's message point	
-logic_auto	data	fires outputs when the map starts -- logic	DotMapAuto
-logic_relay	data	relays inputs to outputs -- logic	DotMapRelay
-logic_timer	data	fires outputs on a timer -- logic	DotMapTimer
-logic_case	data	picks an output by value -- logic	DotMapCase
-logic_compare	data	compares a value -- logic	DotMapCompare
-logic_branch	data	a boolean switch -- logic	DotMapBranch
+logic_auto	data	fires outputs when the map starts -- logic	GSMapAuto
+logic_relay	data	relays inputs to outputs -- logic	GSMapRelay
+logic_timer	data	fires outputs on a timer -- logic	GSMapTimer
+logic_case	data	picks an output by value -- logic	GSMapCase
+logic_compare	data	compares a value -- logic	GSMapCompare
+logic_branch	data	a boolean switch -- logic	GSMapBranch
 logic_branch_listener	data	watches branches -- logic	
-logic_measure_movement	data	copies one entity's movement to another -- logic	DotMapMeasureMovement
-logic_collision_pair	data	disables collision between two objects -- logic	DotMapCollisionPair
+logic_measure_movement	data	copies one entity's movement to another -- logic	GSMapMeasureMovement
+logic_collision_pair	data	disables collision between two objects -- logic	GSMapCollisionPair
 logic_gamerules	data	a mode script's rules entity	
-logic_winlose	data	a mode script's round end	DotMapWinLose
+logic_winlose	data	a mode script's round end	GSMapWinLose
 logic_waves	data	a mode script's wave control	
-logic_beats	data	a mode script's music beats	DotMapBeats
-math_counter	data	a counter with outputs -- logic	DotMapCounter
-math_colorblend	data	maps a value to a colour -- logic	DotMapColorBlend
+logic_beats	data	a mode script's music beats	GSMapBeats
+math_counter	data	a counter with outputs -- logic	GSMapCounter
+math_colorblend	data	maps a value to a colour -- logic	GSMapColorBlend
 multi_manager	data	the older multi-output relay -- logic	
-filter_activator_name	data	passes activators by name -- logic	DotMapFilter
-filter_activator_class	data	passes activators by class -- logic	DotMapFilter
-filter_activator_team	data	passes activators by team -- logic	DotMapFilter
-filter_damage_type	data	passes damage by type -- logic	DotMapFilter
-filter_multi	data	combines filters -- logic	DotMapFilter
+filter_activator_name	data	passes activators by name -- logic	GSMapFilter
+filter_activator_class	data	passes activators by class -- logic	GSMapFilter
+filter_activator_team	data	passes activators by team -- logic	GSMapFilter
+filter_damage_type	data	passes damage by type -- logic	GSMapFilter
+filter_multi	data	combines filters -- logic	GSMapFilter
 path_track	data	a corner of a train's path; read by the movers for func_tracktrain	
-game_player_equip	data	gives players weapons on spawn -- the game decides kits	DotMapPlayerEquip
+game_player_equip	data	gives players weapons on spawn -- the game decides kits	GSMapPlayerEquip
 game_weapon_manager	dropped	caps dropped weapons; the game owns weapons	
 player_weaponstrip	data	takes weapons by input -- logic	
 player_speedmod	data	changes a player's speed by input -- logic	
 game_text	data	shows text on screens -- logic; its text is kept	
-game_ui	data	takes a player's controls for logic	DotMapGameUi
-game_score	data	adds score by input -- logic	DotMapGameScore
+game_ui	data	takes a player's controls for logic	GSMapGameUi
+game_score	data	adds score by input -- logic	GSMapGameScore
 env_hudhint	data	a hint on the screen -- logic	
-env_fade	data	fades the screen by input -- logic	DotMapEffect
-env_shake	data	shakes the screen -- logic	DotMapEffect
+env_fade	data	fades the screen by input -- logic	GSMapEffect
+env_shake	data	shakes the screen -- logic	GSMapEffect
 env_viewpunch	data	kicks the view -- logic	
-env_screenoverlay	data	puts an overlay on the screen -- logic; its material is never shipped	DotMapEffect
+env_screenoverlay	data	puts an overlay on the screen -- logic; its material is never shipped	GSMapEffect
 vgui_slideshow_display	data	a screen in the world that cycles through a folder of images -- kept as data (its size and image folder); the images are the author's own art and are never shipped	
-env_explosion	data	an explosion by input -- logic with a position	DotMapEffect
+env_explosion	data	an explosion by input -- logic with a position	GSMapEffect
 env_physexplosion	data	a physics push by input -- logic	
 env_ar2explosion	data	an explosion effect by input -- logic	
 env_shooter	data	throws gibs by input -- logic	
 env_blood	data	sprays blood by input -- logic	
-env_global	data	sets a global state -- logic	DotMapGlobal
+env_global	data	sets a global state -- logic	GSMapGlobal
 env_texturetoggle	data	switches a brush's texture frame -- logic	
 env_headcrabcanister	data	a scripted canister drop -- logic	
 phys_thruster	data	pushes a physics object -- nothing is simulated	

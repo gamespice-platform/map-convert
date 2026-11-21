@@ -5,7 +5,7 @@ Each `PNG/<Colour>/texture_NN.png` becomes `<library>/kenney/kenney_prototype_<c
 (`_Roughness.png`), and one `manifest.tsv` row (source Kenney, folder `kenney`, the asset page URL, author Kenney, CC0-1.0).
 Rows of an earlier run are replaced; other sources' rows are kept. `pbrmap` never picks a `kenney` set by
 colour: a source texture gets one only through `rules/pbr/pins.tsv`. One texture covers 1 m in the original;
-`DotMapSurfaces` draws a set over 2 m, so its 2x2 big squares are 1 m each.
+`GSMapSurfaces` draws a set over 2 m, so its 2x2 big squares are 1 m each.
 
     python3 -P tools/kenney_prototypes.py "<Kenney bundle>/2D assets/Prototype Textures" [--library DIR]
 """

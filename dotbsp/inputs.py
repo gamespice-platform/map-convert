@@ -1,7 +1,7 @@
 """Which inputs the runtime implements, read from the GDScript so the list cannot drift.
 
-`DotMapIO._init` maps a class name to a component script; each component answers inputs in
-`match name:` blocks (its own `_input`, or `DotMapEntity.accept` for the ones every entity has).
+`GSMapIO._init` maps a class name to a component script; each component answers inputs in
+`match name:` blocks (its own `_input`, or `GSMapEntity.accept` for the ones every entity has).
 A component with several kinds in one file (movers: doors, buttons, trains) counts as the union,
 so this under-reports an input a sibling kind implements: it never claims one that nothing does.
 """
@@ -52,7 +52,7 @@ def _tables():
     io = _read("dot_map_io.gd")
     init = io[io.index("func _init()"):]
     init = init[:init.index("\n\n\n")]
-    classes = dict(re.findall(r'"(\w+)":\s*(DotMap\w+)', init))
+    classes = dict(re.findall(r'"(\w+)":\s*(GSMap\w+)', init))
     for names, comp in re.findall(r"for \w+ in \[([^\]]*)\]:\s*\n\s*_classes\[\w+\] = (\w+)", init):
         for n in re.findall(r'"(\w+)"', names):
             classes[n] = comp
@@ -61,12 +61,12 @@ def _tables():
 
 
 def component_of(classname):
-    """The component script the runtime builds for `classname`, 'DotMapEntity' when none is registered."""
-    return _tables()["classes"].get(classname, "DotMapEntity")
+    """The component script the runtime builds for `classname`, 'GSMapEntity' when none is registered."""
+    return _tables()["classes"].get(classname, "GSMapEntity")
 
 
 def implemented(classname):
-    """The lowercase inputs an entity of `classname` accepts: its component, the scripts it extends, DotMapEntity."""
+    """The lowercase inputs an entity of `classname` accepts: its component, the scripts it extends, GSMapEntity."""
     t = _tables()
     out, c = set(), component_of(classname)
     while c and c in t["files"]:

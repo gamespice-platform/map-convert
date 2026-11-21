@@ -2,7 +2,7 @@
 
 The converter holds no script host. A snippet is matched whole against a short list of exact
 templates (`TEMPLATES`, data); a match becomes a list of whitelisted operations (`OPS`) that
-`DotMapScript` hands to the game as events, and anything else is `unhandled` with its text kept
+`GSMapScript` hands to the game as events, and anything else is `unhandled` with its text kept
 for a person to port into an addon. Nothing here evaluates, imports or shells out: the snippet is
 only ever a string compared against a pattern with `fullmatch`.
 """

@@ -165,7 +165,7 @@ def pieces_from(manifest, spec):
 
 
 def main_io(spec, worlds):
-    """A course that runs the map's own entity logic (dot-map's DotMapWorld): the whole map from the store,
+    """A course that runs the map's own entity logic (dot-map's GSMapWorld): the whole map from the store,
     with its source document beside it, and nothing generated; the game hosts what the map's entities do."""
     cid = spec["id"]
     prefix = os.path.join(worlds, cid)

@@ -545,7 +545,7 @@ def slice_id(owner, name):
 
 def stamp(manifest_path, store_id, version, shared=()):
     """Writes `licence.store_pack` ({id, version, shared: [{id, version}]}) into a map manifest; returns whether it changed.
-    `shared` lists every shared slice the root pulls in, flat, for `DotMapStore.apply`. Keeps the file's layout: a compact
+    `shared` lists every shared slice the root pulls in, flat, for `GSMapStore.apply`. Keeps the file's layout: a compact
     one-line manifest (what the converter writes) stays compact, an indented one stays indented."""
     with open(manifest_path) as f:
         text = f.read()

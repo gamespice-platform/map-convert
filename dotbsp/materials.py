@@ -2,7 +2,7 @@
 
 A packed `.vmt` says whether a surface is translucent, alpha-tested, additive or two-sided; its base
 texture's alpha says how much of it is there. The original art is never shipped, so `kind` turns
-those facts into one of the runtime's generated see-through looks (`DotMapBspMesh.GLASS_LOOKS`),
+those facts into one of the runtime's generated see-through looks (`GSMapBspMesh.GLASS_LOOKS`),
 and a surface the converter would otherwise draw as an opaque slab is no longer one. A
 `materials.tsv` row (texture glob or generic id, then `kind` and `flags`) overrides the derivation;
 `kind` `opaque` keeps a surface solid-looking on purpose.

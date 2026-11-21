@@ -66,7 +66,7 @@ def build(path, name, sha, credit, out, rs, scale=units.VISUAL, y0=0.0, cat=None
         every = movers.movers(bsp, scale, y0)
         # a mover the source gave no brush model (a door that is a .mdl prop) has nothing to animate
         drawn = {s.model for s in m.surfaces} | {h["model"] for h in m.hulls}
-        # a prop_door_rotating is kept though it has no brush: DotMapDoorStandIn draws and swings it
+        # a prop_door_rotating is kept though it has no brush: GSMapDoorStandIn draws and swings it
         built = [r for r in every if r.get("model") in drawn or r["classname"] == "prop_door_rotating"]
         bare = [{k: r.get(k) for k in ("classname", "targetname", "entity", "model_path", "origin")}
                 for r in every if r not in built]

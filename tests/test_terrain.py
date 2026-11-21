@@ -1,7 +1,7 @@
 """Terrain heightfield tests. Run: python3 -P tests/test_terrain.py
 
 Also checks examples/bsp_mesh/terrain_fixture.json, which examples/bsp_mesh_demo.tscn reads to
-hold DotMapTerrain to the same heights and walk points; `--write` rewrites it.
+hold GSMapTerrain to the same heights and walk points; `--write` rewrites it.
 """
 
 import json

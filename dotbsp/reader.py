@@ -651,7 +651,7 @@ def decompress_lump(raw):
 def yaw_to_godot(yaw):
     """A map yaw as the yaw dot-player-controller builds a forward vector from.
 
-    The map measures yaw anticlockwise about +Z from +X; DotFpsMotor.forward is
+    The map measures yaw anticlockwise about +Z from +X; GSFpsMotor.forward is
     (-sin y, 0, -cos y), and the axis swap has turned the map's +Y into Godot's -Z. Solving
     the two gives exactly `yaw - 90`. Getting it wrong shows in no number: the player
     stands in the right place facing the wrong way.

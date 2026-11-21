@@ -1,7 +1,7 @@
 extends SceneTree
-## Bakes a PBR store's textures so a client loads them without decoding: see DotMapTextureBake.
+## Bakes a PBR store's textures so a client loads them without decoding: see GSMapTextureBake.
 ##   heavy -- godot --headless --path ../dot-map --script $PWD/tools/bake_textures.gd -- <store dir> [--out=<dir>] [--max=2048]
-## Without --out the baked files sit beside the sources, where DotMapSurfaces looks. Publishes nothing.
+## Without --out the baked files sit beside the sources, where GSMapSurfaces looks. Publishes nothing.
 
 
 func _initialize() -> void:
@@ -19,6 +19,6 @@ func _initialize() -> void:
 		print("usage: bake_textures.gd -- <store dir> [--out=<dir>] [--max=2048]")
 		quit(2)
 		return
-	var stats := DotMapTextureBake.bake_store(store, out, cap)
+	var stats := GSMapTextureBake.bake_store(store, out, cap)
 	print("bake_textures: ", stats)
 	quit(1 if stats["failed"] > 0 else 0)

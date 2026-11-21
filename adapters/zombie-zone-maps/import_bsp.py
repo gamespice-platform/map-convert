@@ -1585,7 +1585,7 @@ def reseat_spawns(doc):
 def drop_dead_links(doc, extra=None, fixed=()):
     """Drops the nav links the game's builder cannot place, in `doc` (and the nav [param extra] dict): an end finds no point, both ends find one point, a repeat of an earlier link, or an edge through an obstacle between ground the other edges already join.
 
-    Mirrors DotNpcNavBuilder._step_links with `links_check_obstacles`: the builder drops these anyway, so the graph is unchanged and the
+    Mirrors GSNpcNavBuilder._step_links with `links_check_obstacles`: the builder drops these anyway, so the graph is unchanged and the
     build stops counting them as misses. The spec's `extra_links` ([param fixed]) stay. Returns the number dropped."""
     import nav_emulate
     nav = doc["nav"]

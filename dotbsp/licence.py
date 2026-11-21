@@ -292,7 +292,7 @@ ATTRIBUTION = frozenset(("CC-BY-4.0",))
 def credits_list(doc):
     """The machine-readable credits of a map: one dict per distinct work it shows (kind, name, author, licence, url,
     source, `attribution` true when the licence requires naming the author, `uses` how many times it is drawn).
-    The same rows `credits_markdown` prints; `DotMapCredits` reads them from the manifest's licence block."""
+    The same rows `credits_markdown` prints; `GSMapCredits` reads them from the manifest's licence block."""
     out, seen = [], {}
     block = doc.get("licence", {})
 

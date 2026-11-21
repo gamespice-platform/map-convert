@@ -33,7 +33,7 @@ TIERS = ("default", "addon", "game", "map")
 TABLES = ("textures", "free", "models", "sounds", "classes", "materials", "roles")
 FILES = {"textures": "textures.tsv", "free": "free_textures.tsv", "models": "models.tsv",
          "sounds": "sounds.tsv", "classes": "classes.tsv", "materials": "materials.tsv", "roles": "roles.tsv"}
-FALLBACK_CLASS = ("data", "no rule names this class: kept, placed and reported (DotMapEntity)", "fallback")
+FALLBACK_CLASS = ("data", "no rule names this class: kept, placed and reported (GSMapEntity)", "fallback")
 _ROLE_KEY = re.compile(r"^([^\[\]]+)(?:\[([^=\]]+)=(.*)\])?$")
 _FREE_COLS = ("kind", "source", "url", "author", "licence")
 
@@ -262,11 +262,11 @@ class RuleSet:
         return FALLBACK_CLASS + ("fallback",)
 
     def component(self, name):
-        """The DotMapIO component class of a class: the highest tier's row, else the default table's."""
+        """The GSMapIO component class of a class: the highest tier's row, else the default table's."""
         for t in self._high_first():
             r = t.class_row(name)
             if r:
-                return (r[3] if len(r) > 3 and r[3] else "DotMapEntity") if t.name != "default" else _classes.component(name)
+                return (r[3] if len(r) > 3 and r[3] else "GSMapEntity") if t.name != "default" else _classes.component(name)
         return _classes.component(name)
 
     def roles_for(self, entities):

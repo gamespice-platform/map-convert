@@ -18,7 +18,7 @@ What a class becomes (`TREATMENTS`):
 - `point`: a point entity converted to data a game uses as it is: spawns, lights, the sun,
   fog, the 3D sky, props, sounds, decals.
 - `data`: kept verbatim in the intermediate's entity list for a game that wants it (map logic,
-  paths, filters); the converter does not run it, `DotMapIO` does (the `component` column).
+  paths, filters); the converter does not run it, `GSMapIO` does (the `component` column).
 - `dropped`: deliberately left out, with the reason in the row.
 """
 
@@ -29,7 +29,7 @@ TREATMENTS = ("world", "drawn", "mover", "volume", "point", "data", "dropped")
 
 PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "classes.tsv")
 ROWS = {}          # class -> (treatment, meaning)
-COMPONENTS = {}    # class or prefix -> the DotMapIO component that implements it
+COMPONENTS = {}    # class or prefix -> the GSMapIO component that implements it
 PREFIXES = []      # (prefix, treatment, meaning), file order: longest first
 
 
@@ -54,14 +54,14 @@ PREFIXES = tuple(PREFIXES)
 
 
 def component(classname):
-    """The DotMapIO component class that implements `classname`, or 'DotMapEntity' (kept, every
+    """The GSMapIO component class that implements `classname`, or 'GSMapEntity' (kept, every
     input recorded as unimplemented)."""
     if classname in COMPONENTS and classname in ROWS:
         return COMPONENTS[classname]
     for p, _t, _m in PREFIXES:
         if classname.startswith(p) and p in COMPONENTS:
             return COMPONENTS[p]
-    return "DotMapEntity"
+    return "GSMapEntity"
 
 
 def treatment(classname):
@@ -108,7 +108,7 @@ def markdown(survey=None):
         what, _, why = m.partition(" -- ")
         becomes = "`%s`" % t + (": " + why if why else "")
         out.append("| `%s` | %s | %s | %s | %s |" % (c, (survey or {}).get(c, ""), what, becomes,
-                                                       "" if component(c) == "DotMapEntity" else "`%s`" % component(c)))
+                                                       "" if component(c) == "GSMapEntity" else "`%s`" % component(c)))
     out += ["", "| Prefix | Map uses (classes) | What it is | What it becomes |", "| --- | --- | --- | --- |"]
     for p, t, m in PREFIXES:
         hit = [c for c in (survey or {}) if c not in ROWS and treatment(c)[2] == "prefix" and c.startswith(p)

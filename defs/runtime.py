@@ -1,4 +1,4 @@
-"""Writes addons/dot_map/io/catalogue.json, the slice of the class catalogue DotMapIO needs.
+"""Writes addons/dot_map/io/catalogue.json, the slice of the class catalogue GSMapIO needs.
 
     python3 -P defs/runtime.py [--out FILE] [--all]
 

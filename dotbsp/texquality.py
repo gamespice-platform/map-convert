@@ -1,6 +1,6 @@
 """Texture quality report of a converted map: what each replaced surface set is drawn at, per metre.
 
-A converted map is drawn world-triplanar (`lightmapped.gdshader`, `DotMapSurfaces._lightmapped`): one repeat of a
+A converted map is drawn world-triplanar (`lightmapped.gdshader`, `GSMapSurfaces._lightmapped`): one repeat of a
 PBR set covers `DRAW_METRES` metres whatever the source's own texture scale was, so the mesh uv is not what a
 player sees and retiling it changes nothing. The pixels per metre of a set are its albedo's width over that.
 `--store` reads the real width of the shipped slice (`<store>/<id>/<tier>/albedo.webp`); a set missing from it is

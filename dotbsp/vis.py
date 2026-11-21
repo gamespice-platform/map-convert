@@ -8,7 +8,7 @@ every chunk in the view cone, through every wall.
 
 `attach(bsp, mesh)` (called by `mesh.build`) gives every surface the sorted clusters its triangles
 touch (a box query through the BSP tree per triangle, so a face on a leaf boundary counts on both
-sides and the set is never short), and `mesh.vis` the data the runtime (`DotMapVisibility`) needs:
+sides and the set is never short), and `mesh.vis` the data the runtime (`GSMapVisibility`) needs:
 
 - `planes` (nx, ny, nz, d in metres and Godot axes, n.p - d >= 0 is the front), `nodes` (plane,
   front child, back child; a child below 0 is leaf -1 - child), `leaf_cluster`, `leaf_area`;

@@ -4,7 +4,7 @@
 
 Writes `<out_root>/zz_world_<id>/<id>.{json,bin}` (out_root defaults to `world/`), the drawn
 mesh of the source map in dot-map's `dot-bsp-mesh` format (dot-map-convert/dotbsp/mesh.py;
-the game reads it with dot-map's DotMapBspMesh), and names it in the map document (`"world"`).
+the game reads it with dot-map's GSMapBspMesh), and names it in the map document (`"world"`).
 
 WHY A SECOND FILE AND NOT MORE BOXES. The document's boxes are what collides and what the horde's
 ground is cut from, and they stay that; drawn, a curved tunnel, an arch or a sloped roof was a
@@ -24,7 +24,7 @@ WHAT IS DRAWN IS WHAT THE DOCUMENT COLLIDES WITH, as far as a face can say:
 - no hulls, except those of the models the game moves (below): nothing else here collides.
 
 WHAT MOVES IS THE GAME'S TO ANIMATE, FROM THE MANIFEST. `movers`, `volumes`, `links`, `entities` and
-`destinations` are dot-map's (`bsp.py mesh` writes the same records; DotMapEntities reads them).
+`destinations` are dot-map's (`bsp.py mesh` writes the same records; GSMapEntities reads them).
 A brush entity is left to them only when the document does not already stand it up: a class in
 the spec's `solid_classes` or `gate_classes` is boxes (a static wall, or a gate an objective
 opens), and a second, moving copy would collide twice. Every other mover keeps its faces in the

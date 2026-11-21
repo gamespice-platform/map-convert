@@ -8,9 +8,9 @@
 # --- never drawn as a surface a player reads
 # `invisible` faces are left out of the mesh (decal overlays, fog cards, screens: drawn opaque they are slabs).
 # `foliage_card`, `fence`, `grate`, `bars`, `ladder` are alpha-cutout cards and `shield` an additive energy sheet: the original's alpha is not
-# shipped, so each is drawn as a generated cutout pattern in the see-through kinds (DotMapBspMesh.GLASS_LOOKS), never as an opaque slab.
+# shipped, so each is drawn as a generated cutout pattern in the see-through kinds (GSMapBspMesh.GLASS_LOOKS), never as an opaque slab.
 # `decal_*` (lines, graffiti, sign, fade, radial, patch) are decals: drawn alpha-blended over the face under them, a little
-# toward the camera, from a pattern drawn in code (DotMapBspMesh.DECAL_LOOKS) or the map's own texture in an internal pack.
+# toward the camera, from a pattern drawn in code (GSMapBspMesh.DECAL_LOOKS) or the map's own texture in an internal pack.
 TOOLS/*	flat
 DEV/*	flat	0.8,0.8,0.82
 EFFECTS/*	flat

@@ -1,7 +1,7 @@
 """Which entity classes of a map nothing converts, and the check that none is left unlisted.
 
 A class is converted when its treatment is not `data` (geometry, a mover, a volume, a point the
-games read) or when `classes.tsv` names a DotMapIO component for it. What stays is `unconverted`:
+games read) or when `classes.tsv` names a GSMapIO component for it. What stays is `unconverted`:
 kept verbatim as `data` with the generic component (every input recorded, nothing run), or with
 no row at all. `rules/unconverted_ignore.tsv` (class or `prefix*`, a reason) lists what no game
 needs run; anything else on a map and not on that list fails `check`, so a new class is a
@@ -35,7 +35,7 @@ def load_ignore(path=None):
 
 def is_converted(classname):
     t = classes.treatment(classname)[0]
-    return t is not None and (t != "data" or classes.component(classname) != "DotMapEntity")
+    return t is not None and (t != "data" or classes.component(classname) != "GSMapEntity")
 
 
 def ignored(classname, ignore):

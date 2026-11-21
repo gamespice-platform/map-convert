@@ -3,7 +3,7 @@
 The commands are only ever suggestions: every value is written commented out in the file, so it
 changes nothing until an author or operator uncomments a line and the game whitelists the key
 (docs/map-config.md). The same values are the manifest's `settings` (`defaults`), the weakest
-layer of `DotMapConfig`, behind the same whitelist. Nothing here runs a command.
+layer of `GSMapConfig`, behind the same whitelist. Nothing here runs a command.
 
     python3 -m dotbsp.mapcfg OUT_DIR map1.bsp [map2.bsp ...]    (from the repository root)
 """
@@ -38,7 +38,7 @@ def _scalar(value):
 def defaults(cmds):
     """The `{cvar: value}` a map's own `point_servercommand` entities set, numbers as numbers.
 
-    The manifest carries it as `settings` and `DotMapWorld` hands it to `DotMapConfig` as its
+    The manifest carries it as `settings` and `GSMapWorld` hands it to `GSMapConfig` as its
     weakest layer: a key the game does not whitelist is still refused, so this adds no command."""
     out = {}
     for c in cmds:

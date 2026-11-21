@@ -2312,7 +2312,7 @@ def label_zones(z, ignore=None):
     # Two brushes sharing a targetname are ONE entity in Source, and a mapper uses
     # that: surf_summit's `tm_checkpoint1` is a pair, one in each of the map's two
     # mirrored lanes. Emitted as two zones they are two stage zones with the same
-    # number, which `DotTimerZoneSet.problems()` refuses and is right to -- so they
+    # number, which `GSTimerZoneSet.problems()` refuses and is right to -- so they
     # are unioned back into the one volume the map always meant them to be.
     merged = {}
     for i, e, name, role, box in found:
@@ -2658,7 +2658,7 @@ def implied_zones(z):
     A track whose stages start at 1 has already drawn its start line -- stage 1 IS the
     start, in this genre and in Shavit -- and a track whose stages start at 2 has
     drawn a start line and called it that. Both are one zone short of what
-    [code]DotTimerZoneSet.problems()[/code] will accept, and in opposite directions.
+    [code]GSTimerZoneSet.problems()[/code] will accept, and in opposite directions.
     """
     for track in z.tracks():
         starts = z.of_kind("START", track)
@@ -2727,7 +2727,7 @@ def drop_unrunnable_tracks(z):
 
     surf_summit's third bonus is the case: a start zone, eight checkpoints and no
     finish anywhere in the map. Left in, it is a track a player can begin and never
-    complete, and one [code]DotTimerZoneSet.problems()[/code] refuses the whole map
+    complete, and one [code]GSTimerZoneSet.problems()[/code] refuses the whole map
     over. Dropped silently it would be a bonus that quietly does not exist, so it is
     reported.
     """

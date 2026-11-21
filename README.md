@@ -39,7 +39,7 @@ Shipping a library model over `DOTBSP_MODEL_TRI_BUDGET` triangles (default 30000
 
 1. **Raw import**, outside every repository, at `<root>/<game>/raw/<map>/` (`--raw-root`, `$DOTBSP_RAW_ROOT`, default `~/mapsrc`): the mesh, every entity key, a texture and model census and the packed file list.
 2. **Licence pass** (only with `--out`): each surface maps through `free_textures.tsv` to a CC0 PBR set from [ambientCG](https://ambientcg.com) or to a generated image in the original's average colour; each placed model to a free stand-in; each sound to a CC0 sound or silence. Only CC0, MIT and public-domain stand-ins are accepted. The manifest records every replacement with its URL, author and licence.
-3. **Environment and sound** (sky, sun, fog, tone map, ambient sounds) ship as data that `DotMapBspMesh` applies at load. The author's own baked lightmap is imported too (`dotbsp/lightmap.py`).
+3. **Environment and sound** (sky, sun, fog, tone map, ambient sounds) ship as data that `GSMapBspMesh` applies at load. The author's own baked lightmap is imported too (`dotbsp/lightmap.py`).
 
 Rules are read in four tiers, from the least to the most specific: default, addon, game, map. A tier is a folder of `textures.tsv`, `free_textures.tsv`, `models.tsv`, `sounds.tsv`, `classes.tsv`, `materials.tsv` and `roles.tsv`. `regen` writes `<prefix>.coverage.json`, which lists what each tier answered and every name that fell through.
 
@@ -84,7 +84,7 @@ Per-game importers are in `adapters/<repo>/` (launchers stay in each map reposit
 | `dotbsp/lights.py` | `to_game` (lights to metres, range and energy, suns apart), `thin`, `thin_by_gap` and `strengthen` (the `--max-lights` loop exactly), `auto` |
 | `dotbsp/gamebox.py` | `model_boxes`: a model's brushes as game-metre boxes with the source material and kind |
 | `dotbsp/flood.py` | `Flood`: reachable space over boxes with step, jump, drop and head room, and over terrain by slope; `floor_rects`, `keep_starts`, `terrain_walk` |
-| `dotbsp/terrain.py` | `Heightfield`: displacement triangles as a heightfield in metres (highest surface wins), `encode`/`decode` (predicted int16 residuals, deflated, with a walk mask), `fit` to a byte budget over the reached ground, `walk_points`, and a skirt (`outer_edges`, `skirt_level`: `swap_terrain` writes one float, `skirt`, and `DotMapTerrain` hangs a double-sided wall from the field's outer rim down to it, mesh only, so a rim over open air never floats with sky under it; holes the field surrounds get none; `skirt=False` leaves it out); the game reads it with `DotMapTerrain` (collision shape, mesh, nav points). Replaces `boxes.terrain_cells`' stepped boxes, which no flood or body could climb past a step per cell |
+| `dotbsp/terrain.py` | `Heightfield`: displacement triangles as a heightfield in metres (highest surface wins), `encode`/`decode` (predicted int16 residuals, deflated, with a walk mask), `fit` to a byte budget over the reached ground, `walk_points`, and a skirt (`outer_edges`, `skirt_level`: `swap_terrain` writes one float, `skirt`, and `GSMapTerrain` hangs a double-sided wall from the field's outer rim down to it, mesh only, so a rim over open air never floats with sky under it; holes the field surrounds get none; `skirt=False` leaves it out); the game reads it with `GSMapTerrain` (collision shape, mesh, nav points). Replaces `boxes.terrain_cells`' stepped boxes, which no flood or body could climb past a step per cell |
 | `dotbsp/plan.py` | `extract`: a room plan from walls that do not close (seal, outside flood, doorway erosion, rooms on a coarse grid) |
 | `dotbsp/gma.py` | `.gma` workshop archives through fastgmad (`sources.find` and `bsp.py` take a `.gma` like a zip) |
 | `dotbsp/texturemap.py`, `dotbsp/source_textures.tsv` | the one list of source texture names to generic material ids (`wood_floor`, `carpet`, `brick_red`...) with an optional tint, most specific row first; `bsp.py unmapped` lists what it misses |
@@ -138,7 +138,7 @@ The document names the pack in a top-level `world` key:
 | `offset` | metres to add to a pack point to land in the document's frame. The pack is regenerated at `y0 = 0`, so this is the importer's spawn shift undone: `[0, -y_off, 0]` |
 | `crop` | optional: the config's `region` in the pack's frame (`x0,z0,x1,z1,ymin,ymax`), as passed to `regen --crop`. Faces, props and entities centred outside it are left out, just as boxes are |
 
-A game draws the pack in place of the box meshes with `DotMapDrawnWorld.attach(parent, mesh, {"transform": Transform3D(Basis.IDENTITY, offset), ...})` and keeps the boxes' collision. When the pack is missing or will not read, or its scale differs, the game draws the boxes. Once the pack exists, the document's `attribution` names the free textures and stand-ins instead of the box grid.
+A game draws the pack in place of the box meshes with `GSMapDrawnWorld.attach(parent, mesh, {"transform": Transform3D(Basis.IDENTITY, offset), ...})` and keeps the boxes' collision. When the pack is missing or will not read, or its scale differs, the game draws the boxes. Once the pack exists, the document's `attribution` names the free textures and stand-ins instead of the box grid.
 
 ## Credits and removal
 

@@ -3,13 +3,13 @@
 `boxes.terrain_cells` cuts terrain into a stepped box field, which a body cannot climb once a
 slope rises more than a step per cell, so a hilly map's reachable ground ended at its first hill.
 A `Heightfield` samples the displacement triangles on a regular grid instead; the game builds a
-triangle shape from the same samples (dot-map's `DotMapTerrain`), so what collides and what the
+triangle shape from the same samples (dot-map's `GSMapTerrain`), so what collides and what the
 flood walks are one surface. Everything here is in metres on Godot axes (y up).
 
 A cell is split along its (i, j)-(i+1, j+1) diagonal, the same in `height` and in the shape. A
 sample no triangle covers is a hole. Where triangles overlap (an overhang) the highest wins.
 
-`encode` writes the dictionary `DotMapTerrain.from_dict` reads (format 1): heights quantised to
+`encode` writes the dictionary `GSMapTerrain.from_dict` reads (format 1): heights quantised to
 `step` metres, predicted from the left, upper and upper-left samples, the residuals as int16 LE
 after a hole bitmask (LSB first, row-major, x fastest), zlib then base64, so a hilly yard of a few
 hundred metres is a few kilobytes. `walk` is an optional mask in the same bit layout: the samples
@@ -142,7 +142,7 @@ class Heightfield:
 
     def triangles(self):
         """Present triangles as {(i, j, half): corner samples}: half 0 is (i,j) (i+1,j) (i+1,j+1),
-        half 1 is (i,j) (i+1,j+1) (i,j+1), the split `DotMapTerrain.faces` uses."""
+        half 1 is (i,j) (i+1,j+1) (i,j+1), the split `GSMapTerrain.faces` uses."""
         out = {}
         for j in range(self.nz - 1):
             for i in range(self.nx - 1):
@@ -154,7 +154,7 @@ class Heightfield:
     def outer_edges(self):
         """Sample pairs along the outer rim: an edge of a present triangle whose other side is
         outside the grid or a missing triangle the outside reaches through missing ones. A hole the
-        field surrounds (a building's footprint) is not rim. `DotMapTerrain.skirt_edges` is the same."""
+        field surrounds (a building's footprint) is not rim. `GSMapTerrain.skirt_edges` is the same."""
         tris = self.triangles()
 
         def across(t):
@@ -194,7 +194,7 @@ class Heightfield:
         return min(v for v in self.h if v is not None) - depth
 
     def encode(self, step=0.05, walk=None, mat="", skirt=None):
-        """The dictionary `DotMapTerrain.from_dict` reads. `walk` is a set of (i, j) samples;
+        """The dictionary `GSMapTerrain.from_dict` reads. `walk` is a set of (i, j) samples;
         `skirt` is the height the rim's skirt drops to (see `skirt_level`), none by default."""
         known = [v for v in self.h if v is not None]
         base = min(known)
@@ -290,7 +290,7 @@ def fit(tris, keep_bounds, budget, cells=(1.0, 1.5, 2.0, 3.0, 4.0, 6.0), margin_
 
 def walk_points(hf, walk, spacing):
     """Points every `spacing` metres whose nearest sample is in `walk`, on the surface; the same
-    ones `DotMapTerrain.walk_points` places (keep the arithmetic identical)."""
+    ones `GSMapTerrain.walk_points` places (keep the arithmetic identical)."""
     out = []
     if not walk or spacing <= 0:
         return out
@@ -723,7 +723,7 @@ def swap_terrain(doc, tris, mat, tint, budget=24000, scale=0.01905, skirt=True):
     committed document (`--graft-terrain`) alike. What stood on a box of the field is set down on
     the heightfield instead; the rest of the document is untouched.
 
-    `skirt` (default on) writes the height of a skirt `DotMapTerrain` hangs under the field's outer
+    `skirt` (default on) writes the height of a skirt `GSMapTerrain` hangs under the field's outer
     rim (mesh only, one float): the field ends in air where the source's hillsides were brushes
     that are not imported, and its rim floated with sky under it."""
     cells = []

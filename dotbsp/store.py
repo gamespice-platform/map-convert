@@ -51,7 +51,7 @@ def commands(ents):
 
 def ship_document(data, prefix, stored=None):
     """`<prefix>.doc.json` beside a shipped manifest: the source document (the map's entities and
-    their outputs) that `DotMapWorld` reads, so a shipped map needs no store. `stored` is the
+    their outputs) that `GSMapWorld` reads, so a shipped map needs no store. `stored` is the
     store entry's `doc.json` when there is one; otherwise it is built from `data`."""
     doc = _load(stored) if stored and os.path.isfile(stored) else document(data)
     scripts.annotate(doc["entities"])

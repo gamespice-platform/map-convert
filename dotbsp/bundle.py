@@ -2,7 +2,7 @@
 
 `licence.model_store` points at a shared folder (`../../model-library`) that exists on a developer's disk and in no
 delivered pack, so a client drew those props as boxes or not at all. `bundle_world` copies a world folder and exactly the
-model files its manifest names into `<out>/models/`, and points `model_store` there; `DotMapBspMesh` finds it beside the mesh.
+model files its manifest names into `<out>/models/`, and points `model_store` there; `GSMapBspMesh` finds it beside the mesh.
 `bsp.py bundle` runs it for many worlds; a world with no model rows is copied unchanged.
 """
 import json

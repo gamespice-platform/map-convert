@@ -2,7 +2,7 @@
 
 Textures and models may be stood in for; what a map *does* may not change. This compares the
 original's entity graph, read the way the original engine reads it, with what the converter
-records and the DotMapIO runtime runs, and names every difference as a finding class:
+records and the GSMapIO runtime runs, and names every difference as a finding class:
 
     findings(bsp) -> {"findings": {class: [detail, ...]}, "classes": {classname: status}, ...}
 
@@ -43,15 +43,15 @@ FINDINGS = {
     "teleport_dest_lost": ("lost", "a trigger_teleport whose destination the engine finds and the runtime does not (class, case or name)"),
     "teleport_dest_moved": ("changed", "a trigger_teleport sent to another place than the engine sends it (duplicate names, first vs last)"),
     "teleport_retargeted": ("changed", "the converter's release_pits heuristic re-aimed a teleport the author wired elsewhere"),
-    "teleport_target_dynamic": ("handled", "a trigger_teleport whose target logic changes at run time (AddOutput target / SetRemoteDestination); DotMapTeleport re-aims it as the engine does"),
+    "teleport_target_dynamic": ("handled", "a trigger_teleport whose target logic changes at run time (AddOutput target / SetRemoteDestination); GSMapTeleport re-aims it as the engine does"),
     "teleport_landmark_lost": ("lost", "a landmark the engine resolves that the runtime's destinations lack"),
-    "teleport_landmark_angles": ("handled", "UseLandmarkAngles: DotMapVolumeNode snaps the body to the destination's yaw as the engine does"),
+    "teleport_landmark_angles": ("handled", "UseLandmarkAngles: GSMapVolumeNode snaps the body to the destination's yaw as the engine does"),
     "filter_dropped": ("lost", "a filtername on a volume kind whose record drops it (everyone passes)"),
     "filter_class_unsupported": ("unsupported", "a filter class the runtime does not evaluate (admits everyone)"),
     "volume_unrecorded": ("lost", "a trigger/volume brush entity with no volume record (nothing touches it)"),
     "volume_empty": ("lost", "a volume record with no brushes (its model has none the tree reaches)"),
     "volume_parented": ("unsupported", "a volume parented to something that moves without a mover record (a prop_dynamic, a physics object): the volume stays where it was compiled"),
-    "volume_follows": ("handled", "a volume parented to a door, lift, train or spinner (through parents that do not move): DotMapVolumeNode carries it with the mover chain, SetParent included"),
+    "volume_follows": ("handled", "a volume parented to a door, lift, train or spinner (through parents that do not move): GSMapVolumeNode carries it with the mover chain, SetParent included"),
     "volume_key_unread": ("unsupported", "a gameplay key on a volume the runtime does not apply"),
     "mover_unrecorded": ("lost", "a moving brush entity with no mover record"),
     "class_unsupported": ("unsupported", "a gameplay class (wired by outputs, or a trigger/logic/filter/game class) with no runtime component"),
@@ -67,7 +67,7 @@ FINDINGS = {
 }
 SEVERE = ("lost", "changed", "unsupported")
 
-# Parents that never move by themselves: the runtime walks through them to the mover above (DotMapVolumeNode._movers_above).
+# Parents that never move by themselves: the runtime walks through them to the mover above (GSMapVolumeNode._movers_above).
 STILL_PARENTS = {"info_target", "info_null", "func_brush", "func_wall", "func_illusionary", "func_wall_toggle",
                  "func_lod", "info_teleport_destination", "point_template", "path_track", "path_corner"}
 
@@ -94,7 +94,7 @@ def _parent_chain(refs, resolve, mov_by, parentname):
 # Keys the converter's records read by exact name.
 RECORD_KEYS = ("classname", "targetname", "target", "parentname", "filtername", "origin", "angles", "model",
                "spawnflags", "StartDisabled", "wait", "speed", "pushdir", "damage", "gravity", "landmark")
-# Gameplay keys per volume class the runtime applies (DotMapVolumeNode/DotMapTrigger/DotMapHurt/DotMapPush).
+# Gameplay keys per volume class the runtime applies (GSMapVolumeNode/GSMapTrigger/GSMapHurt/GSMapPush).
 # Anything else a definition lists for the class and the map sets off its default is `volume_key_unread`.
 VOLUME_KEYS_READ = {
     "*": {"classname", "targetname", "target", "parentname", "filtername", "origin", "angles", "model", "spawnflags",
@@ -102,7 +102,7 @@ VOLUME_KEYS_READ = {
           "disablereceiveshadows", "disableshadows", "vrad_brush_cast_shadows", "_minlight", "solid",
           "origin_x", "texturescroll", "fadescale", "mindxlevel", "maxdxlevel", "inputfilter", "invert_exclusion",
           "spawnflags_", "damagefilter", "speed", "pushdir", "damage", "gravity", "landmark", "damagetype"},
-    # DotMapHurt._configure: rate, cap, doubling model, one-shot damage and knockback.
+    # GSMapHurt._configure: rate, cap, doubling model, one-shot damage and knockback.
     "trigger_hurt": {"hurtrate", "damagecap", "damagemodel", "damageonce", "damageforce", "nodmgforce"},
 }
 
@@ -225,7 +225,7 @@ def class_status(cls, wired=False, recorded=False):
     comp = _classes.component(cls)
     if t is None:
         return "unknown"
-    if comp != "DotMapEntity" or t in ("world", "drawn") or recorded:
+    if comp != "GSMapEntity" or t in ("world", "drawn") or recorded:
         return "implemented"
     if t == "dropped":
         return "ignored" if not wired else "approximated"

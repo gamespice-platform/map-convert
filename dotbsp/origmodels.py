@@ -11,7 +11,7 @@ up in the map's pakfile, then in the map's loose content folders (a workshop add
 - `<name>.gltf` (upright) and `<name>~p<pitch>r<roll>.gltf` (one per tilt a placement uses, rounded to
   `TILT_STEP` degrees) are small JSON files that share that `.bin` and differ only in a node matrix.
 
-The runtime (dot-map `DotMapBspMesh._place_prop`) turns a library model by yaw only, faces it along +Z, and
+The runtime (dot-map `GSMapBspMesh._place_prop`) turns a library model by yaw only, faces it along +Z, and
 puts the bottom centre of its bounds (the 8 corners of the mesh box, turned by the node) on the record's
 `at`. So each node matrix turns the model from Source's +X facing to +Z and applies the placement's pitch and
 roll, and `settle` moves each record's `at` from the model origin to where that bottom centre lands.

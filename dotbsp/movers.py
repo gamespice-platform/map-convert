@@ -579,7 +579,7 @@ PICKUP_PATTERNS = ("weapon_*", "item_*", "ammo_*")
 
 def pickups(bsp, scale=_units.VISUAL, y0=0.0):
     """Weapons, items and ammunition the source lays in the map, as the entity dictionaries
-    dot-weapon's `DotWeaponSpawner.add_entities` takes: {classname, origin, angle, props}. What each
+    dot-weapon's `GSWeaponSpawner.add_entities` takes: {classname, origin, angle, props}. What each
     one gives is the game's `classes:` mapping in its spawner.yml, never decided here; a class
     the source marks `dropped` (a bomb defuser) is not a pickup."""
     import fnmatch

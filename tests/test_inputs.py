@@ -14,9 +14,9 @@ class Bsp:
 
 class InputTests(unittest.TestCase):
     def test_components_come_from_the_registration_table(self):
-        self.assertEqual(inputs.component_of("logic_relay"), "DotMapRelay")
-        self.assertEqual(inputs.component_of("func_door"), "DotMapMoverNode")      # the loop-registered ones
-        self.assertEqual(inputs.component_of("zz_nothing"), "DotMapEntity")
+        self.assertEqual(inputs.component_of("logic_relay"), "GSMapRelay")
+        self.assertEqual(inputs.component_of("func_door"), "GSMapMoverNode")      # the loop-registered ones
+        self.assertEqual(inputs.component_of("zz_nothing"), "GSMapEntity")
 
     def test_a_component_answers_its_cases_and_every_entity_answers_the_base_ones(self):
         relay = inputs.implemented("logic_relay")
@@ -24,7 +24,7 @@ class InputTests(unittest.TestCase):
         self.assertIn("kill", relay)
         self.assertNotIn("open", relay)
         self.assertIn("open", inputs.implemented("func_door"))
-        self.assertIn("break", inputs.implemented("func_physbox"))      # inherited: DotMapPhysbox extends DotMapBreakable
+        self.assertIn("break", inputs.implemented("func_physbox"))      # inherited: GSMapPhysbox extends GSMapBreakable
         self.assertEqual(inputs.implemented("zz_nothing"), inputs.implemented("info_target"))
 
     def test_the_unimplemented_list_names_class_and_input(self):

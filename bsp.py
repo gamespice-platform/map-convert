@@ -216,7 +216,7 @@ def cmd_classes_keys(args):
             rc = 1
             continue
         rep = coverage.class_report(bsp)
-        plain = sum(1 for r in rep.values() if r["component"] == "DotMapEntity")
+        plain = sum(1 for r in rep.values() if r["component"] == "GSMapEntity")
         print("%s: %d classes, %d without a component" % (s.label(), len(rep), plain))
         for line in coverage.class_text(rep):
             print("  " + line)

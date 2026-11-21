@@ -14,6 +14,7 @@ driven by buttons) is not run, because this game is not a scripting engine; what
 player FEELS standing in a volume is, because a map plays wrong without it.
 """
 
+import collections
 import math
 import re
 
@@ -66,6 +67,22 @@ def _int(e, key, default=0):
         return int(float(e.get(key, default)))
     except ValueError:
         return default
+
+
+def _starts_off(bsp, e):
+    """StartDisabled, and not switched on by the map as it spawns (dotbsp.movers.spawn_enabled):
+    a trigger a logic_auto enables runs all round in Source, so it is imported as running."""
+    if _int(e, "StartDisabled") != 1:
+        return False
+    on = getattr(bsp, "_spawn_enabled", None)
+    if on is None:
+        from dotbsp.movers import spawn_enabled
+        on = spawn_enabled(bsp.entities)
+        try:
+            bsp._spawn_enabled = on
+        except AttributeError:
+            pass
+    return e.get("targetname", "").strip().lower() not in on
 
 
 def _float(e, key, default=0.0):
@@ -203,7 +220,7 @@ def push_volumes(bsp, origin_of, inert_filters):
         if e.get("classname") != "trigger_push":
             continue
         flags = _int(e, "spawnflags", SF_TRIGGER_CLIENTS)
-        if not flags & SF_TRIGGER_CLIENTS or _int(e, "StartDisabled") == 1:
+        if not flags & SF_TRIGGER_CLIENTS or _starts_off(bsp, e):
             continue
         if e.get("filtername", "").strip().lower() in inert_filters:
             continue
@@ -246,7 +263,7 @@ def booster_volumes(bsp, origin_of, inert_filters):
     for e in bsp.entities:
         if e.get("classname") not in ("trigger_multiple", "trigger_once"):
             continue
-        if _int(e, "StartDisabled") == 1:
+        if _starts_off(bsp, e):
             continue
         flags = _int(e, "spawnflags", SF_TRIGGER_CLIENTS)
         if not flags & SF_TRIGGER_CLIENTS:
@@ -279,7 +296,7 @@ def gravity_volumes(bsp, origin_of):
     """`trigger_gravity`: inside it a player falls at `gravity` times the server's."""
     out = []
     for e in bsp.entities:
-        if e.get("classname") != "trigger_gravity" or _int(e, "StartDisabled") == 1:
+        if e.get("classname") != "trigger_gravity" or _starts_off(bsp, e):
             continue
         scale = _float(e, "gravity", 1.0)
         for _i, (lo, hi) in entity_brushes(bsp, e, origin_of):
@@ -293,7 +310,7 @@ def hurt_volumes(bsp, origin_of):
     lethal one (100 or more) as a death -- back to the spawn -- and the rest as nothing."""
     out = []
     for e in bsp.entities:
-        if e.get("classname") != "trigger_hurt" or _int(e, "StartDisabled") == 1:
+        if e.get("classname") != "trigger_hurt" or _starts_off(bsp, e):
             continue
         if not _int(e, "spawnflags", 1) & SF_TRIGGER_CLIENTS:
             continue
@@ -494,6 +511,28 @@ def inert_filters(bsp, names_too=True):
                 dead.add(e.get("targetname", "").strip().lower())
     dead.discard("")
     return dead
+
+
+# Entities the game does not run: map logic and the triggers it has no counterpart for. Their
+# outputs go nowhere, so a timer, relay or counter that drives a push or a door does nothing.
+DROPPED_PREFIXES = ("logic_", "math_", "filter_")
+DROPPED_CLASSES = ("point_teleport", "trigger_proximity", "trigger_wind", "trigger_look",
+                   "trigger_playermovement", "trigger_teleport_relative", "point_servercommand",
+                   "point_clientcommand", "game_player_equip", "env_entity_maker")
+
+
+def dropped_entities(bsp):
+    """Counter of class -> count of the map's entities the game does not run (DROPPED_*), plus
+    `StartDisabled <class>` for each push, gravity and hurt trigger dropped for starting off
+    (only a button, timer or relay the game does not run would switch it on)."""
+    out = collections.Counter()
+    for e in bsp.entities:
+        cls = e.get("classname", "")
+        if cls.startswith(DROPPED_PREFIXES) or cls in DROPPED_CLASSES:
+            out[cls] += 1
+        elif cls in ("trigger_push", "trigger_gravity", "trigger_hurt") and _starts_off(bsp, e):
+            out["StartDisabled " + cls] += 1
+    return out
 
 
 def trap_blocks(bsp, traps, origin_of, destinations):

@@ -4768,6 +4768,13 @@ def main(argv=None):
         print("  %d brush entities left non-solid: %s"
               % (sum(skipped_entities.values()),
                  ", ".join("%s x%d" % kv for kv in skipped_entities.most_common(6))))
+    # Every map says what of its logic does not run, so a map whose pushes a logic_timer
+    # switches on reads as such here rather than as a missing push in play.
+    dropped_ents = bsp_mechanics.dropped_entities(bsp)
+    if dropped_ents:
+        print("  DROPPED %d entities the game does not run: %s"
+              % (sum(dropped_ents.values()),
+                 ", ".join("%s x%d" % kv for kv in sorted(dropped_ents.items(), key=lambda kv: (-kv[1], kv[0])))))
     print("  lightmap %dx%d, %d lit faces, %.1f%% of luxels clipped to white"
           % (lm_w, lm_h, len(place) - 1, lm_clipped))
     if sky is not None:

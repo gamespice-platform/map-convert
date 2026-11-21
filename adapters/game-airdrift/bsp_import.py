@@ -4646,7 +4646,7 @@ def main(argv=None):
         bsp, a.min_zone_thickness, doc, solids, floor_boxes(bsp, solids, solid_props))
     zones = emit_zones(z)
     mech = bsp_mechanics.mechanics(bsp, entity_origin, z.destinations, DESTINATION_LIFT,
-                                   yaw_to_godot, z.traps)
+                                   yaw_to_godot, z.traps, cut=hull_boxes)
     capped = cap_pits_under_blocks(zones, mech["blocks"], solids)
     if capped:
         notes.append("%d pit slabs lowered below the top of a block in their footprint" % capped)
@@ -4723,6 +4723,12 @@ def main(argv=None):
         "push_volumes": mech["push"],
         "trigger_volumes": other,
     }
+    # What the game does not run, kept in the manifest and not only in this log: the
+    # classes (bsp_mechanics.dropped_entities) and each trigger logic switches on later.
+    dropped_ents = bsp_mechanics.dropped_entities(bsp)
+    switched = bsp_mechanics.switched_off(bsp, entity_origin)
+    if dropped_ents or switched:
+        manifest["not_run"] = {"classes": dict(sorted(dropped_ents.items())), "switched_off": switched}
     points, resupply, flags = objective_markers(bsp, doc)
     if points:
         manifest["control_points"] = points
@@ -4770,7 +4776,9 @@ def main(argv=None):
                  ", ".join("%s x%d" % kv for kv in skipped_entities.most_common(6))))
     # Every map says what of its logic does not run, so a map whose pushes a logic_timer
     # switches on reads as such here rather than as a missing push in play.
-    dropped_ents = bsp_mechanics.dropped_entities(bsp)
+    if switched:
+        print("  SWITCHED OFF %d triggers the map's logic turns on later: %s"
+              % (len(switched), ", ".join(sorted({"%s %s" % (t["class"], t["name"]) for t in switched})[:8])))
     if dropped_ents:
         print("  DROPPED %d entities the game does not run: %s"
               % (sum(dropped_ents.values()),

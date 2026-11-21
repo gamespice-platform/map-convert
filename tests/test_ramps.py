@@ -1,4 +1,4 @@
-"""dotbsp.ramps: a solid staircase prop in a worlds/ regen collides as one ramp hull where the game draws it.
+"""gsbsp.ramps: a solid staircase prop in a worlds/ regen collides as one ramp hull where the game draws it.
 Run: python3 -P tests/test_ramps.py
 """
 
@@ -8,7 +8,7 @@ import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dotbsp import ramps  # noqa: E402
+from gsbsp import ramps  # noqa: E402
 
 STAIRS = "lib/kenney_furniture-kit_stairs"
 # cp_orange_x3's first staircase as the regen places it (metres, Godot axes), and the wall it climbs (brush 240).

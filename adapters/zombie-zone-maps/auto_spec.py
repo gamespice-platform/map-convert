@@ -14,11 +14,11 @@ import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-BSP = os.environ.get("DOTBSP_PATH", os.path.join(HERE, "..", "..", "dot-map-convert"))
+BSP = os.environ.get("GSBSP_PATH", os.path.join(HERE, "..", "..", "gs-map-convert"))
 sys.path.insert(0, BSP)
-from dotbsp import reader  # noqa: E402
+from gsbsp import reader  # noqa: E402
 
-STORE = os.environ.get("DOTBSP_STORE", os.path.expanduser("~/mapsrc/store"))
+STORE = os.environ.get("GSBSP_STORE", os.path.expanduser("~/mapsrc/store"))
 SURVIVORS = ["info_player_human", "info_player_counterterrorist", "info_player_start"]
 ZOMBIES = ["info_player_zombie", "info_player_undead", "info_player_terrorist"]
 PROPS = {  # model name fragments -> Kenney ids, the families every converted map shares

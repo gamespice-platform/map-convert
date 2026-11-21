@@ -11,12 +11,12 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path[:0] = [ROOT, HERE]
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 
 try:
     import synth
-    from dotbsp import reader
-    # The adapter imports the maps repo's bsp_read, a thin wrapper over dotbsp's reader.
+    from gsbsp import reader
+    # The adapter imports the maps repo's bsp_read, a thin wrapper over gsbsp's reader.
     stub = types.ModuleType("bsp_read")
     stub.Bsp = reader.Bsp
     sys.modules.setdefault("bsp_read", stub)

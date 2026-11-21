@@ -10,7 +10,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import bundle  # noqa: E402
+from gsbsp import bundle  # noqa: E402
 
 
 def make(root, rows):

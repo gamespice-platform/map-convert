@@ -1,7 +1,7 @@
 """The class catalogue's tests. Run: python3 -P tests/test_defs.py
 
 The committed rules/entity_defs.json is checked on its own; when the definition files and dumps
-are on this machine (`$DOTBSP_DEFS`, default ~/mapsrc/defs) it is also rebuilt and compared.
+are on this machine (`$GSBSP_DEFS`, default ~/mapsrc/defs) it is also rebuilt and compared.
 """
 
 import os
@@ -14,9 +14,9 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, os.path.join(os.path.dirname(HERE), "defs"))
 
 import build                                          # noqa: E402
-from dotbsp import defs                               # noqa: E402
+from gsbsp import defs                               # noqa: E402
 
-DEFS = os.environ.get("DOTBSP_DEFS", os.path.expanduser("~/mapsrc/defs"))
+DEFS = os.environ.get("GSBSP_DEFS", os.path.expanduser("~/mapsrc/defs"))
 FGD = '''
 @BaseClass = Targetname [ targetname(target_source) : "Name" : : "descr" ]
 @PointClass base(Targetname) = env_demo : "A demo."

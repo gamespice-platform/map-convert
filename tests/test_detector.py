@@ -4,9 +4,9 @@ Run: python3 -P tests/test_detector.py [REPO_DIR ...]
 Scans the `tools/*.py` of the sibling map repositories (`*-maps`, plus the games that convert maps) for
   1. code that reads the VBSP format (the magic, a lump table, lump index constants), and
   2. an importer-named file (`import*`, `reimport*`, `bsp*`) over MAX_LINES lines.
-Both belong in dot-map-convert (`dotbsp/`, `adapters/<repo>/`); a repository keeps a launcher and data.
+Both belong in gs-map-convert (`gsbsp/`, `adapters/<repo>/`); a repository keeps a launcher and data.
 A file that must stay is listed in ALLOW with the reason, so a new one fails. Repositories that are not
-checked out beside this one are skipped (CI has only dot-map-convert and dot-map).
+checked out beside this one are skipped (CI has only gs-map-convert and gs-map).
 """
 import glob
 import os
@@ -28,7 +28,7 @@ ALLOW = {}
 
 
 def repos():
-    godot = os.environ.get("GS_GODOT_DIR", os.environ.get("DOT_GODOT_DIR")) or os.path.dirname(ROOT)
+    godot = os.environ.get("GS_GODOT_DIR", os.environ.get("GS_GODOT_DIR")) or os.path.dirname(ROOT)
     found = sorted(glob.glob(os.path.join(godot, "*-maps")))
     found += [os.path.join(godot, n) for n in EXTRA_REPOS if os.path.isdir(os.path.join(godot, n))]
     return found
@@ -47,9 +47,9 @@ def scan(repo):
             lines = f.read().splitlines()
         code = [ln for ln in lines if not ln.lstrip().startswith("#")]
         if any(READS_BSP.search(ln) for ln in code):
-            out.append((rel, "reads the VBSP format; use dotbsp.reader"))
+            out.append((rel, "reads the VBSP format; use gsbsp.reader"))
         if IMPORTER_NAME.search(base[:-3]) and len(lines) > MAX_LINES:
-            out.append((rel, "importer of %d lines (limit %d); make it an adapter in dot-map-convert" % (len(lines), MAX_LINES)))
+            out.append((rel, "importer of %d lines (limit %d); make it an adapter in gs-map-convert" % (len(lines), MAX_LINES)))
     return out
 
 

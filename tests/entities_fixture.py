@@ -12,16 +12,16 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import mesh, movers, paths, reader  # noqa: E402
+from gsbsp import mesh, movers, paths, reader  # noqa: E402
 
-OUT = os.path.join(paths.dot_map_dir(), "examples", "bsp_mesh", "zm_4way_tunnel.entities.json")
+OUT = os.path.join(paths.gs_map_dir(), "examples", "bsp_mesh", "zm_4way_tunnel.entities.json")
 
 
 def build(path):
     with open(path, "rb") as f:
         bsp = reader.Bsp(os.path.basename(path), data=f.read()).load()
     owners = mesh.model_entities(bsp)
-    return {"format": "dot-bsp-mesh", "version": 1, "name": "zm_4way_tunnel", "partial": "entities only",
+    return {"format": "gs-bsp-mesh", "version": 1, "name": "zm_4way_tunnel", "partial": "entities only",
             "movers": movers.movers(bsp, owners=owners),
             "volumes": [v for v in movers.volumes(bsp, owners=owners) if v["kind"] not in ("water", "ladder")],
             "links": movers.links(bsp), "entities": movers.generic(bsp, owners)}

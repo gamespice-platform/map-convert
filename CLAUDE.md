@@ -1,6 +1,6 @@
 # GameSpice Map Convert
 
-The family's one map converter: community BSP maps (VBSP v19-21) to the documented intermediate, the drawn mesh and the per-game manifests, plus every table that maps an original texture, model or sound to its free replacement or records that it is kept. Python 3 standard library only, no Godot project. It moved here from `dot-map/tools/bsp` on 2026-11-01 with its history; the engine-runtime code stays in `dot-map`.
+The family's one map converter: community BSP maps (VBSP v19-21) to the documented intermediate, the drawn mesh and the per-game manifests, plus every table that maps an original texture, model or sound to its free replacement or records that it is kept. Python 3 standard library only, no Godot project. It moved here from `gs-map/tools/bsp` on 2026-11-01 with its history; the engine-runtime code stays in `gs-map`.
 
 Read README.md first (layout, rule tiers, the lossless store, the intermediate).
 
@@ -8,15 +8,15 @@ Read README.md first (layout, rule tiers, the lossless store, the intermediate).
 
 - **One converter.** A reader fix, a table row or a class definition goes here, never into a game or map repository. Game adapters live in `adapters/<repo>/`; each map repository's `tools/<name>.py` is a launcher (`adapters/adapter_launch.py`), so edit the adapter here. `tools/README.md` lists what is where.
 - **Always `python3 -P`, never `-I`.** Maps are downloads; -P keeps the safe path (no script dir or cwd on sys.path) but leaves the user site, where numpy lives for the gamedev user (-I made every suite fail with no numpy).
-- **Finding things.** Callers find this checkout as the sibling `../dot-map-convert` or `$DOTBSP_PATH` (or `$GS_MAP_CONVERT_PATH` for the tools). This converter finds the dot-map addon (assets, `io/catalogue.json`) through `dotbsp/paths.py`: sibling `../dot-map` or `$GS_MAP_DIR`.
+- **Finding things.** Callers find this checkout as the sibling `../gs-map-convert` or `$GSBSP_PATH` (or `$GS_MAP_CONVERT_PATH` for the tools). This converter finds the gs-map addon (assets, `io/catalogue.json`) through `gsbsp/paths.py`: sibling `../gs-map` or `$GS_MAP_DIR`.
 - **Output must not drift.** Changing a table or rule changes every regenerated manifest; prove a refactor with a `regen` before and after and compare hashes.
 - Mapping tables carry source, URL, author and licence per row; only CC0-1.0, MIT and public-domain replacements (`licence.check` refuses the rest).
 - Family conventions apply: short `##`/`#` comments that say why, markdown never hard-wrapped, no other game or engine named in public files.
 
 ## Checks
 
-Each suite is `python3 -P tests/test_<name>.py` from this directory (all of them are headless and need no maps; `DOTBSP_TEST_MAPS=<dir>` adds real ones). `tests/test_defs.py` needs the entity definition checkout only for its optional case. Run the suites that cover what you touched; run all of them once before committing.
+Each suite is `python3 -P tests/test_<name>.py` from this directory (all of them are headless and need no maps; `GSBSP_TEST_MAPS=<dir>` adds real ones). `tests/test_defs.py` needs the entity definition checkout only for its optional case. Run the suites that cover what you touched; run all of them once before committing.
 
 ## Not here
 
-`addons/dot_map/*.gd` (runtime), and the screenshot and bench helpers that need a Godot project (`dot-map/tools/`). `bake_textures.gd` is here but runs as `godot --path ../dot-map --script <abs path>`.
+`addons/gs_map/*.gd` (runtime), and the screenshot and bench helpers that need a Godot project (`gs-map/tools/`). `bake_textures.gd` is here but runs as `godot --path ../gs-map --script <abs path>`.

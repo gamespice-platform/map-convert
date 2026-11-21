@@ -18,7 +18,7 @@ checks the converted map, not the importer's own opinion of it. Per map it fails
     tools/check_playable.py -v               list every problem, not the first few per map
 
 This is the shared copy. A map repository runs it through its own tools/check_playable.py
-launcher, which finds dot-map-convert as `../dot-map-convert` or `$GS_MAP_CONVERT_PATH` and calls
+launcher, which finds gs-map-convert as `../gs-map-convert` or `$GS_MAP_CONVERT_PATH` and calls
 main(root=<repo>), the same way tools/build_provides.py is launched. Run directly, the
 repository is the current directory.
 
@@ -40,7 +40,7 @@ DEPTH = 4.0                 # a probe this far inside every face of a hull is st
 BOUNDS_SLACK = 64.0
 CELL = 512.0
 SAME = 2.0                  # two destinations this close are the same place
-DESTINATION_LIFT = 24.0     # dot-map-convert bsp_import.py: destinations sit this far above the authored point
+DESTINATION_LIFT = 24.0     # gs-map-convert bsp_import.py: destinations sit this far above the authored point
 DESTINED = ("TELEPORT", "STAGE", "START", "SPAWN")
 
 

@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                              # noqa: E402
-from dotbsp import environment, importer, licence, paths, props, reader, texturemap, textures  # noqa: E402
+from gsbsp import environment, importer, licence, paths, props, reader, texturemap, textures  # noqa: E402
 
 ENTS = [{"classname": "worldspawn", "skyname": "sky_day01"},
         {"classname": "light_environment", "origin": "0 0 100", "pitch": "-45", "angles": "0 90 0",
@@ -73,7 +73,7 @@ class Free(unittest.TestCase):
             self.assertIn(r["url"], credits)
 
     def test_carpet_and_snow_names_choose_a_photo(self):
-        from dotbsp import nearest
+        from gsbsp import nearest
         self.assertEqual(nearest.by_name("de_chateau/carpet01"), "carpet_grey")
         self.assertEqual(nearest.by_name("nature/snowfloor001"), "snow")
         self.assertIsNone(nearest.by_name("props/drugstore"))
@@ -87,7 +87,7 @@ class Free(unittest.TestCase):
 
 class Defects(unittest.TestCase):
     def test_skybox_model_is_recognised(self):
-        from dotbsp import standins
+        from gsbsp import standins
         self.assertFalse(standins.is_skybox("models/props/crate.mdl"))
         for ok in ("models/props/sky_scraper01.mdl", "models/props/de_sky_sign.mdl", "models/props/sky_cube.mdl"):
             self.assertFalse(standins.is_skybox(ok), ok)
@@ -95,7 +95,7 @@ class Defects(unittest.TestCase):
             self.assertTrue(standins.is_skybox(sky), sky)
 
     def test_size_classes_by_name(self):
-        from dotbsp import standins
+        from gsbsp import standins
         sz = standins.Sizes()
         small = {"props_junk/popcan01a.mdl": 0.13, "props_junk/garbage_can01a.mdl": None, "props_junk/trashcan01a.mdl": None,
                  "props_junk/bottle001a.mdl": 0.28, "props_junk/beach_ball01.mdl": None, "props_junk/wrecking_ball01.mdl": None,
@@ -106,7 +106,7 @@ class Defects(unittest.TestCase):
             self.assertEqual(sz.get(name), want, name)
 
     def test_shape_match_neutral_blocks_only(self):
-        from dotbsp import standins
+        from gsbsp import standins
         cat = standins.ShapeCatalogue()
         props_dir = os.path.join(paths.addon_dir(), "props")
         for cid in cat.dims:
@@ -120,14 +120,14 @@ class Defects(unittest.TestCase):
         self.assertIsNone(cat.match([0.1, 2.0, 1.9]))                # a wall decal
 
     def test_shape_match_turns_to_the_long_side(self):
-        from dotbsp import standins
+        from gsbsp import standins
         cat = standins.ShapeCatalogue()
         # crate_large is long on its z; after the viewer's 90 degrees that is the source's x
         self.assertEqual(cat.match([1.0, 0.5, 0.5]), ("crate_large", 0))
         self.assertEqual(cat.match([0.5, 0.5, 1.0]), ("crate_large", 1))
 
     def test_a_library_placement_carries_its_measured_box(self):
-        from dotbsp import standins
+        from gsbsp import standins
         k = 1 / 0.01905
         packed = {"models/x/shelf.mdl": {"size": [1.0, 1.5, 0.4], "centre": [0.0, 0.75, 0.0], "min": [-0.5, 0.0, -0.2]}}
         pick = {"stand_in": "lib/ph_shelf", "turns": 0, "size": 1.5, "centre": [0.0, 0.0, 0.0], "base": 0.0, "row": None}
@@ -142,7 +142,7 @@ class Defects(unittest.TestCase):
         self.assertNotIn("bounds", stock)                            # no measure anywhere: nothing to draw
 
     def test_a_thing_resting_on_a_packed_model_gets_a_block_of_its_size(self):
-        from dotbsp import standins
+        from gsbsp import standins
         k = 1 / 0.01905
         # a 1.8 x 0.7 x 0.6 m table at the origin (its z runs 0 to -0.6), a bottle on top, a bottle on the floor
         packed = {"models/x/tbl.mdl": {"size": [1.8, 0.7, 0.6], "centre": [0.0, 0.35, -0.3], "min": [-0.9, 0.0, -0.6]}}
@@ -158,7 +158,7 @@ class Defects(unittest.TestCase):
         self.assertEqual(standins._support_boxes(far, packed, None, 0.01905, 0.0), [])
 
     def test_natural_stand_ins_take_a_packed_models_size_and_base(self):
-        from dotbsp import standins
+        from gsbsp import standins
         tree = {"size": [11.0, 5.0, 8.8], "min": [-7.5, 0.0, -4.7]}
         rec = {"stand_in": "tree", "at": [1.0, 2.0, 3.0]}
         standins._fit_natural(rec, tree, None)
@@ -183,7 +183,7 @@ class Defects(unittest.TestCase):
         self.assertEqual(sz.get("props/banana01.mdl"), 0.1)
 
     def test_carparts_have_sizes(self):
-        from dotbsp import standins
+        from gsbsp import standins
         sz, fm = standins.Sizes(), standins.models()
         self.assertEqual(sz.get("props_vehicles/carparts_wheel01a.mdl"), 0.8)
         self.assertEqual(fm.get("props_vehicles/carparts_wheel01a")["stand_in"], "barrel")
@@ -191,7 +191,7 @@ class Defects(unittest.TestCase):
         self.assertEqual(fm.get("props_vehicles/car001a")["stand_in"], "vehicles/sedan")
 
     def test_junk_and_light_names_have_stand_ins_and_effects_are_left_out(self):
-        from dotbsp import standins
+        from gsbsp import standins
         fm, sz = standins.models(), standins.Sizes()
         self.assertEqual(fm.get("props_junk/glassbottle01a.mdl")["stand_in"], "pirate/bottle")
         self.assertEqual(fm.get("props/de_nuke/wall_light.mdl")["stand_in"], "ceiling_light")
@@ -204,7 +204,7 @@ class Defects(unittest.TestCase):
         self.assertFalse(standins.is_detail("props_vents/vent_medium_grill002.mdl"))   # an own CC0 vent model since 8c11a4b
 
     def test_measured_block_for_a_packed_model_no_stand_in_fits(self):
-        from dotbsp import standins
+        from gsbsp import standins
         self.assertTrue(standins._box_ok("models/propper/x/widget.mdl", [0.3, 0.6, 0.4]))
         self.assertFalse(standins._box_ok("models/propper/x/ceilinglamp.mdl", [0.3, 0.6, 0.4]))    # hung: would shade the room
         self.assertFalse(standins._box_ok("models/propper/x/poster.mdl", [1.2, 0.8, 0.01]))        # a decal
@@ -215,7 +215,7 @@ class Defects(unittest.TestCase):
         self.assertAlmostEqual(rec["at"][1], 50 * 0.01905 + 0.3, 3)
 
     def test_unmeasured_stock_debris_is_not_drawn(self):
-        from dotbsp import standins
+        from gsbsp import standins
         self.assertTrue(standins.UNMEASURED_DEBRIS.search("models/props_debris/walldestroyed08a.mdl"))
         self.assertFalse(standins.UNMEASURED_DEBRIS.search("models/props_c17/oildrum001a.mdl"))
 
@@ -266,7 +266,7 @@ class Import(unittest.TestCase):
 
     def test_pak_view_reads_a_zip_in_place(self):
         import io, zipfile
-        from dotbsp import reader
+        from gsbsp import reader
         b = io.BytesIO()
         with zipfile.ZipFile(b, "w") as z:
             z.writestr("a.vmt", "x" * 50)
@@ -277,7 +277,7 @@ class Import(unittest.TestCase):
         self.assertEqual(z.read("b.mdl"), b"y" * 50)
 
     def test_hard_models_have_stand_ins_or_are_left_out(self):
-        from dotbsp import standins
+        from gsbsp import standins
         fm = standins.models()
         for name, want in (("props/de_piranesi/pi_apc.mdl", "vehicles/truck"), ("spongebob/ketchup.mdl", "food/bottle-ketchup"),
                            ("johny-srka/arcade_machine.mdl", "arcade/arcade-machine"), ("props_c17/trappropeller_engine.mdl", "space/machine_generator"),
@@ -288,7 +288,7 @@ class Import(unittest.TestCase):
             self.assertTrue(standins.is_detail(name), name)
 
     def test_model_and_sound_stand_ins_are_free_and_exist(self):
-        from dotbsp import standins
+        from gsbsp import standins
         root = paths.addon_dir()
         m, s = standins.models(), standins.sounds()
         self.assertEqual(m.get("props/cs_office/sofa.mdl")["stand_in"], "sofa")
@@ -305,12 +305,12 @@ class Import(unittest.TestCase):
                     self.assertTrue(os.path.exists(os.path.join(root, "sounds", row["stand_in"] + ".ogg")), row["stand_in"])
 
     def test_unset_hdr_colour_is_absent(self):
-        from dotbsp import environment
+        from gsbsp import environment
         self.assertIsNone(environment._colour("-1 -1 -1 1"))
         self.assertEqual(environment._colour("255 0 0 200"), [1.0, 0.0, 0.0, 200.0])
 
     def test_unmapped_texture_goes_to_the_nearest_photo(self):
-        from dotbsp import nearest
+        from gsbsp import nearest
         table = licence.load()
         self.assertEqual(nearest.nearest("custom/brickwall12", None), ("brick", "name"))
         self.assertEqual(nearest.nearest("zz/dawall_07", [0.97, 0.97, 0.96])[1], "colour")

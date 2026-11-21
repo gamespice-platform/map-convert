@@ -23,7 +23,7 @@ class RegenWorldsSource(unittest.TestCase):
             f.write(FAKE_BSP)
         for name in sources:
             open(os.path.join(repo, "sources", name), "w").close()
-        env = dict(os.environ, DOTBSP_PATH=fake, HEAVY="", TMPDIR=d)
+        env = dict(os.environ, GSBSP_PATH=fake, HEAVY="", TMPDIR=d)
         p = subprocess.run(["bash", SCRIPT, repo] + ids, env=env, capture_output=True, text=True)
         calls = os.path.join(fake, "calls.log")
         log = open(calls).read() if os.path.exists(calls) else ""

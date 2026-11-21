@@ -13,7 +13,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import storecheck  # noqa: E402
+from gsbsp import storecheck  # noqa: E402
 
 
 def publish(dist, sid, version, files, deps=()):

@@ -12,7 +12,7 @@ import zlib
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import mdl, models, vtf  # noqa: E402
+from gsbsp import mdl, models, vtf  # noqa: E402
 
 # A triangle 100 x 50 source units standing on its base, facing +x (normal +x).
 POINTS = [(0, 0, 0), (0, 100, 0), (0, 0, 50)]
@@ -207,7 +207,7 @@ class Reach(unittest.TestCase):
         self.assertEqual(bsp3.reads, 1)
 
     def test_packed_model_gets_a_shaped_stand_in(self):
-        from dotbsp import standins
+        from gsbsp import standins
         bsp = self.bsp()
         packed = models.measure(bsp)
         shaped = standins.shape_matches(bsp, packed=packed)

@@ -7,9 +7,9 @@ import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 
-from dotbsp import docboxes  # noqa: E402
+from gsbsp import docboxes  # noqa: E402
 
 
 def deck_and_pit():
@@ -62,7 +62,7 @@ class JoinSpawns(unittest.TestCase):
         self.assertTrue(abs(x - 3.5) >= half_x or abs(z) >= half_z, "outside the turned bed and a person's room around it: %s" % [x, z])
 
     def test_terrain_counts_as_floor(self):
-        from dotbsp import terrain
+        from gsbsp import terrain
         d = deck_and_pit()
         d["boxes"] = d["boxes"][1:]
         hf = terrain.Heightfield(-10.0, -10.0, 1.0, 21, 21, [3.0] * (21 * 21))

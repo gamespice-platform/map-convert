@@ -1,4 +1,4 @@
-"""dotbsp.sourceframe and tools/audit_maps.py's use of it. Run: python3 -P tests/test_source_frame.py (needs numpy, as the audit runner does)"""
+"""gsbsp.sourceframe and tools/audit_maps.py's use of it. Run: python3 -P tests/test_source_frame.py (needs numpy, as the audit runner does)"""
 
 import importlib.util
 import json
@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                   # noqa: E402
-from dotbsp import audit, sourceframe, units  # noqa: E402
+from gsbsp import audit, sourceframe, units  # noqa: E402
 
 BOXES = ((0, 0, 0, 256, 256, 16), (0, 0, 16, 64, 64, 48), (600, 0, 0, 856, 256, 16))
 SHIFT = (3.5, 0.75, -2.25)      # what an importer subtracted, game metres

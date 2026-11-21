@@ -2,7 +2,7 @@
 
     heavy -- python3 -P defs/build.py [--defs DIR] [--maps DIR] [--out FILE] [--check]
 
-Inputs live outside the repository (`$DOTBSP_DEFS`, default `~/mapsrc/defs`, holding the
+Inputs live outside the repository (`$GSBSP_DEFS`, default `~/mapsrc/defs`, holding the
 definition-file tree and `../dumps/<game>/dump_*.txt`). Only derived facts are written: class
 names, key names with type, default and choice values, input and output names. Descriptions,
 display names and the files themselves are never copied; the definition set carries no licence.
@@ -329,7 +329,7 @@ def scan_maps(root):
     content store; identical files count once.
     """
     import hashlib
-    from dotbsp import reader
+    from gsbsp import reader
     counts, bad, seen = {}, 0, set()
     for dp, dn, fn in os.walk(root):
         dn[:] = sorted(d for d in dn if not (dp == root and d in ("defs", "dumps", "store", "tools")))
@@ -410,7 +410,7 @@ def dumps_json(doc):
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--defs", default=os.environ.get("DOTBSP_DEFS", os.path.expanduser("~/mapsrc/defs")))
+    ap.add_argument("--defs", default=os.environ.get("GSBSP_DEFS", os.path.expanduser("~/mapsrc/defs")))
     ap.add_argument("--maps", default=os.path.expanduser("~/mapsrc"), help="directory of bsp files to scan ('' to skip)")
     ap.add_argument("--out", default=os.path.normpath(ROOT))
     ap.add_argument("--check", action="store_true", help="fail when --out differs from a fresh build")

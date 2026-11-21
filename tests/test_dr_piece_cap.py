@@ -6,7 +6,7 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 sys.path.insert(0, ROOT)
 GAME_TOOLS = os.path.join(os.path.expanduser("~"), "godot", "mg-deathrun-maps", "tools")  # bsp_read lives in the game repo
 if not os.path.isdir(GAME_TOOLS):

@@ -11,7 +11,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import licence, pbrmap  # noqa: E402
+from gsbsp import licence, pbrmap  # noqa: E402
 
 MANIFEST = "\n".join([
     "#h",

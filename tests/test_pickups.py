@@ -1,5 +1,5 @@
 """movers.pickups' tests: a source's weapon_*, item_* and ammo_* entities as the dictionaries
-dot-weapon's GSWeaponSpawner.add_entities takes. Run: python3 -P tests/test_pickups.py"""
+gs-weapon's GSWeaponSpawner.add_entities takes. Run: python3 -P tests/test_pickups.py"""
 
 import os
 import sys
@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                  # noqa: E402
-from dotbsp import movers, reader, units      # noqa: E402
+from gsbsp import movers, reader, units      # noqa: E402
 
 
 def load(*extra):

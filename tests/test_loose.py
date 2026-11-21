@@ -7,7 +7,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import loose  # noqa: E402
+from gsbsp import loose  # noqa: E402
 
 S = 0.01905
 

@@ -1,12 +1,12 @@
 # Entity classes, and what the importer makes of each
 
-Every entity class found in 200 community maps (measured 2026-10-23 over the 105 readable maps in the lossless store, 296 classes counting `prop_static`), what it is in the original engine, and what `dotbsp` makes of it. The table is written from `dotbsp/classes.py` by `python3 -P bsp.py classes --markdown <maps...>`, so a change goes there and this file is regenerated, never edited by hand. `bsp.py mesh` prints what became of every entity of the map it converts and fails on a class with no row and no prefix rule.
+Every entity class found in 200 community maps (measured 2026-10-23 over the 105 readable maps in the lossless store, 296 classes counting `prop_static`), what it is in the original engine, and what `gsbsp` makes of it. The table is written from `gsbsp/classes.py` by `python3 -P bsp.py classes --markdown <maps...>`, so a change goes there and this file is regenerated, never edited by hand. `bsp.py mesh` prints what became of every entity of the map it converts and fails on a class with no row and no prefix rule.
 
 What a class becomes:
 
-- `world`: geometry, drawn and solid (`dotbsp/mesh.py`), like any world brush.
+- `world`: geometry, drawn and solid (`gsbsp/mesh.py`), like any world brush.
 - `drawn`: geometry, drawn and never solid.
-- `mover`: geometry that moves: a record in the mesh manifest's `movers` (what moves, which way, how far, how fast, what starts it, and the outputs that drive it) beside its model's surfaces and hulls (`dotbsp/movers.py`).
+- `mover`: geometry that moves: a record in the mesh manifest's `movers` (what moves, which way, how far, how fast, what starts it, and the outputs that drive it) beside its model's surfaces and hulls (`gsbsp/movers.py`).
 - `volume`: a brush a body is affected by inside: the manifest's `volumes` (multiple, once, teleport, push, hurt, gravity, water, ladder) with each brush's planes; never drawn.
 - `point`: a point entity a game uses as it is: spawns, lights, the sun, fog, the 3D sky, props, sounds, decals, effect positions (the intermediate's `entities`, `lights`, `spawns`, `static_props`).
 - `data`: kept verbatim in the intermediate's entity list (map logic, paths, filters). Nothing runs it: a converter is not a scripting engine. The one exception is an output that drives a mover (`button -> door,Open`), which `movers` records as `opened_by`, because a button that opens a door and a lift is what the escape and zombie maps are built around.
@@ -20,10 +20,10 @@ What a class becomes:
 | Displacements (terrain) | `mesh` surfaces flagged `displacement`, collided as triangles |
 | `func_illusionary`, `func_brush`, `func_wall`, breakables, doors, buttons | `mesh` surfaces of their model, offset by the entity origin; hidden ones (`rendermode 10`, alpha 0, a func_brush that starts disabled) are not drawn |
 | `sky_camera` and its room (the 3D skybox) | the room's faces are moved out and scaled up around the world origin as the engine draws them, flagged `sky3d`, never solid (`mesh.skybox_of`) |
-| `light`, `light_spot`, `light_environment`, `env_sun`, `shadow_control` | the intermediate's `lights` and the sun (`dotbsp/lights.py`) |
+| `light`, `light_spot`, `light_environment`, `env_sun`, `shadow_control` | the intermediate's `lights` and the sun (`gsbsp/lights.py`) |
 | `env_fog_controller`, `env_tonemap_controller`, `color_correction`, `water_lod_control` | `point` data a game reads for its environment; colour-grade lookup files are the source's own and never shipped |
 | Water (`func_water_analog`, water-content brushes) | drawn as their surfaces (`water` flag) and a `water` volume |
-| Static props, `prop_*` | `point` data; models are studied, a game places its own (`dotbsp/props.py` matches them) |
+| Static props, `prop_*` | `point` data; models are studied, a game places its own (`gsbsp/props.py` matches them) |
 | `infodecal`, overlays | `point` data; their materials are replaced like any texture |
 | `env_cubemap` | `point` data (reflection probe positions) |
 | `func_areaportal`, `func_occluder` | dropped: visibility hints; the renderer culls on its own |

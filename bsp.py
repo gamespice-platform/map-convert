@@ -15,13 +15,13 @@
             [--map-rules FILE] [--ratchet] [--baseline FILE] [--coverage FILE] [--root R]
     python3 -P bsp.py store <dir | file>... [--root R] [--game G] [credit flags] | store --check | store --scripts
 
-`mesh` writes the full geometry (`<prefix>.json` + `<prefix>.bin`, dotbsp/mesh.py) with the
-movers, volumes and teleport destinations (dotbsp/movers.py) and what became of every entity
-(dotbsp/classes.py) in the manifest; it fails (3) on an entity class nobody decided about
+`mesh` writes the full geometry (`<prefix>.json` + `<prefix>.bin`, gsbsp/mesh.py) with the
+movers, volumes and teleport destinations (gsbsp/movers.py) and what became of every entity
+(gsbsp/classes.py) in the manifest; it fails (3) on an entity class nobody decided about
 unless `--allow-unknown`, and `--coverage` samples the source against what was written.
 `audit` counts every brush by owner class and CONTENTS kind and asks the converted output (a
 mesh's hulls or a document's boxes) for each player-solid one and for ground under every exposed
-floor (dotbsp/audit.py); it fails (1) when either share lost is over `--max-loss`.
+floor (gsbsp/audit.py); it fails (1) when either share lost is over `--max-loss`.
 `classes` prints each class's treatment over the maps given, or the whole table; `--keys` reports each map's keys, outputs and inputs against the class catalogue, with the runtime component of each class.
 
 `convert` writes the intermediate JSON (README.md, "The intermediate") that every game's
@@ -37,7 +37,7 @@ import os
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from dotbsp import bundle, licence, pbrmap, propaudit, modeldims, modelmap, modelparts, standinreport, storepack, storecheck, audit, classes, regen, units, docboxes, environment, gma, importer, intermediate, mesh, movers, reader, sources, store, terrain, texturemap, texquality, unconverted  # noqa: E402
+from gsbsp import bundle, licence, pbrmap, propaudit, modeldims, modelmap, modelparts, standinreport, storepack, storecheck, audit, classes, regen, units, docboxes, environment, gma, importer, intermediate, mesh, movers, reader, sources, store, terrain, texturemap, texquality, unconverted  # noqa: E402
 
 
 def _credit(args):
@@ -131,7 +131,7 @@ def cmd_mesh(args):
             cv["drawn"], cv["drawn_samples"], cv["solid"], cv["solid_samples"], sl["top"]["kept"],
             sl["side_x"]["kept"], sl["side_z"]["kept"]))
     if report["unknown"]:
-        print("  undecided classes (add a row to dotbsp/classes.py): %s" % ", ".join(
+        print("  undecided classes (add a row to gsbsp/classes.py): %s" % ", ".join(
             "%s %d" % kv for kv in sorted(report["unknown"].items())), file=sys.stderr)
         if not args.allow_unknown:
             return 3
@@ -155,7 +155,7 @@ def cmd_audit(args):
         if doc.get("world_collision") and args.world:
             # the game collides with these hulls of the world pack as well as the boxes
             out = audit.Union(out, audit.Hulls(audit.collision_hulls(mesh.read(args.world)[1].hulls, doc["world_collision"])))
-        # a box document stands still: the world and the classes dot-map treats as world collide
+        # a box document stands still: the world and the classes gs-map treats as world collide
         classes_of = lambda c: c == "worldspawn" or (classes.treatment(c)[0] == "world" and c not in args.passable)  # noqa: E731
     r = audit.audit(bsp, out, scale, y0, classes_of, keep=audit.region(args.within, args.band, args.skip),
                     skip_entity=None if args.mesh else docboxes.entity_starts_hidden)
@@ -206,7 +206,7 @@ def cmd_import(args):
 
 def cmd_classes_keys(args):
     """Per map: the keys, outputs and inputs the class catalogue lacks, and the component of each class."""
-    from dotbsp import coverage
+    from gsbsp import coverage
     rc = 0
     for s in sources.find(args.paths):
         try:
@@ -400,11 +400,11 @@ def main(argv):
     lst.add_argument("--queue", action="store_true", help="leave out maps already converted")
     um = sub.add_parser("unmapped", help="textures that hit no row of source_textures.tsv, with face counts")
     um.add_argument("paths", nargs="+")
-    um.add_argument("--table", help="another table than dotbsp/source_textures.tsv")
+    um.add_argument("--table", help="another table than gsbsp/source_textures.tsv")
     um.add_argument("--top", type=int, default=0, help="only the N most-used")
     um.add_argument("--json", action="store_true")
     um.add_argument("--strict", action="store_true", help="exit 1 when anything is unmapped")
-    me = sub.add_parser("mesh", help="one map's full geometry, movers and volumes (dotbsp/mesh.py)")
+    me = sub.add_parser("mesh", help="one map's full geometry, movers and volumes (gsbsp/mesh.py)")
     me.add_argument("bsp")
     me.add_argument("--out", required=True, help="prefix: writes <prefix>.json and <prefix>.bin")
     me.add_argument("--member")
@@ -416,18 +416,18 @@ def main(argv):
     me.add_argument("--y0", type=float, default=0.0, help="metres subtracted from every height")
     me.add_argument("--coverage", action="store_true", help="sample the source against the output (slow on big maps)")
     me.add_argument("--allow-unknown", action="store_true", help="do not fail on an undecided entity class")
-    tq = sub.add_parser("texquality", help="pixels per metre of every replaced texture set of a converted map, worst first (dotbsp/texquality.py)")
-    tq.add_argument("mesh", help="a dot-bsp-mesh prefix")
+    tq = sub.add_parser("texquality", help="pixels per metre of every replaced texture set of a converted map, worst first (gsbsp/texquality.py)")
+    tq.add_argument("mesh", help="a gs-bsp-mesh prefix")
     tq.add_argument("--json")
     tq.add_argument("--top", type=int, default=15)
     tq.add_argument("--target", type=float, default=256.0)
     tq.add_argument("--dense", type=float, default=1024.0, help="px per metre over which a set counts as too dense")
     tq.add_argument("--store", help="a PBR store (<id>/<tier>/albedo.webp): real slice widths; a set missing from it counts as the 64 px fallback")
     tq.add_argument("--fail-below", action="store_true", help="exit 1 when any set is under the target")
-    au = sub.add_parser("audit", help="every brush and floor of the source against a converted output (dotbsp/audit.py)")
+    au = sub.add_parser("audit", help="every brush and floor of the source against a converted output (gsbsp/audit.py)")
     au.add_argument("bsp")
     au.add_argument("--member")
-    au.add_argument("--mesh", help="a dot-bsp-mesh prefix (its hulls)")
+    au.add_argument("--mesh", help="a gs-bsp-mesh prefix (its hulls)")
     au.add_argument("--doc", help="a document with `boxes` (metres, Godot axes)")
     au.add_argument("--y0", type=float, default=0.0, help="the document's y0 (a mesh carries its own)")
     au.add_argument("--scale", default="visual")
@@ -443,7 +443,7 @@ def main(argv):
     im = sub.add_parser("import", help="raw import outside the repo, then the licence pass into --out")
     im.add_argument("bsp")
     im.add_argument("--game", required=True, help="the game's folder under the raw root (zz, pg, ...)")
-    im.add_argument("--raw-root", default=None, help="default $DOTBSP_RAW_ROOT or ~/mapsrc; the raw import is <root>/<game>/raw/<map>/")
+    im.add_argument("--raw-root", default=None, help="default $GSBSP_RAW_ROOT or ~/mapsrc; the raw import is <root>/<game>/raw/<map>/")
     im.add_argument("--out", help="prefix of the shipped map; omit to store only the raw import")
     im.add_argument("--pak", action="store_true", help="also extract the packed vmt/vtf/sound files into the raw store")
     im.add_argument("--member")
@@ -460,9 +460,9 @@ def main(argv):
     uc = sub.add_parser("unconverted", help="per map: entity classes nothing converts, against rules/unconverted_ignore.tsv; exit 6 for one not on it")
     uc.add_argument("paths", nargs="+")
     uc.add_argument("--ignore", help="the ignore list; default rules/unconverted_ignore.tsv")
-    st = sub.add_parser("store", help="copy maps into the lossless store (dotbsp/store.py), or --check it")
+    st = sub.add_parser("store", help="copy maps into the lossless store (gsbsp/store.py), or --check it")
     st.add_argument("paths", nargs="*")
-    st.add_argument("--root", help="default $DOTBSP_STORE or ~/mapsrc/store")
+    st.add_argument("--root", help="default $GSBSP_STORE or ~/mapsrc/store")
     st.add_argument("--check", action="store_true", help="rebuild every document from its source.bsp and compare")
     st.add_argument("--game")
     st.add_argument("--audit", action="store_true", help="list entries with an empty author, page, licence or no_share_check, and licence terms that restrict reuse; exit 1 only on a no_share_check of `forbidden`")
@@ -474,7 +474,7 @@ def main(argv):
     rg = sub.add_parser("regen", help="rebuild a map from its store entry and the rule tiers, with a coverage report")
     rg.add_argument("entry", help="a store hash (prefix) or <game>/<map>")
     rg.add_argument("--out", required=True, help="prefix: writes <prefix>.json, .bin, .coverage.json")
-    rg.add_argument("--root", help="the store; default $DOTBSP_STORE or ~/mapsrc/store")
+    rg.add_argument("--root", help="the store; default $GSBSP_STORE or ~/mapsrc/store")
     rg.add_argument("--addon-rules", action="append", metavar="DIR|FILE", help="an addon's tier (repeatable)")
     rg.add_argument("--game-rules", metavar="DIR|FILE", help="the game's tier, <maps repo>/tools/convert")
     rg.add_argument("--map-rules", metavar="FILE", help="the map's tier, tools/convert/maps/<id>.json")
@@ -484,14 +484,14 @@ def main(argv):
     rg.add_argument("--catalogue", help="the class catalogue; default rules/entity_defs.json")
     rg.add_argument("--orig-textures", action="store_true", help="also write the map's own textures (pakfile, then installed base games) under textures/orig and name them per surface; only for a <map>_orig pack (the unedited original variant; the owner decides where it is published, never a public repo)")
     rg.add_argument("--orig-max-side", type=int, default=0, metavar="PX", help="with --orig-textures: the largest texture side to ship (the largest mip that fits); 0, the default, ships each texture at full size")
-    rg.add_argument("--orig-models", action="store_true", help="internal `_orig` packs only: the map's own models (pakfile, --orig-content, installed base games) converted and placed in place of the stand-ins (dotbsp.origmodels)")
+    rg.add_argument("--orig-models", action="store_true", help="internal `_orig` packs only: the map's own models (pakfile, --orig-content, installed base games) converted and placed in place of the stand-ins (gsbsp.origmodels)")
     rg.add_argument("--orig-content", action="append", metavar="DIR", help="with --orig-models: a folder holding the map's loose models/ and materials/ (a workshop addon unpacked); repeatable")
     rg.add_argument("--name")
     rg.add_argument("--scale", default="visual")
     rg.add_argument("--y0", type=float, default=0.0)
     rg.add_argument("--crop", metavar="x0,z0,x1,z1[,ymin,ymax]", help="output metres: leave out every face, hull, brush model, prop, entity, lightmap block and the 3D sky centred outside it, so a source map larger than the playable area is reduced to it")
     rg.add_argument("--no-pbr", action="store_true", help="leave out the PBR library tier (rules/pbr)")
-    rg.add_argument("--no-omit", action="store_true", help="no-omission mode: place every model, none left out as detail or sky dressing, the 3D sky room's models moved out and scaled up with its faces (dotbsp/standins.py NO_OMIT), and draw the overlays and detail grass (--overlays --detail); off by default")
+    rg.add_argument("--no-omit", action="store_true", help="no-omission mode: place every model, none left out as detail or sky dressing, the 3D sky room's models moved out and scaled up with its faces (gsbsp/standins.py NO_OMIT), and draw the overlays and detail grass (--overlays --detail); off by default")
     rg.add_argument("--overlays", action="store_true", help="draw the info_overlay decals (the overlays lump), cut to their faces, in their texture rows' looks; on with --no-omit, off by default")
     rg.add_argument("--detail", action="store_true", help="draw the detail grass (the dprp game lump's sprites) as crossed cards in the worldspawn's detailmaterial; on with --no-omit, off by default")
     rg.add_argument("--no-sky-detail", action="store_true", help="with --detail or --no-omit, leave out the detail sprites in the 3D skybox room (scaled up with it they are cards metres wide); counted as skipped detail:sky")
@@ -503,7 +503,7 @@ def main(argv):
     pm.add_argument("--library", help="the library's materials folder; default $GS_ART_LIBRARY or ~/art-library/materials")
     pm.add_argument("--out", help="the tier directory to write; default rules/pbr")
     md = sub.add_parser("modeldims", help="count every placed model over the store and write its size (rules/models/model_dims.tsv, ranking.tsv)")
-    md.add_argument("--root", help="the store; default $DOTBSP_STORE or ~/mapsrc/store")
+    md.add_argument("--root", help="the store; default $GSBSP_STORE or ~/mapsrc/store")
     md.add_argument("--game-vpk", help="a game directory's <name>_dir.vpk: the size of a stock model no map packs is read from its header")
     md.add_argument("--maps", action="append", help="count only these store keys (or key prefixes such as playlot/); repeatable")
     md.add_argument("--add", action="store_true", help="keep every row the tables in --out have and append the models they lack")
@@ -512,7 +512,7 @@ def main(argv):
     md.add_argument("--out", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "rules", "models"))
     mp = sub.add_parser("modelparts", help="one own block per connected piece of a combined model (rules/models/model_parts.tsv)")
     mp.add_argument("--models", required=True, help="a file of the models to split (one per line, as a coverage report lists them)")
-    mp.add_argument("--root", help="the store; default $DOTBSP_STORE or ~/mapsrc/store")
+    mp.add_argument("--root", help="the store; default $GSBSP_STORE or ~/mapsrc/store")
     mp.add_argument("--maps", action="append", help="read only these store keys (or key prefixes such as playlot/); repeatable")
     mp.add_argument("--content", action="append", help="a folder of loose addon content (models/, materials/) a map ships beside its bsp; repeatable")
     mp.add_argument("--weld", type=float, default=0.1, help="source units within which vertices count as one (0: exact)")
@@ -524,36 +524,36 @@ def main(argv):
     mm.add_argument("--only", help="a file of models (one per line): pick only these and keep every other picks.tsv row unchanged")
     mm.add_argument("--no-omit", action="store_true", help="pick skybox and detail models too (the default leaves them out); for maps converted with regen --no-omit")
     mm.add_argument("--report", help="write the models that got a generated stand-in (reason, instances, model, size) to this file")
-    si = sub.add_parser("standins", help="models of shipped worlds still drawn by a stand-in that is not an equal-quality free model, ranked by use (dotbsp/standinreport.py)")
+    si = sub.add_parser("standins", help="models of shipped worlds still drawn by a stand-in that is not an equal-quality free model, ranked by use (gsbsp/standinreport.py)")
     si.add_argument("paths", nargs="+", help="converted world manifests or folders of them")
     si.add_argument("--top", type=int, default=40)
     si.add_argument("--tiers", default="placeholder,generated,kenney", help="tiers to list: free,kenney,generated,placeholder")
     si.add_argument("--json", action="store_true")
     si.add_argument("--strict", action="store_true", help="exit 1 while a model of the listed tiers remains")
-    sp = sub.add_parser("storepack", help="publish the PBR sets and models maps draw as dot-cloud slices (dotbsp/storepack.py)")
+    sp = sub.add_parser("storepack", help="publish the PBR sets and models maps draw as gs-cloud slices (gsbsp/storepack.py)")
     sp.add_argument("packs", nargs="+", help="a map pack folder (or its manifest.json), regenerated with its stores beside it")
     sp.add_argument("--out", required=True, help="the Godot project folder the slices are built and imported in")
     sp.add_argument("--dist", required=True, help="where the published packs go")
-    sp.add_argument("--owner", default="gamemann", help="dot-cloud id owner segment (the site username)")
+    sp.add_argument("--owner", default="gamemann", help="gs-cloud id owner segment (the site username)")
     sp.add_argument("--prefix", default="store-", help="slice name prefix")
-    sp.add_argument("--key", help="signing key for dot-cloud publish")
-    sp.add_argument("--cloud", default=os.path.expanduser("~/godot/dot-cloud"), help="the dot-cloud checkout")
+    sp.add_argument("--key", help="signing key for gs-cloud publish")
+    sp.add_argument("--cloud", default=os.path.expanduser("~/godot/gs-cloud"), help="the gs-cloud checkout")
     sp.add_argument("--godot", help="the engine binary")
     sp.add_argument("--combined", action="store_true", help="one slice for all the packs instead of one each")
     sp.add_argument("--shared", type=int, default=8, help="per map, how many of its biggest groups of items drawn by the same maps become shared slices (0: one self-contained slice per map)")
     sp.add_argument("--lossless", action="store_true", help="import textures lossless instead of VRAM-compressed")
     sp.add_argument("--burnt", help="a file of id@version slice names the site refuses (FAILED uploads); those slices and their dependents get new versions")
     sp.add_argument("--dry-run", action="store_true", help="build the slice folders and stop")
-    bu = sub.add_parser("bundle", help="copy world folders with exactly the library models they draw into a pack (dotbsp/bundle.py)")
+    bu = sub.add_parser("bundle", help="copy world folders with exactly the library models they draw into a pack (gsbsp/bundle.py)")
     bu.add_argument("worlds", nargs="+", help="converted world folders")
     bu.add_argument("--out", required=True, help="the folder that gets one <id>/ per world")
     bu.add_argument("--store", help="the model store; default each manifest's licence.model_store")
     bu.add_argument("--strict", action="store_true", help="exit 1 when a model file is missing")
-    sk = sub.add_parser("storecheck", help="every art slice a world names is published and holds what the manifest draws (dotbsp/storecheck.py)")
+    sk = sub.add_parser("storecheck", help="every art slice a world names is published and holds what the manifest draws (gsbsp/storecheck.py)")
     sk.add_argument("manifests", nargs="+", help="a world pack's manifest json")
     sk.add_argument("--dist", help="a storepack --dist folder to read the signed slice manifests from")
     sk.add_argument("--origin", help="a published origin (https://content.gamespice.net) to read them from")
-    sa = sub.add_parser("smallalbedo", help="add a small albedo per PBR set to converted packs, drawn when the store slices are missing (dotbsp/licence.py)")
+    sa = sub.add_parser("smallalbedo", help="add a small albedo per PBR set to converted packs, drawn when the store slices are missing (gsbsp/licence.py)")
     sa.add_argument("manifests", nargs="+", help="a pack's manifest json")
     sa.add_argument("--pbr-store", help="the PBR store; default the manifest's licence.pbr_store")
     sa.add_argument("--px", type=int, default=licence.SMALL_PX, help="side in pixels (default %d)" % licence.SMALL_PX)

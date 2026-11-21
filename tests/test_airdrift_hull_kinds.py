@@ -1,5 +1,5 @@
 """The game-airdrift importer writes a kind per collision hull (collision.hull_kinds), from the same rule the drawn mesh uses.
-Run: python3 -I tests/test_airdrift_hull_kinds.py   (DOTBSP_TEST_MAPS=<dir of .bsp> adds real maps)
+Run: python3 -I tests/test_airdrift_hull_kinds.py   (GSBSP_TEST_MAPS=<dir of .bsp> adds real maps)
 """
 
 import os
@@ -13,7 +13,7 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "adapters", "game-airdrift"))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, HERE)
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 for READER in (os.environ.get("AIRDRIFT_TOOLS", "") or os.environ.get("G2G_TOOLS", ""),
                os.path.join(os.path.dirname(ROOT), "game-airdrift", "tools"),
                "/home/gamedev/godot/game-airdrift/tools"):
@@ -25,7 +25,7 @@ try:
 except ModuleNotFoundError as err:
     raise unittest.SkipTest("bsp_read not found (set AIRDRIFT_TOOLS): %s" % err)
 import synth  # noqa: E402
-from dotbsp import materials  # noqa: E402
+from gsbsp import materials  # noqa: E402
 
 MATS = ("dev/dev_measuregeneric01", "metal/chainlink_fence01", "TOOLS/TOOLSSKYBOX", "TOOLS/TOOLSPLAYERCLIP")
 
@@ -85,10 +85,10 @@ class Import(unittest.TestCase):
         self.assertEqual({k: len(v) for k, v in mixed["hull_kinds"].items()}, {"fence": 1})
 
 
-@unittest.skipUnless(os.environ.get("DOTBSP_TEST_MAPS"), "DOTBSP_TEST_MAPS not set")
+@unittest.skipUnless(os.environ.get("GSBSP_TEST_MAPS"), "GSBSP_TEST_MAPS not set")
 class RealMaps(unittest.TestCase):
     def test_counts_match_the_blob(self):
-        d = os.environ["DOTBSP_TEST_MAPS"]
+        d = os.environ["GSBSP_TEST_MAPS"]
         found = [f for f in sorted(os.listdir(d)) if f.lower().endswith(".bsp")][:3]
         self.assertTrue(found)
         for f in found:

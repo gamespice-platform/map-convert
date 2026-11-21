@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the gameplay-fidelity audit (`dotbsp/fidelity.py`) over many maps and total it.
+"""Run the gameplay-fidelity audit (`gsbsp/fidelity.py`) over many maps and total it.
 
     python3 -P tools/fidelity_audit.py OUT.json MAP_OR_DIR [...] [--jobs N] [--md OUT.md]
 
@@ -19,7 +19,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dotbsp import fidelity, reader  # noqa: E402
+from gsbsp import fidelity, reader  # noqa: E402
 
 # Entity classes counted per category for the other-mappable-categories table.
 CATEGORIES = {

@@ -7,7 +7,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path[:0] = [ROOT, os.path.join(ROOT, "adapters", "zombie-zone-maps")]
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 
 try:
     import import_bsp as I  # noqa: E402

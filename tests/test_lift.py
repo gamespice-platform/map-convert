@@ -20,7 +20,7 @@ sys.path.insert(0, HERE)
 
 import bsp as cli                                          # noqa: E402,F401
 import synth                                               # noqa: E402
-from dotbsp import (entities, flood, gamebox, gma, intermediate, lights, plan, props,  # noqa: E402
+from gsbsp import (entities, flood, gamebox, gma, intermediate, lights, plan, props,  # noqa: E402
                     movers, reader, sources, units)
 
 
@@ -562,10 +562,10 @@ class Gma(unittest.TestCase):
         with tempfile.TemporaryDirectory() as t:
             p = os.path.join(t, "a.gma")
             make_gma(p, [("maps/dr_a.bsp", synth.build())])
-            old = {k: os.environ.get(k) for k in ("PATH", "DOTBSP_FASTGMAD", "HOME")}
+            old = {k: os.environ.get(k) for k in ("PATH", "GSBSP_FASTGMAD", "HOME")}
             try:
                 os.environ["PATH"], os.environ["HOME"] = "/nonexistent", "/nonexistent"
-                os.environ.pop("DOTBSP_FASTGMAD", None)
+                os.environ.pop("GSBSP_FASTGMAD", None)
                 for argv in (["bsp.py", "list", t], ["bsp.py", "list", p], ["bsp.py", "convert", p, "--out", os.path.join(t, "o.json")]):
                     err = io.StringIO()
                     with contextlib.redirect_stderr(err):
@@ -579,15 +579,15 @@ class Gma(unittest.TestCase):
                         os.environ[k] = v
 
     def test_missing_fastgmad_is_a_clear_error(self):
-        old = os.environ.get("PATH"), os.environ.get("DOTBSP_FASTGMAD"), os.environ.get("HOME")
+        old = os.environ.get("PATH"), os.environ.get("GSBSP_FASTGMAD"), os.environ.get("HOME")
         try:
             os.environ["PATH"], os.environ["HOME"] = "/nonexistent", "/nonexistent"
-            os.environ.pop("DOTBSP_FASTGMAD", None)
+            os.environ.pop("GSBSP_FASTGMAD", None)
             with self.assertRaises(gma.GmaError) as cm:
                 gma.read_bsps("x.gma")
             self.assertIn("fastgmad", str(cm.exception))
         finally:
-            for k, v in zip(("PATH", "DOTBSP_FASTGMAD", "HOME"), old):
+            for k, v in zip(("PATH", "GSBSP_FASTGMAD", "HOME"), old):
                 if v is None:
                     os.environ.pop(k, None)
                 else:

@@ -14,14 +14,14 @@ Adapted from hide-n-seek-maps' importer (copied, not linked): one spawn group, `
 What it does, and why each choice:
 
 - The world's brushes become BOXES, because a map document has no meshes. Each brush's convex
-  hull is found (dotbsp's reader, dot-map-convert) and its bounding
+  hull is found (gsbsp's reader, gs-map-convert) and its bounding
   box is written; a brush that is NOT a box (a roof slope, a stair) is cut into slabs along its
   longer horizontal axis, each slab as tall as the brush is at the slab's middle, so a ramp
   becomes a staircase of 0.3 m risers rather than a block twice its height.
 - Axes: Source is Z-up, godot = (x, z, -y). Scale: 1 unit = 0.01905 m (the engine's own
   0.75 inch), which makes a 108-unit door 2.06 m, fits the game's 1.4 m x 2.3 m door convention.
 - Textures are NOT carried. The author's textures are replaced with the game's own materials
-  (Poly Haven and ambientCG photographs in the game, mm_materials.gd); dot-map's source_textures.tsv says which, by name.
+  (Poly Haven and ambientCG photographs in the game, mm_materials.gd); gs-map's source_textures.tsv says which, by name.
 - prop_physics become catalogue props by PROP_MAP (the author's HL2 models have no licence we can
   ship; the catalogue is Kenney, CC0). A model with no entry is dropped and counted. PROP_MAP is
   the prop-hunt importer's, whose catalogue has bottles and cans (a disguise); this game's has
@@ -44,20 +44,20 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 
-def _dotbsp_path():
-    """dot-map-convert: $DOTBSP_PATH, else the sibling checkout dot-bootstrap makes."""
-    for p in (os.environ.get("DOTBSP_PATH", ""), os.path.join(HERE, "..", "..", "dot-map-convert")):
-        if p and os.path.isfile(os.path.join(p, "dotbsp", "reader.py")):
+def _gsbsp_path():
+    """gs-map-convert: $GSBSP_PATH, else the sibling checkout gs-bootstrap makes."""
+    for p in (os.environ.get("GSBSP_PATH", ""), os.path.join(HERE, "..", "..", "gs-map-convert")):
+        if p and os.path.isfile(os.path.join(p, "gsbsp", "reader.py")):
             return os.path.abspath(p)
-    sys.exit("import_bsp: dot-map-convert was not found; clone dot-map beside this "
-             "repository (dot-bootstrap does) or set DOTBSP_PATH to its checkout")
+    sys.exit("import_bsp: gs-map-convert was not found; clone gs-map beside this "
+             "repository (gs-bootstrap does) or set GSBSP_PATH to its checkout")
 
 
-sys.path.insert(1, _dotbsp_path())
-from dotbsp import reader as bsp_read  # noqa: E402  (the family's one reader)
-from dotbsp import boxes as dboxes, docboxes, passledger, lights as dlights, texturemap  # noqa: E402  (the shared passes over a document's boxes)
-from dotbsp import terrain as dterrain  # noqa: E402
-from dotbsp import sourceframe  # noqa: E402  (doc["source_frame"]: the origin shift and bounds, for the audit)
+sys.path.insert(1, _gsbsp_path())
+from gsbsp import reader as bsp_read  # noqa: E402  (the family's one reader)
+from gsbsp import boxes as dboxes, docboxes, passledger, lights as dlights, texturemap  # noqa: E402  (the shared passes over a document's boxes)
+from gsbsp import terrain as dterrain  # noqa: E402
+from gsbsp import sourceframe  # noqa: E402  (doc["source_frame"]: the origin shift and bounds, for the audit)
 import build_maps  # noqa: E402
 
 S = 0.01905
@@ -67,7 +67,7 @@ MIN_SIZE = 0.0   # --min-size=m: boxes with a longest side under this are droppe
 TERRAIN_TINT = (0.85, 0.9, 0.78)
 
 
-terrain_tris = dterrain.terrain_tris  # swap_terrain and its helpers live in dot-map (dotbsp.terrain)
+terrain_tris = dterrain.terrain_tris  # swap_terrain and its helpers live in gs-map (gsbsp.terrain)
 swap_terrain = dterrain.swap_terrain
 SKIP_STARTS = set()   # --skip-start=N: the author's Nth start, which the build says is inside a box
 ONE_WAY = []   # --one-way=x,z (a door's finished centre): pinned to swing one way, for a door the swing check refuses the other way
@@ -84,7 +84,7 @@ NOT_DOORS = ("lockerdoor", "door_oven")   # func_door_rotating targetnames that 
 SLAB = 28.0     # source units: ~0.53 m, a slope's riser
 
 TOOLS = ("TOOLS/", "tools/")
-# The surface of a brush comes from dot-map's shared list (dot-map-convert/dotbsp/source_textures.tsv), the one every
+# The surface of a brush comes from gs-map's shared list (gs-map-convert/gsbsp/source_textures.tsv), the one every
 # conversion reads; a new texture goes there, never into this file. `bsp.py unmapped <bsp>` lists what it misses.
 TEXTURE_MAP = texturemap.load()
 
@@ -335,7 +335,7 @@ def planes_of(bsp, index):
 
 def brush_boxes(bsp, index):
     """[((x range), (y range), (z range), phi)] in Source units for one brush, and whether it had to
-    be cut into slabs. dotbsp's decompose: a box, a box turned about the vertical, a prism's turned
+    be cut into slabs. gsbsp's decompose: a box, a box turned about the vertical, a prism's turned
     bounding box, else slabs along the slope. (The local copy this replaces took a wedge for a box,
     because a wedge's six corners are all box corners: a ramp came out as a block twice its height.)"""
     out = dboxes.decompose(planes_of(bsp, index), bsp.brush_hull(index), slab=SLAB)
@@ -403,7 +403,7 @@ def hang_doorways(m, doc, log=print):
             at = (mid, a["at"][cross]) if axis == 0 else (a["at"][cross], mid)
             if any(abs(at[0] - sx) < 0.8 and abs(at[1] - sz) < 0.8 for sx, sz in SKIP_DOORS):
                 continue   # --skip-door: left open, as add_doors does
-            # The author's own leaf, left standing in the opening in whatever material (dot-map's
+            # The author's own leaf, left standing in the opening in whatever material (gs-map's
             # drop_door_leaves only takes wood): a door-high slab, under 15 cm thick, inside the gap.
             leaves = [b for b in doc["boxes"] if b is not a and b is not c and 1.9 <= b["size"][1] <= 2.3 and min(b["size"][0], b["size"][2]) < 0.15
                       and abs(b["at"][cross] - a["at"][cross]) < 0.3 and lo - 0.05 <= b["at"][axis] - b["size"][axis] / 2 and b["at"][axis] + b["size"][axis] / 2 <= hi + 0.05
@@ -671,8 +671,8 @@ def spread_spawns(m, levels, count, gap=3.5, log=print):
 # --- The author's sky, light, fog, weather and sound ---------------------------------------------------
 #
 # What the file says about the hour and the air, read for this game's own sky, sun, fog and weather (the
-# author's sky textures are never carried; a name only says what mood to paint). Nothing here is in dot-map's
-# reader yet: it wants a shared `environment` pass there (nightly item `dotbsp-environment`).
+# author's sky textures are never carried; a name only says what mood to paint). Nothing here is in gs-map's
+# reader yet: it wants a shared `environment` pass there (nightly item `gsbsp-environment`).
 
 # skyname -> (zenith, horizon, the ground under the horizon). The horizon is the fog colour when the map has fog,
 # since distance fades into the sky and any other horizon draws a seam along every ridge.
@@ -762,7 +762,7 @@ def environment(bsp, fog_override=None):
 
 
 def weather_block(weather, shift, seed=1):
-    """The document's `weather` (a dot-weather document) from environment()'s volumes, shifted with the map."""
+    """The document's `weather` (a gs-weather document) from environment()'s volumes, shifted with the map."""
     ox, oy, oz = shift
     vols = []
     for lo, hi in weather["volumes"]:

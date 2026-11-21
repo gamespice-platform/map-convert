@@ -22,7 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import completeness  # noqa: E402
 import import_bsp  # noqa: E402
-from dotbsp import reader  # noqa: E402
+from gsbsp import reader  # noqa: E402
 
 
 def kind_of(b):

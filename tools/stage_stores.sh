@@ -1,6 +1,6 @@
 #!/bin/bash
 # Stage a converted-maps repository's raw art stores (`.stores/pbr-library`, `.stores/model-library`, the folders its worlds'
-# `licence.pbr_store` and `model_store` name) so a checkout draws the worlds with full art and no dot-cloud slices, and link
+# `licence.pbr_store` and `model_store` name) so a checkout draws the worlds with full art and no gs-cloud slices, and link
 # them into each game that draws those worlds (`<game>/.stores`, kept out of git through the game's .git/info/exclude).
 #   tools/stage_stores.sh <maps repo> [--from SRC] [--game <game project>]...
 # SRC (or GS_STORES_FROM) is an rsync source holding pbr-library/ and model-library/ (`host:path/.stores`), a local folder,
@@ -9,7 +9,7 @@ set -euo pipefail
 die() { echo "stage_stores: $*" >&2; exit 2; }
 [ $# -ge 1 ] || die "usage: tools/stage_stores.sh <maps repo> [--from SRC] [--game <game project>]..."
 MAPS="$(cd "$1" && pwd)"; shift
-FROM="${GS_STORES_FROM:-${DOT_STORES_FROM:-}}"
+FROM="${GS_STORES_FROM:-}"
 GAMES=()
 while [ $# -gt 0 ]; do
     case $1 in
@@ -18,7 +18,7 @@ while [ $# -gt 0 ]; do
         *) die "unknown argument $1" ;;
     esac
 done
-[ -n "$FROM" ] || die "no source: --from host:path/.stores, a folder, or a .tar URL (see dot-map docs/content.md#without-the-slices)"
+[ -n "$FROM" ] || die "no source: --from host:path/.stores, a folder, or a .tar URL (see gs-map docs/content.md#without-the-slices)"
 DEST="$MAPS/.stores"
 mkdir -p "$DEST"
 case $FROM in

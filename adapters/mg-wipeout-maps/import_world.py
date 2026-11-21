@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Imports a community map as a course: its mesh through dot-map's converter, its moving parts as pieces.
+"""Imports a community map as a course: its mesh through gs-map's converter, its moving parts as pieces.
 
     python3 -P tools/import_world.py tools/imports/<course id>.json
 
 The import file names the source .bsp, its credit, and the parts only a person can write (start, finish,
 checkpoints, route, anything the map has no mover for). The mesh goes to worlds/<id>.{json,bin}; the course
-to courses/<id>.json. The converter is dot-map's (the sibling checkout, or $DOTBSP_PATH); nothing here
+to courses/<id>.json. The converter is gs-map's (the sibling checkout, or $GSBSP_PATH); nothing here
 reads a BSP itself. Rules, per mover and volume the converter lists:
 
     tracktrain between two corners   -> pusher along the track (a punch and back, not a glide)
@@ -31,7 +31,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.join(HERE, "..")
-BSP = os.environ.get("DOTBSP_PATH") or os.path.join(REPO, "..", "dot-map-convert")
+BSP = os.environ.get("GSBSP_PATH") or os.path.join(REPO, "..", "gs-map-convert")
 MAX_SPIN = 120.0
 
 
@@ -165,24 +165,24 @@ def pieces_from(manifest, spec):
 
 
 def main_io(spec, worlds):
-    """A course that runs the map's own entity logic (dot-map's GSMapWorld): the whole map from the store,
+    """A course that runs the map's own entity logic (gs-map's GSMapWorld): the whole map from the store,
     with its source document beside it, and nothing generated; the game hosts what the map's entities do."""
     cid = spec["id"]
     prefix = os.path.join(worlds, cid)
-    # The converter also writes a one-map CREDITS.md and a dot_map/ rule stub beside the world; the repository's own
+    # The converter also writes a one-map CREDITS.md and a gs_map/ rule stub beside the world; the repository's own
     # copies (the pack-wide credits, the hand-kept rules) are put back afterwards. Its generated flat images (textures/)
     # stay: a "generated" surface reads them.
     keep = os.path.join(worlds, ".import_keep")
     shutil.rmtree(keep, ignore_errors=True)
     os.makedirs(keep)
-    for extra in ("dot_map", "CREDITS.md"):
+    for extra in ("gs_map", "CREDITS.md"):
         if os.path.exists(os.path.join(worlds, extra)):
             shutil.move(os.path.join(worlds, extra), os.path.join(keep, extra))
     try:
         subprocess.run([sys.executable, "-P", os.path.join(BSP, "bsp.py"), "regen", spec["io"]["store"],
                         "--out", prefix, "--name", cid], check=True, stdout=subprocess.DEVNULL)
     finally:
-        for extra in ("dot_map", "CREDITS.md"):
+        for extra in ("gs_map", "CREDITS.md"):
             dst = os.path.join(worlds, extra)
             if os.path.isdir(dst):
                 shutil.rmtree(dst)

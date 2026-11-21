@@ -6,9 +6,9 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 sys.path.insert(0, ROOT)
-from dotbsp import docboxes as D  # noqa: E402
+from gsbsp import docboxes as D  # noqa: E402
 
 
 def box(x0, x1, y0, y1, z0, z1, mat="plaster", **kw):
@@ -293,7 +293,7 @@ class DropUnsupportedProps(unittest.TestCase):
 
 class TerrainReach(unittest.TestCase):
     def test_spawn_across_a_heightfield_is_reached(self):
-        from dotbsp.terrain import Heightfield
+        from gsbsp.terrain import Heightfield
         hf = Heightfield(10.0, 0.0, 2.0, 6, 4, [0.0] * 24)
         floor = box(-3, 3, -0.2, 0.0, -3, 3)
         d = doc_of([floor], spawns={"players": [{"at": [0.0, 0.0, 0.0], "yaw": 0}, {"at": [15.0, 0.0, 3.0], "yaw": 0}]})

@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                          # noqa: E402
-from dotbsp import classes, reader, unconverted       # noqa: E402
+from gsbsp import classes, reader, unconverted       # noqa: E402
 
 
 def _bsp(*ents):

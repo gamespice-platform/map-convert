@@ -1,4 +1,4 @@
-"""dotbsp.audit's tests. Run: python3 -P tests/test_audit.py"""
+"""gsbsp.audit's tests. Run: python3 -P tests/test_audit.py"""
 
 import os
 import sys
@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                   # noqa: E402
-from dotbsp import audit, boxes, mesh, reader, terrain, units  # noqa: E402
+from gsbsp import audit, boxes, mesh, reader, terrain, units  # noqa: E402
 
 MATS = ("concrete/concretefloor001", "metal/metalwall001")
 
@@ -115,7 +115,7 @@ class Audit(unittest.TestCase):
         self.assertEqual(r["brushes_expected"], 1)
 
     def test_entity_that_starts_hidden_is_not_owed(self):
-        from dotbsp import docboxes
+        from gsbsp import docboxes
         for keys, owed in (({"Solidity": "1"}, 0), ({"StartDisabled": "1"}, 0), (None, 1)):
             bsp = load(boxes=self.BOXES[:1], entity_box=(0, 0, 0, 32, 32, 32), entity_origin=(100, 100, 16),
                        entity_class="func_brush", entity_keys=keys)

@@ -5,9 +5,9 @@ import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 
-from dotbsp import docboxes  # noqa: E402
+from gsbsp import docboxes  # noqa: E402
 
 
 def slab(x0, x1, z0, z1, top, mat="grass"):

@@ -6,22 +6,22 @@
 The import is the WHOLE map by default: every brush, displacement, prop and the 3D skybox, nothing cut away. --course
 keeps the older course cut (the config's `region` crop and its `exclude`/`remove` trims). --orig builds the ORIGINAL
 variant: id <id>_orig, pack pg_world_<name>_orig, with the map's own textures (its pakfile, then the installed base
-games, full size unless --orig-max-side) baked into the pack beside the free ones (dotbsp.origtex), and its own
-models in place of the stand-ins (dotbsp.origmodels; a models/ or materials/ folder beside the .bsp is searched too).
+games, full size unless --orig-max-side) baked into the pack beside the free ones (gsbsp.origtex), and its own
+models in place of the stand-ins (gsbsp.origmodels; a models/ or materials/ folder beside the .bsp is searched too).
 --no-omit passes regen --no-omit: the 3D skybox props, detail and trim models, the info_overlay decals and the detail
 grass are drawn too (the skybox ones moved out as the sky is); --orig always does, being the unedited map.
 
 Two outputs. The document (maps/<id>.json) is boxes: what collides, what the survey reads, and the look of a game
 without the pack. The WORLD PACK (maps/world/pg_world_<name>/<id>.{json,bin}, plus textures/, credits.json, CREDITS.md and
-<id>.coverage.json) is the map drawn: dot-map's mesh route (`bsp.py store`, then `bsp.py regen` at this scale and
+<id>.coverage.json) is the map drawn: gs-map's mesh route (`bsp.py store`, then `bsp.py regen` at this scale and
 the config's region as its crop), with the faces, displacements, free (CC0) textures, model stand-ins, sky, sun, fog
 and lightmap that route makes. The document names it in `world` (README, "PLAYLOT world"); --no-world skips the
 regen (the document still names the pack, and a game draws the boxes while the pack is not there).
 
 `CONFIGS` below says, per map, its id, name, author, page, how its author's textures become the
 game's materials, where the spawn is and what is dropped. The reader (bsp_read.py) and the material
-naming and majority pick (dotbsp.docboxes) and the brush-to-box cutting (dotbsp.boxes.decompose with
-tilt=True) are dot-map's shared ones; this file keeps only the document format, the GAME_MATERIAL table
+naming and majority pick (gsbsp.docboxes) and the brush-to-box cutting (gsbsp.boxes.decompose with
+tilt=True) are gs-map's shared ones; this file keeps only the document format, the GAME_MATERIAL table
 and the per-map configs. Re-importing gm_smallbase gives a byte-identical document.
 
 What it does, and why each choice:
@@ -33,14 +33,14 @@ What it does, and why each choice:
   horizontal axis, each as tall as the brush is at the slab's middle, so a ramp becomes a flight
   of 0.5 m risers, which a player climbs (the game's climb limit is 1.035 m).
 - Axes: Source is Z-up, godot is (x, z, -y). Scale: 1 unit = 0.01905 m, the family's.
-- The BOXES carry no textures (the world pack does). A brush's surface comes from dot-map's shared list
-  (dot-map-convert/dotbsp/source_textures.tsv, a new texture goes there and `bsp.py unmapped <bsp>` lists
+- The BOXES carry no textures (the world pack does). A brush's surface comes from gs-map's shared list
+  (gs-map-convert/gsbsp/source_textures.tsv, a new texture goes there and `bsp.py unmapped <bsp>` lists
   what it misses); GAME_MATERIAL turns the list's generic ids into this game's materials and
   tints, drawn over Kenney's CC0 Prototype Textures grid like every other map.
 - Tool brushes (skybox, clip, trigger, hint, nodraw-only) are dropped. A water brush becomes a
   water volume. A document has no meshes, so a displacement is not carried as one: a config with
   `terrain` ({"cell", "material", "colour", "thick"}) samples the map's displacements inside its region
-  into a heightfield and lays tilted slabs on it (dotbsp.terrain.tilted_tiles), one per run of cells
+  into a heightfield and lays tilted slabs on it (gsbsp.terrain.tilted_tiles), one per run of cells
   sharing a plane, so a hill is walked on and not climbed as steps. Without it the brush under one is all.
 - The ground is shifted so the spawn's floor is y = 0.
 - A config may hold what a converter cannot read out of the brushes: `stairs` (a file stairs/<name>.json of
@@ -57,12 +57,12 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import bsp_read  # noqa: E402  (also puts dot-map-convert on sys.path)
-from dotbsp import boxes as boxes_lib, docboxes, texturemap  # noqa: E402  (the passes and the texture list the map repositories share)
-from dotbsp import gaps  # noqa: E402  (closes the cracks the survey reads as slots)
-from dotbsp import sourceframe  # noqa: E402  (doc["source_frame"]: the ground shift, for the audit)
-from dotbsp import terrain  # noqa: E402  (displacement ground as tilted slabs)
-from dotbsp import mesh as dotmesh  # noqa: E402  (skybox_of: the 3D skybox room, which is not play space)
+import bsp_read  # noqa: E402  (also puts gs-map-convert on sys.path)
+from gsbsp import boxes as boxes_lib, docboxes, texturemap  # noqa: E402  (the passes and the texture list the map repositories share)
+from gsbsp import gaps  # noqa: E402  (closes the cracks the survey reads as slots)
+from gsbsp import sourceframe  # noqa: E402  (doc["source_frame"]: the ground shift, for the audit)
+from gsbsp import terrain  # noqa: E402  (displacement ground as tilted slabs)
+from gsbsp import mesh as gsmesh  # noqa: E402  (skybox_of: the 3D skybox room, which is not play space)
 
 S = 0.01905
 SLAB = 28.0     # source units: ~0.53 m, a slope's riser
@@ -71,7 +71,7 @@ WORLD_GAME = "playlot"  # the lossless store's game folder for these maps' sourc
 
 
 def brush_boxes(bsp, index, slab=None):
-    """dot-map's boxes.decompose for one brush: ([(u range), (v range), (z range), phi], cut), cut 0 for a
+    """gs-map's boxes.decompose for one brush: ([(u range), (v range), (z range), phi], cut), cut 0 for a
     box, 1 for slabs and 2 for a tilted ramp, whose box is then boxes.decompose's own ramp tuple."""
     planes = [bsp.planes[s[0]][:4] for s in bsp.brushsides[bsp.brushes[index][0]:][:bsp.brushes[index][1]] if not s[3]]
     parts = boxes_lib.decompose(planes, bsp.brush_hull(index), slab=slab or SLAB, tilt=True)
@@ -580,7 +580,7 @@ REMOVAL_CONTACT = "https://github.com/zees-games/playlot-maps/issues"
 
 
 def material_for(cfg, names):
-    # The majority pick (sorted, so a tie follows the name, not the hash seed) is dot-map's. The map's own
+    # The majority pick (sorted, so a tie follows the name, not the hash seed) is gs-map's. The map's own
     # overrides are tried first; then the shared list, whose generic id the game turns into its own.
     pick = docboxes.majority_material(names, cfg.get("overrides", []), None)
     if pick is not None or not [n for n in names if not n.startswith("TOOLS/")]:
@@ -739,7 +739,7 @@ def weld_hairlines(boxes, eps=0.03):
 def sky_room(bsp, y_off):
     """The 3D skybox room in the document frame (metres, lo and hi), or None. The room is a miniature
     the engine draws behind the map, not ground: with no region to leave it out, nothing in it collides."""
-    sky = dotmesh.skybox_of(bsp)
+    sky = gsmesh.skybox_of(bsp)
     if sky is None:
         return None
     (x0, y0, z0), (x1, y1, z1) = sky[2]
@@ -806,7 +806,7 @@ def config(name, whole=True, orig=False):
     return cfg
 
 
-ORIG_MARK = "_orig"   # dotbsp.origtex.MARK: the original variant's id, pack and regen name end in it
+ORIG_MARK = "_orig"   # gsbsp.origtex.MARK: the original variant's id, pack and regen name end in it
 
 
 def build(bsp_path, name, whole=True, orig=False):
@@ -918,7 +918,7 @@ def world_pack(map_id):
 
 
 def world_crop(cfg, y_off):
-    """The config's `region` as dot-map's regen --crop (x0,z0,x1,z1,ymin,ymax) in the pack's frame, or None for the whole
+    """The config's `region` as gs-map's regen --crop (x0,z0,x1,z1,ymin,ymax) in the pack's frame, or None for the whole
     map. The pack is regenerated at y0 = 0, so only the height moves: by the spawn shift the boxes were given."""
     region = cfg.get("region")
     if not region:

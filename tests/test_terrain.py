@@ -13,9 +13,9 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import boxes, docboxes, flood, paths, terrain  # noqa: E402
+from gsbsp import boxes, docboxes, flood, paths, terrain  # noqa: E402
 
-FIXTURE = os.path.join(paths.dot_map_dir(), "examples", "bsp_mesh", "terrain_fixture.json")
+FIXTURE = os.path.join(paths.gs_map_dir(), "examples", "bsp_mesh", "terrain_fixture.json")
 
 
 def grid_tris(f, x0, z0, x1, z1, step):

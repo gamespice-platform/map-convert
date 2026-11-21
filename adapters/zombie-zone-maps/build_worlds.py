@@ -3,15 +3,15 @@
     python3 -P tools/build_worlds.py tools/bsp/<id>.json path/to/<map>.bsp [out_root]
 
 Writes `<out_root>/zz_world_<id>/<id>.{json,bin}` (out_root defaults to `world/`), the drawn
-mesh of the source map in dot-map's `dot-bsp-mesh` format (dot-map-convert/dotbsp/mesh.py;
-the game reads it with dot-map's GSMapBspMesh), and names it in the map document (`"world"`).
+mesh of the source map in gs-map's `gs-bsp-mesh` format (gs-map-convert/gsbsp/mesh.py;
+the game reads it with gs-map's GSMapBspMesh), and names it in the map document (`"world"`).
 
 WHY A SECOND FILE AND NOT MORE BOXES. The document's boxes are what collides and what the horde's
 ground is cut from, and they stay that; drawn, a curved tunnel, an arch or a sloped roof was a
 staircase of boxes and a whole map was a few thousand cubes. The mesh is the original's faces, so
 it looks like the map, but it is far larger than the document (180 KB to 1.3 MB against 60 KB), so
 it is not sent in MAP: each map's world is its own pack, published by this repository's release
-(dot-ci's release-maps), which a client fetches when the server it joins is on that map.
+(gs-ci's release-maps), which a client fetches when the server it joins is on that map.
 
 WHAT IS DRAWN IS WHAT THE DOCUMENT COLLIDES WITH, as far as a face can say:
 - the world and the spec's `solid_classes`; never a `gate_classes` model (the document draws its
@@ -24,7 +24,7 @@ WHAT IS DRAWN IS WHAT THE DOCUMENT COLLIDES WITH, as far as a face can say:
 - no hulls, except those of the models the game moves (below): nothing else here collides.
 
 WHAT MOVES IS THE GAME'S TO ANIMATE, FROM THE MANIFEST. `movers`, `volumes`, `links`, `entities` and
-`destinations` are dot-map's (`bsp.py mesh` writes the same records; GSMapEntities reads them).
+`destinations` are gs-map's (`bsp.py mesh` writes the same records; GSMapEntities reads them).
 A brush entity is left to them only when the document does not already stand it up: a class in
 the spec's `solid_classes` or `gate_classes` is boxes (a static wall, or a gate an objective
 opens), and a second, moving copy would collide twice. Every other mover keeps its faces in the
@@ -42,8 +42,8 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-import import_bsp  # noqa: E402  (puts dot-map-convert on the path, and owns the material table)
-from dotbsp import environment, importer, licence, mesh, models, movers, reader, standins, units  # noqa: E402
+import import_bsp  # noqa: E402  (puts gs-map-convert on the path, and owns the material table)
+from gsbsp import environment, importer, licence, mesh, models, movers, reader, standins, units  # noqa: E402
 
 # Metres of world one batch covers: the game's own (ZzMap.CHUNK), because the compatibility renderer
 # lights a mesh with at most eight lamps and a chunk is about a room, which is about a lamp.
@@ -166,7 +166,7 @@ def main(argv):
     credit = {k: spec[k] for k in ("author", "page", "licence") if k in spec}
     credit["note"] = "Geometry converted from the original map with credit; its textures and models are not used. Removed on the author's request."
     doc = mesh.write(m, os.path.join(out_dir, map_id), credit=credit, name=map_id, extra=extra)
-    # The licence pass: every texture a free one, the models and sounds stand-ins (dot-map's tables), props placed.
+    # The licence pass: every texture a free one, the models and sounds stand-ins (gs-map's tables), props placed.
     # The sizes come from the raw import's models.json when the map has one (no second read of the pakfile).
     raw = importer.raw_dir("zz", map_id)
     packed = models.measure(bsp, raw=raw if os.path.isdir(raw) else None)

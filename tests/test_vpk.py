@@ -7,7 +7,7 @@ import unittest
 import zlib
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from dotbsp import vpk  # noqa: E402
+from gsbsp import vpk  # noqa: E402
 
 
 def vtf_rgba(w=4, h=4):

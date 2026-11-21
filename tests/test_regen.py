@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                          # noqa: E402
-from dotbsp import coverage, regen, rules, store      # noqa: E402
+from gsbsp import coverage, regen, rules, store      # noqa: E402
 
 MAT = ("TOOLS/TOOLSNODRAW", "ZZQ/NEWWALL", "ZZQ/OTHER")
 ENTS = [{"classname": "worldspawn", "skyname": "sky_test"},
@@ -54,7 +54,7 @@ class TierTests(unittest.TestCase):
         self.assertEqual(rs.texture(d)[2], "game")
 
     def test_class_precedence_and_fallback(self):
-        g = tmp_tier({"classes.tsv": "zz_brand_new_class\tpoint\tmine\tDotMapThing\nzz_fam_*\tdrawn\tfamily\n"})
+        g = tmp_tier({"classes.tsv": "zz_brand_new_class\tpoint\tmine\tGSMapThing\nzz_fam_*\tdrawn\tfamily\n"})
         rs = rules.RuleSet.build(game=g)
         self.assertEqual(rs.klass("zz_brand_new_class")[::3], ("point", "game"))
         self.assertEqual(rs.klass("zz_fam_x")[::3], ("drawn", "game"))
@@ -108,7 +108,7 @@ class RegenTests(unittest.TestCase):
             return json.load(f)
 
     def test_a_link_to_a_name_the_source_never_defined_is_listed_apart(self):
-        from dotbsp import coverage
+        from gsbsp import coverage
         rows = coverage.dangling()
         self.assertTrue(any(r.fullmatch("func_door.OnFullyOpen->stop_sound_room7") for r in rows))
         self.assertFalse(any(r.fullmatch("zz_brand_new_class.OnTrigger->nobody") for r in rows))
@@ -125,7 +125,7 @@ class RegenTests(unittest.TestCase):
         self.assertTrue(any(m["stand_in"] == "placeholder_box" for m in doc["licence"]["models"]))
 
     def test_ratchet_passes_when_equal_and_fails_when_a_rule_is_dropped(self):
-        g = tmp_tier({"classes.tsv": "zz_brand_new_class\tdata\tdecided\tDotMapEntity\n",
+        g = tmp_tier({"classes.tsv": "zz_brand_new_class\tdata\tdecided\tGSMapEntity\n",
                       "models.tsv": "unlisted_thing\tarmchair\tKenney\thttps://kenney.nl\tKenney\tCC0-1.0\n",
                       "textures.tsv": "ZZQ/*\tplaster\n"})
         self.run_regen(game_rules=g)
@@ -159,7 +159,7 @@ class RegenTests(unittest.TestCase):
         self.assertEqual(self.report()["lists"]["keys_unmapped"], ["zz_brand_new_class.weirdkey"])
 
     def test_a_class_based_on_a_class_inherits_its_keys_and_handled_keys_are_not_listed(self):
-        from dotbsp import coverage
+        from gsbsp import coverage
         cat = coverage.catalogue()
         self.assertIn("fademindist", cat["prop_physics_multiplayer"])      # prop_physics_multiplayer is based on prop_physics
         hand = coverage.handled()

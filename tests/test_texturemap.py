@@ -1,4 +1,4 @@
-"""Tests for the shared source texture list (dotbsp/source_textures.tsv, dotbsp/texturemap.py) and the
+"""Tests for the shared source texture list (gsbsp/source_textures.tsv, gsbsp/texturemap.py) and the
 `unmapped` report. Run: python3 -P tests/test_texturemap.py"""
 
 import io
@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import bsp as cli                                          # noqa: E402
-from dotbsp import docboxes, licence, texturemap                    # noqa: E402
+from gsbsp import docboxes, licence, texturemap                    # noqa: E402
 
 # The ids a game may be asked to draw: the generic list the replacements table (free_textures.tsv)
 # defines, so a row naming anything else is a typo and a new generic is added in exactly one place.
@@ -85,7 +85,7 @@ class TextureMapTests(unittest.TestCase):
     def test_drawn_in_code_generics_credit_the_script_that_draws_them(self):
         free = licence.load()
         for name in ("fence", "grate", "bars", "ladder", "shield", "invisible"):
-            self.assertIn("dot_map_bsp_mesh.gd", free[name]["url"], name)
+            self.assertIn("gs_map_bsp_mesh.gd", free[name]["url"], name)
             self.assertNotIn("textures.py", free[name]["url"], name)
 
     def test_a_decal_inside_a_folder_is_not_drawn_as_a_wall(self):
@@ -131,7 +131,7 @@ class TextureMapTests(unittest.TestCase):
             self.assertEqual(hit[0], material, name)
 
     def test_mountainresort_models_get_a_free_stand_in_and_a_size(self):
-        from dotbsp import standins
+        from gsbsp import standins
         rows, sizes = standins.models(), standins.Sizes()
         for name, stand_in in {
             "mark2580/gtav/barstuff/glass_02.mdl": "pirate/bottle", "mark2580/gtav/barstuff/shot_glass.mdl": "pirate/bottle",
@@ -149,7 +149,7 @@ class TextureMapTests(unittest.TestCase):
 
     def test_surf_maps_textures_and_models_are_all_mapped(self):
         # the combat surf pack's unmapped lists (2026-11-18): cards and credits are flat, surfaces take a material
-        from dotbsp import standins
+        from gsbsp import standins
         t = texturemap.load()
         for name, material in {
             "AUSTINPOWERSTEX/5": "flat", "AUSTINPOWERSTEX/CLEAR": "glass", "AUSTINPOWERSTEX/CRATE": "wood_planks",

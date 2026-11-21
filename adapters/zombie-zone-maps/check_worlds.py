@@ -2,7 +2,7 @@
 
     python3 -P tools/check_worlds.py [world_root]
 
-Every `world/zz_world_<id>/<id>.json` must parse, be a `dot-bsp-mesh` v1 with the entity sections
+Every `world/zz_world_<id>/<id>.json` must parse, be a `gs-bsp-mesh` v1 with the entity sections
 tools/build_worlds.py writes, name a .bin whose stored sha256 matches, belong to a document that
 names it, and every mover must have the model its game animates (surfaces, and hulls when it is
 carried solid). It also fails a bin whose hull bounds disagree with its mover records, or with the document's boxes and spawns, in height: a bin built without the spec's y0 sits y0 metres off its movers. Runs on the committed files alone, so CI needs no source map.
@@ -76,8 +76,8 @@ def check(pack_dir):
             m = json.load(f)
     except (OSError, ValueError) as e:
         return ["%s: does not parse: %s" % (path, e)]
-    if m.get("format") != "dot-bsp-mesh" or m.get("version") not in (1, 2):
-        bad.append("%s: not a dot-bsp-mesh v1 or v2" % pack)
+    if m.get("format") != "gs-bsp-mesh" or m.get("version") not in (1, 2):
+        bad.append("%s: not a gs-bsp-mesh v1 or v2" % pack)
     for k in SECTIONS:
         if not isinstance(m.get(k), list):
             bad.append("%s: no '%s' list (rebuild with tools/build_worlds.py)" % (pack, k))
@@ -94,7 +94,7 @@ def check(pack_dir):
             bad.append("%s: the .bin is not the one the manifest describes" % pack)
     except (OSError, KeyError) as e:
         bad.append("%s: no .bin: %s" % (pack, e))
-    # A pack from dot-map's global importer carries no "zz" block (the game reads it as a global pack).
+    # A pack from gs-map's global importer carries no "zz" block (the game reads it as a global pack).
     if "zz" in m and not isinstance(m["zz"].get("materials"), dict):
         bad.append("%s: no zz.materials" % pack)
     drawn = {s["model"] for s in m["surfaces"]}
@@ -127,7 +127,7 @@ def check(pack_dir):
             doc = json.load(f)
         if doc.get("world") != pack:
             bad.append("%s: maps/%s.json does not name it" % (pack, map_id))
-        # dot-map's SOLID_BOX: a deployed server has no world/, so its document must carry the boxes (tools/solid_props.sh).
+        # gs-map's SOLID_BOX: a deployed server has no world/, so its document must carry the boxes (tools/solid_props.sh).
         solid = sum(1 for p in m.get("props", []) if "box" not in p and int(p.get("solid", 0)) in (2, 3, 4, 6))
         if solid and not doc.get("solid_props"):
             bad.append("%s: %d solid props and no 'solid_props' in maps/%s.json (run tools/solid_props.sh)" % (pack, solid, map_id))

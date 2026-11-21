@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                   # noqa: E402
-from dotbsp import docboxes, reader            # noqa: E402
+from gsbsp import docboxes, reader            # noqa: E402
 
 PLAYERCLIP, SOLID, NPCCLIP = 0x10000, 0x1, 0x20000
 
@@ -62,7 +62,7 @@ class EntityBrushes(unittest.TestCase):
         self.assertTrue(docboxes.entity_starts_hidden({"classname": "func_brush", "Solidity": "1"}))
 
     def test_mesh_hides_a_wall_toggle_that_starts_off(self):
-        from dotbsp import mesh
+        from gsbsp import mesh
         self.assertTrue(mesh.hidden({"classname": "func_wall_toggle", "spawnflags": "1"}))
         self.assertFalse(mesh.hidden({"classname": "func_wall_toggle", "spawnflags": "0"}))
         self.assertFalse(mesh.hidden({"classname": "func_wall_toggle"}))

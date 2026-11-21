@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.join(ROOT, "adapters", "game-airdrift"))
 sys.path.insert(0, ROOT)
 
 # bsp_import reads through game-airdrift's `bsp_read` shim, which lives in that game's repo.
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 for READER in (os.environ.get("AIRDRIFT_TOOLS", "") or os.environ.get("G2G_TOOLS", ""),
                os.path.join(os.path.dirname(ROOT), "game-airdrift", "tools"),
                "/home/gamedev/godot/game-airdrift/tools"):

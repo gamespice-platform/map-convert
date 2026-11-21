@@ -5,12 +5,12 @@ import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 
 import importlib.util  # noqa: E402
 
 # Loaded by path: the module is pure, and the package import pulls numpy in for nothing here.
-_spec = importlib.util.spec_from_file_location("spawntopup", os.path.join(ROOT, "dotbsp", "spawntopup.py"))
+_spec = importlib.util.spec_from_file_location("spawntopup", os.path.join(ROOT, "gsbsp", "spawntopup.py"))
 spawntopup = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(spawntopup)
 

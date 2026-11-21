@@ -1,4 +1,4 @@
-"""Writes addons/dot_map/io/catalogue.json, the slice of the class catalogue GSMapIO needs.
+"""Writes addons/gs_map/io/catalogue.json, the slice of the class catalogue GSMapIO needs.
 
     python3 -P defs/runtime.py [--out FILE] [--all]
 
@@ -16,9 +16,9 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import classes, defs  # noqa: E402
+from gsbsp import classes, defs  # noqa: E402
 
-from dotbsp import paths  # noqa: E402
+from gsbsp import paths  # noqa: E402
 
 OUT = os.path.join(paths.addon_dir(), "io", "catalogue.json")
 
@@ -39,7 +39,7 @@ def build(doc, everything=False):
                "keys": {k: [v[0], v[1]] for k, v in sorted(r["keys"].items())}}
         # What every class has is stored once, under "common".
         out[n] = {f: {k: v for k, v in rec[f].items() if common[f].get(k) != v} for f in rec}
-    return {"format": "dot-map-io-catalogue", "version": 1, "notice": doc["_notice"], "common": common, "classes": out}
+    return {"format": "gs-map-io-catalogue", "version": 1, "notice": doc["_notice"], "common": common, "classes": out}
 
 
 def main():

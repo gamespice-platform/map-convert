@@ -1,4 +1,4 @@
-"""The convert-time prop fit pass (standins.fit_prop) and the converted-world prop audit (dotbsp/propaudit.py).
+"""The convert-time prop fit pass (standins.fit_prop) and the converted-world prop audit (gsbsp/propaudit.py).
 Run: python3 -P tests/test_propaudit.py
 """
 
@@ -11,7 +11,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import propaudit, standins  # noqa: E402
+from gsbsp import propaudit, standins  # noqa: E402
 
 
 def measure(x, y, z):
@@ -20,11 +20,11 @@ def measure(x, y, z):
 
 class FitPass(unittest.TestCase):
     def setUp(self):
-        self._env = {k: os.environ.pop(k) for k in list(os.environ) if k.startswith(("DOT_PROP_FIT", "DOT_PROP_MISFIT"))}
+        self._env = {k: os.environ.pop(k) for k in list(os.environ) if k.startswith(("GS_PROP_FIT", "GS_PROP_MISFIT"))}
         standins.FIT_STATS.clear()
 
     def tearDown(self):
-        for k in [k for k in os.environ if k.startswith(("DOT_PROP_FIT", "DOT_PROP_MISFIT"))]:
+        for k in [k for k in os.environ if k.startswith(("GS_PROP_FIT", "GS_PROP_MISFIT"))]:
             del os.environ[k]
         os.environ.update(self._env)
 
@@ -66,12 +66,12 @@ class FitPass(unittest.TestCase):
         for d, s in zip(drawn, sorted([5.8, 7.7, 1.3])):
             self.assertLessEqual(d, s + 0.01)
         self.assertEqual(standins.FIT_STATS.get("fitted_in"), 1)
-        os.environ["DOT_PROP_MISFIT"] = "box"
+        os.environ["GS_PROP_MISFIT"] = "box"
         self.assertIn("box", self.fit(dict(rec, size=7.7), measure(5.8, 7.7, 1.3)))
-        os.environ["DOT_PROP_MISFIT"] = "bogus"
+        os.environ["GS_PROP_MISFIT"] = "bogus"
         with self.assertRaises(ValueError):
             self.fit(dict(rec, size=7.7), measure(5.8, 7.7, 1.3))
-        del os.environ["DOT_PROP_MISFIT"]
+        del os.environ["GS_PROP_MISFIT"]
 
     def test_trees_keep_their_height_fit_unless_far_off(self):
         rec = {"stand_in": "tree", "model": "t.mdl", "at": [0, 0, 0], "yaw": 0, "scale": 1.0, "size": 9.0}
@@ -82,17 +82,17 @@ class FitPass(unittest.TestCase):
 
     def test_off_and_fail_policies(self):
         rec = {"stand_in": "fence", "model": "m.mdl", "at": [0, 0, 0], "yaw": 0, "scale": 1.0}
-        os.environ["DOT_PROP_FIT"] = "off"
+        os.environ["GS_PROP_FIT"] = "off"
         self.assertNotIn("size", self.fit(dict(rec), measure(9.77, 3.0, 0.2)))
-        os.environ["DOT_PROP_FIT"] = "fail"
+        os.environ["GS_PROP_FIT"] = "fail"
         with self.assertRaises(ValueError):
             self.fit(dict(rec), measure(9.77, 3.0, 0.2))
-        os.environ["DOT_PROP_FIT"] = "bogus"
+        os.environ["GS_PROP_FIT"] = "bogus"
         with self.assertRaises(ValueError):
             self.fit(dict(rec), measure(9.77, 3.0, 0.2))
 
     def test_thresholds_are_configurable(self):
-        os.environ["DOT_PROP_FIT_HIGH"] = "20"
+        os.environ["GS_PROP_FIT_HIGH"] = "20"
         rec = self.fit({"stand_in": "fence", "model": "m.mdl", "at": [0, 0, 0], "yaw": 0, "scale": 1.0}, measure(0.2, 0.069, 0.014))
         self.assertNotIn("size", rec)   # 5x off but under the raised bound
 

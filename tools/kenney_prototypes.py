@@ -17,7 +17,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import pbrmap  # noqa: E402
+from gsbsp import pbrmap  # noqa: E402
 
 SOURCE = "kenney"          # the library folder; the manifest row says Kenney
 URL = "https://kenney.nl/assets/prototype-textures"

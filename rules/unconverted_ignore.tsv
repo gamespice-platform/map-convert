@@ -1,4 +1,4 @@
-# Entity classes no game needs run, so the unconverted-class check passes them (dotbsp/unconverted.py).
+# Entity classes no game needs run, so the unconverted-class check passes them (gsbsp/unconverted.py).
 # A row is a class or prefix*, then why. Anything gameplay-relevant stays off this list until a game converts it:
 # trigger_*, filter_*, multi_manager, point_teleport, point_hurt, point_viewcontrol, game_text, game_player_equip, player_*.
 # class or prefix*	reason

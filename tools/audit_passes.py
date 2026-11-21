@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Attributes a box document's audit loss to the importer pass that removed the boxes: `python3 -P tools/audit_passes.py BSP DOC [--json OUT]`.
 
-DOC is a document an importer wrote with DOTBSP_PASS_LEDGER=1, so `DOC.passes.json` (dotbsp/passledger.py) sits beside it. The
+DOC is a document an importer wrote with GSBSP_PASS_LEDGER=1, so `DOC.passes.json` (gsbsp/passledger.py) sits beside it. The
 document is audited as it is, then once per pass with that pass's removed boxes put back, then with every pass's boxes put back;
 the drop in lost brushes and in missed floor is what that pass explains. A pass that restores nothing explains none of the loss.
 Passes overlap (a brush lost to two passes comes back with either), so the shares can add to more than the total.
@@ -18,7 +18,7 @@ sys.path.insert(0, HERE)
 sys.path.insert(0, os.path.join(HERE, ".."))
 import audit_maps  # noqa: E402
 import numpy as np  # noqa: E402
-from dotbsp import audit, docboxes, units  # noqa: E402
+from gsbsp import audit, docboxes, units  # noqa: E402
 
 
 def audit_with(bsp, doc, extra, max_loss=0.002):

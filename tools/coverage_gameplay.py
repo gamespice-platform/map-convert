@@ -3,7 +3,7 @@
 
     python3 -P tools/coverage_gameplay.py [--store DIR] [--check] REPORT.coverage.json [...]
 
-Each report names its source by `sha256`, a store entry (`dotbsp/store.py`). The rest of the report
+Each report names its source by `sha256`, a store entry (`gsbsp/store.py`). The rest of the report
 is kept as it was, so a world's binaries need not be rebuilt for its report to say what the
 converted map does not do as the original did. `--check` writes nothing and exits 5 when a report
 would gain a `gameplay_lost` entry (the ratchet) or does not have the section yet. A report whose
@@ -17,7 +17,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dotbsp import coverage, reader, store  # noqa: E402
+from gsbsp import coverage, reader, store  # noqa: E402
 
 
 def main(argv=None):

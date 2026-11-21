@@ -10,7 +10,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import modeldims, modelparts, standins  # noqa: E402
+from gsbsp import modeldims, modelparts, standins  # noqa: E402
 
 
 def cube(x0, y0, z0, s):

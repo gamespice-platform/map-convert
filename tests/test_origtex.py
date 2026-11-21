@@ -6,7 +6,7 @@ import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from dotbsp import origtex, vtf  # noqa: E402
+from gsbsp import origtex, vtf  # noqa: E402
 from test_vpk import vtf_rgba  # noqa: E402
 
 

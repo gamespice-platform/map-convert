@@ -7,7 +7,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import docboxes, passledger  # noqa: E402
+from gsbsp import docboxes, passledger  # noqa: E402
 
 
 def box(x, size, mat="wall", **kw):
@@ -69,11 +69,11 @@ class Ledger(unittest.TestCase):
         import tempfile
         with tempfile.TemporaryDirectory() as d:
             p = os.path.join(d, "m.json")
-            os.environ["DOTBSP_PASS_LEDGER"] = "1"
+            os.environ["GSBSP_PASS_LEDGER"] = "1"
             try:
                 passledger.finish(log=lambda s: None, out_path=p)
             finally:
-                del os.environ["DOTBSP_PASS_LEDGER"]
+                del os.environ["GSBSP_PASS_LEDGER"]
             with open(p + ".passes.json") as f:
                 side = json.load(f)
         self.assertEqual(side["order"], ["drop_small"])

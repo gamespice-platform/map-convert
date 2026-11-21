@@ -1,4 +1,4 @@
-"""Runs an adapter that lives in dot-map-convert/adapters/<repo>/ as if it still sat in the map repository's tools/.
+"""Runs an adapter that lives in gs-map-convert/adapters/<repo>/ as if it still sat in the map repository's tools/.
 
 A map repository's `tools/<name>.py` is a three-line launcher that calls `run(globals(), "<repo>", "<name>.py")`. The code is compiled
 from here but executes in the launcher's namespace, so `__file__`, `__name__` and `__doc__` are the launcher's: the adapter's
@@ -10,7 +10,7 @@ import os
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # legacy id: a renamed map repository whose launcher still says its old name (a checkout made before the rename).
-FORMER = {"game-playground-maps": "playlot-maps", "game-playlot-maps": "playlot-maps", "game-g2gfast": "game-airdrift"}
+FORMER = {"playlot-maps": "playlot-maps", "game-playlot-maps": "playlot-maps", "game-airdrift": "game-airdrift"}
 
 
 def adapter_path(repo, name):

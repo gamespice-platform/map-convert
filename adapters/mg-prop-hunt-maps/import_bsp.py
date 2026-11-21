@@ -16,7 +16,7 @@ author walled in with counters too tall for a bot to step over, where one prop a
 --prune-pockets drops every floor prop that leaves a sliver of floor the bots' mesh cuts off (a small flat's
 beds and bookcases a hand off a wall), by a flood fill over a grid, instead of one --drop-beside at a time.
 
-Start top-up (dotbsp/spawntopup.py): props are topped up to 8 on the floor level(s) the author's starts stand on (not y = 0, so a
+Start top-up (gsbsp/spawntopup.py): props are topped up to 8 on the floor level(s) the author's starts stand on (not y = 0, so a
 raised floor works). A map with no hunter start gets three (otherwise the build crashes); a map with one or two hunter starts keeps
 them unless --topup-hunters asks for three.
 
@@ -46,7 +46,7 @@ author left unskinned); other maps keep the surface their material names say.
 What it does, and why each choice:
 
 - The world's brushes become BOXES, because a map document has no meshes. Each brush's convex
-  hull is found (dotbsp's Bsp.brush_hull, via the bsp_read shim) and its bounding
+  hull is found (gsbsp's Bsp.brush_hull, via the bsp_read shim) and its bounding
   box is written; a brush that is NOT a box (a roof slope, a stair) is cut into slabs along its
   longer horizontal axis, each slab as tall as the brush is at the slab's middle, so a ramp
   becomes a staircase of 0.3 m risers rather than a block twice its height.
@@ -69,13 +69,13 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import bsp_read  # noqa: E402  (a shim over dot-map's shared reader; it puts dotbsp on sys.path)
-from dotbsp import boxes as dboxes, docboxes, passledger  # noqa: E402  (the shared passes over a document's boxes)
-from dotbsp import models as bsp_models  # noqa: E402  (the models a map packs in its pakfile)
-from dotbsp import restack as dotrestack  # noqa: E402  (floating props are lowered onto the support below)
-from dotbsp import spawntopup  # noqa: E402  (props/hunters start top-up)
-from dotbsp import standins  # noqa: E402
-from dotbsp import sourceframe  # noqa: E402  (doc["source_frame"]: the origin shift and bounds, for the audit)
+import bsp_read  # noqa: E402  (a shim over gs-map's shared reader; it puts gsbsp on sys.path)
+from gsbsp import boxes as dboxes, docboxes, passledger  # noqa: E402  (the shared passes over a document's boxes)
+from gsbsp import models as bsp_models  # noqa: E402  (the models a map packs in its pakfile)
+from gsbsp import restack as gsrestack  # noqa: E402  (floating props are lowered onto the support below)
+from gsbsp import spawntopup  # noqa: E402  (props/hunters start top-up)
+from gsbsp import standins  # noqa: E402
+from gsbsp import sourceframe  # noqa: E402  (doc["source_frame"]: the origin shift and bounds, for the audit)
 import build_maps  # noqa: E402
 
 S = 0.01905
@@ -845,7 +845,7 @@ def vec(s):
 
 def brush_boxes(bsp, index):
     """[((x range), (y range), (z range), phi)] in Source units, the ranges in a frame turned phi
-    degrees (0 for most), and whether the brush had to be cut into slabs. dot-map-convert's
+    degrees (0 for most), and whether the brush had to be cut into slabs. gs-map-convert's
     boxes.decompose_axis, which is this importer's own cut as it was."""
     first, count, _ = bsp.brushes[index]
     planes = [bsp.planes[s[0]][:4] for s in bsp.brushsides[first:first + count] if not s[3]]
@@ -1272,10 +1272,10 @@ def drop_buried(boxes, field, cell=80.0):
 
 def restack_props(doc, max_drop=0.0, strict=False):
     """Sets each floating prop down on the support below it (a box top or another prop's top)
-    before the audit would drop it; the shared pass is dotbsp.restack. max_drop is the furthest
+    before the audit would drop it; the shared pass is gsbsp.restack. max_drop is the furthest
     a prop may fall in metres (0 = unlimited); strict raises when a prop has no support within
     reach, otherwise the audit that follows drops it. Returns (lowered, unsupported)."""
-    return dotrestack.restack(
+    return gsrestack.restack(
         doc, lambda q: build_maps.footprint(q["id"], q.get("yaw", 0.0)),
         lambda under, dx, dz, q: build_maps.rest_on(under, dx, dz, q["id"], q.get("yaw", 0.0)),
         max_drop=max_drop, skip=lambda q: "ceiling" in q["id"] or "lily" in q["id"], strict=strict)
@@ -1622,7 +1622,7 @@ def main(argv):
         if not m._floored(gx, sy - 0.05, gz):
             continue
         m.spawn("props" if i % 2 == 0 else "hunters", gx, gz, yaw=ang[1] - 90.0, y=(max(gy, 0.0) if floor is None else floor) + 0.05)
-    # The author gave six starts; a prop hunt wants six hiding starts and three hunter ones (dotbsp.spawntopup).
+    # The author gave six starts; a prop hunt wants six hiding starts and three hunter ones (gsbsp.spawntopup).
     # A map with no hunter start gets three; one with one or two only with --topup-hunters.
     spawntopup.top_up(m, hunters_always=topup_hunters)
     have = [(sp["at"][0], sp["at"][2]) for side in m.spawns.values() for sp in side]  # the toys keep clear of every start

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """check_zone_fidelity -- every converted teleport catches a player only where Source's did.
 
-Source touches a trigger with the player's hull (32 wide, 72 tall); dot-timer tests one point,
+Source touches a trigger with the player's hull (32 wide, 72 tall); gs-timer tests one point,
 the feet, once a tick. So the importer thickens a thin trigger, and this checks that the
 thickening never reaches anywhere Source's trigger could not have touched a player from:
 
@@ -40,7 +40,7 @@ import json
 import sys
 from pathlib import Path
 
-# dot-map-convert adapters/game-airdrift/bsp_import.py
+# gs-map-convert adapters/game-airdrift/bsp_import.py
 PLAYER_HALF_WIDTH = 16.0
 HOP_REACH = 76.0
 MIN_ZONE_THICKNESS = 192.0

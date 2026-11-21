@@ -1,4 +1,4 @@
-"""dotbsp.restack: a floating prop is lowered onto the support below, within the allowed drop.
+"""gsbsp.restack: a floating prop is lowered onto the support below, within the allowed drop.
 Run: python3 -P tests/test_restack.py
 """
 import os
@@ -8,7 +8,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import restack  # noqa: E402
+from gsbsp import restack  # noqa: E402
 
 FOOT = lambda q: (0.5, 0.5)  # noqa: E731
 H = {"table": 0.6, "cup": 0.1}

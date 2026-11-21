@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                          # noqa: E402
-from dotbsp import intermediate, readers              # noqa: E402
+from gsbsp import intermediate, readers              # noqa: E402
 
 LIC = {"author": "A", "url": "https://example.org/a", "licence": "CC0-1.0"}
 
@@ -46,7 +46,7 @@ class Readers(unittest.TestCase):
     def test_plugin_directory(self):
         with tempfile.TemporaryDirectory() as d:
             with open(os.path.join(d, "ogg.py"), "w") as f:
-                f.write("from dotbsp import readers\n"
+                f.write("from gsbsp import readers\n"
                         "def register(r):\n"
                         "    r.register(readers.Reader('ogg', 'sound', ('.ogg',), lambda p, **o: {'ok': 1}))\n")
             reg = readers.Registry()

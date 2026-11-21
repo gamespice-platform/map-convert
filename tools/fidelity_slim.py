@@ -3,7 +3,7 @@
 
     python3 -P tools/fidelity_slim.py OUT_DIR ROOT [ROOT ...] [--jobs N]
 
-The audit (`dotbsp/fidelity.py`) reads the entity lump and the brush tree (planes, nodes, leafs,
+The audit (`gsbsp/fidelity.py`) reads the entity lump and the brush tree (planes, nodes, leafs,
 models, leaf brushes, brushes, brush sides): a few MB of a map that is often hundreds of MB of
 faces, lighting and packed files. This writes one slim map per distinct source (`<key>.bsp`, a
 valid map holding only those lumps, read through mmap so the rest of the file is never paged
@@ -25,7 +25,7 @@ from concurrent.futures import ProcessPoolExecutor
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dotbsp import reader  # noqa: E402
+from gsbsp import reader  # noqa: E402
 
 KEEP = (reader.LUMP_ENTITIES, reader.LUMP_PLANES, reader.LUMP_NODES, reader.LUMP_LEAFS, reader.LUMP_MODELS,
         reader.LUMP_LEAFBRUSHES, reader.LUMP_BRUSHES, reader.LUMP_BRUSHSIDES)

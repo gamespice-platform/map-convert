@@ -10,7 +10,7 @@ runner follows. Everything else is read from the bsp.
 What it does, and why:
 
 - The world's brushes become BOXES (a course document has no meshes). `brush_boxes` is
-  dotbsp.boxes.decompose: a brush that is not a box is
+  gsbsp.boxes.decompose: a brush that is not a box is
   a turned box, a vertical prism, or cut into slabs. Boxes that touch end to end are then
   merged, because a document is capped at MAX_PIECES (2400) and a ceiling is a hundred slats.
 - Scale: 1 unit = 0.0254 m (a true inch, a 72 unit player is 1.83 m), not the 0.01905 of the
@@ -64,7 +64,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import bsp_read  # noqa: E402
-from dotbsp import boxes as dboxes  # noqa: E402
+from gsbsp import boxes as dboxes  # noqa: E402
 
 MAX_PIECES = 2400     # dr_course_doc.MAX_PIECES in mg-deathrun
 S = 0.0254
@@ -93,7 +93,7 @@ def vec(s):
     return [float(x) for x in s.split()]
 
 
-# ---- brushes -> boxes (dotbsp.boxes.decompose) ---------------------------------------------
+# ---- brushes -> boxes (gsbsp.boxes.decompose) ---------------------------------------------
 
 def brush_boxes(bsp, index):
     """[((x range), (y range), (z range), phi)] in Source units, and whether it was sliced."""

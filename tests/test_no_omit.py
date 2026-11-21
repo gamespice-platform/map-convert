@@ -10,7 +10,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import standins  # noqa: E402
+from gsbsp import standins  # noqa: E402
 
 SKY = "models/props_buildings/project_building01_skybox.mdl"
 

@@ -8,7 +8,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from dotbsp import licence, origmodels as O  # noqa: E402
+from gsbsp import licence, origmodels as O  # noqa: E402
 
 
 def _ry(deg):

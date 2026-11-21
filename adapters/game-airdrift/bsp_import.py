@@ -51,8 +51,8 @@ import stock_archives  # noqa: E402
 import bsp_mechanics  # noqa: E402
 import bsp_props  # noqa: E402
 import stock_standins  # noqa: E402
-from dotbsp import mood as _mood  # noqa: E402
-from dotbsp import docboxes as _docboxes, materials as _dotmaterials, props as _dotprops, ramps as _ramps  # noqa: E402
+from gsbsp import mood as _mood  # noqa: E402
+from gsbsp import docboxes as _docboxes, materials as _gsmaterials, props as _gsprops, ramps as _ramps  # noqa: E402
 
 LUMP_LIGHTING, LUMP_PAKFILE, LUMP_PLANES = 8, 40, 1
 ATLAS_W = 1024
@@ -76,12 +76,12 @@ LM_PAD = 1
 
 # The least a zone volume may measure on any axis, in genre units.
 #
-# [b]Source sweeps its trigger tests and dot-timer samples a point per tick.[/b] A
+# [b]Source sweeps its trigger tests and gs-timer samples a point per tick.[/b] A
 # `trigger_teleport` in a surf map is the pit, and a mapper draws it as a 16-unit
-# plane because Source asks "did the player's path cross this". dot-timer's index asks
+# plane because Source asks "did the player's path cross this". gs-timer's index asks
 # `contains(point)` once a tick, so at 3500 u/s and 128 Hz -- 27 units of travel per
 # tick -- a falling player steps straight over a 16-unit plane and keeps falling for
-# ever, which is precisely the bug dot-timer's RESPAWN zones exist to prevent.
+# ever, which is precisely the bug gs-timer's RESPAWN zones exist to prevent.
 #
 # The plane is therefore inflated into a slab centred on it. Centred, and not extended
 # downward: downward is right for a pit and wrong for a boundary trigger above the
@@ -105,7 +105,7 @@ MIN_ZONE_THICKNESS = 192.0
 # units. A pit the importer could not grow to MIN_ZONE_THICKNESS is still made this deep.
 TICK_DEPTH = 32.0
 
-# The standing player hull: Source touches a trigger with this box, dot-timer with the feet.
+# The standing player hull: Source touches a trigger with this box, gs-timer with the feet.
 PLAYER_HEIGHT = 72.0
 PLAYER_HALF_WIDTH = 16.0
 # How high a player's feet rise over the floor: a 57-unit jump, 18 more crouched in the air.
@@ -1231,7 +1231,7 @@ def prop_hulls(pak, drawn):
     return out
 
 
-# Library staircases a solid `prop_dynamic` is drawn as (rules/models/picks.tsv): dotbsp.ramps, shared with the
+# Library staircases a solid `prop_dynamic` is drawn as (rules/models/picks.tsv): gsbsp.ramps, shared with the
 # worlds/ regen. A stock model has no .phy in the pak, so without this the stairs are not solid.
 WALK_RAMPS = _ramps.WALK_RAMPS
 METRES_PER_UNIT = 0.01905
@@ -1242,18 +1242,18 @@ def stair_hulls(bsp, picks=None):
 
     A ramp and not one box per step: a tread of the drawn model is taller than a player steps up (11 steps over
     4.7 m on cp_orange_x3), and a ramp along the front edges is the climb the drawing shows. Placed the way
-    dotbsp.standins._shaped_placements and the game draw the pick: on the origin plus the turned centre, at yaw
+    gsbsp.standins._shaped_placements and the game draw the pick: on the origin plus the turned centre, at yaw
     + 90 * turns + 90 (the library model faces +z, a Source model +x), scaled so its longest side is `size`, and
-    measured from the bottom centre of the model's bounds (dotbsp.ramps.local_points), where the game roots it.
+    measured from the bottom centre of the model's bounds (gsbsp.ramps.local_points), where the game roots it.
     """
     if picks is None:
-        from dotbsp import standins as _standins
+        from gsbsp import standins as _standins
         picks = _standins.picks()
     out = []
     for e in bsp.entities:
         if e.get("classname") not in SKY_PROP_CLASSES or e.get("solid", "6") == "0":
             continue
-        pick = picks.get(_dotprops.norm_model(e.get("model", "")))
+        pick = picks.get(_gsprops.norm_model(e.get("model", "")))
         ramp = WALK_RAMPS.get(pick["stand_in"]) if pick else None
         if ramp is None:
             continue
@@ -1331,7 +1331,7 @@ def merge_convex_brushes(bsp, brushes):
             planes.append(((pl[0], pl[1], pl[2]), pl[3]))
         items.append({"pts": [tuple(p) for p in bsp.brush_hull(i)], "planes": planes,
                       "contents": contents, "alive": True,
-                      "kind": _dotmaterials.hull_kind(_docboxes.brush_material_names(bsp, i), contents)})
+                      "kind": _gsmaterials.hull_kind(_docboxes.brush_material_names(bsp, i), contents)})
 
     def behind(pts, planes, skip):
         for n, d in planes:
@@ -1423,7 +1423,7 @@ def build_collision(bsp, notes, props=()):
                 notes.append("%s brush %d has no hull (%d corners)" % (why, i, len(pts)))
                 continue
             hulls.append((pts, offset, contents,
-                          _dotmaterials.hull_kind(_docboxes.brush_material_names(bsp, i), contents)))
+                          _gsmaterials.hull_kind(_docboxes.brush_material_names(bsp, i), contents)))
 
     add_model(0, (0.0, 0.0, 0.0), "world")
     world_brushes = sorted(i for i in bsp.model_brushes(0)
@@ -1518,7 +1518,7 @@ def build_collision(bsp, notes, props=()):
         "playerclip_hulls": clips,
         "prop_hulls": len(hulls) - first_prop,
         # Hull indexes by kind, for every kind but `solid` (clip, glass, fence, sky: see
-        # dotbsp.materials.hull_kind). Absent means all solid: a manifest written before this
+        # gsbsp.materials.hull_kind). Absent means all solid: a manifest written before this
         # key loads as it always did. A dict of index lists, not a list parallel to the hulls,
         # because nearly every hull is solid and a map has thousands.
         "hull_kinds": dict(kinds),
@@ -1533,7 +1533,7 @@ def hull_span(span, minimum):
     [b]Sideways, Source's trigger already reaches PLAYER_HALF_WIDTH past the brush.[/b]
     Its touch test is the player's 32-wide hull against the brush, so the feet it
     catches lie up to 16 units outside each face, and growing the box by exactly that
-    makes the point test dot-timer does ask the same question. It is also enough for
+    makes the point test gs-timer does ask the same question. It is also enough for
     the tick: an 8-unit door becomes 40, and 3500 u/s at 128 Hz is 27.3 units a tick,
     so nobody crosses it between two samples. Never past `minimum`, which is the most
     the old centred growth ever made of it.
@@ -2388,7 +2388,7 @@ def finish_teleports(z, spec, track, around):
     [b]Claimed as END alone, it finished the run and left the player standing in it.[/b]
     bhop_arcane_v2's stage-stop pads land the player at `end_stop`, inside a clip brush
     and inside the trigger to `end`: Source moved them on, this game left them stuck.
-    The TELEPORT fires after the finish (dot-timer applies effects last), and is marked
+    The TELEPORT fires after the finish (gs-timer applies effects last), and is marked
     `finish` so a pit landing in it is not chained past the END.
     """
     want = str(spec["teleport_to"]).strip().lower()
@@ -2414,7 +2414,7 @@ POINT_KINDS = ("SPAWN",)
 #
 # A Source `info_teleport_destination` is at the player's feet and so is the middle of
 # a zone's floor, so SOMETHING has to lift a player off it: a foot resting at exactly
-# the floor's height is the state dot-player-controller's own notes describe as never
+# the floor's height is the state gs-player-controller's own notes describe as never
 # reporting ground again. It was 8 units, which is 15 cm, and 15 cm turns out to be
 # inside the noise.
 #
@@ -2780,7 +2780,7 @@ def brush_boxes(bsp, e):
 
     [b]A trigger is the union of its brushes, and the box around that union is not.[/b]
     A pit a mapper drew as an L, or as thirty-eight strips under thirty-eight gaps, has a
-    bounding box that covers every block between them -- and dot-timer's zones are
+    bounding box that covers every block between them -- and gs-timer's zones are
     boxes, so a respawn zone built from [method brush_box] respawned players on the
     blocks. bhop_tesquo_v2 put three of its own stage arrivals inside one.
 
@@ -2949,7 +2949,7 @@ def clear_standers(zone, solids):
     """Raise a thickened pit, column by column, off every floor whose stander Source
     never touched it from; returns the extra boxes the cut leaves (the zone keeps one).
 
-    Source touches a trigger with the standing hull, dot-timer with the feet, so a floor
+    Source touches a trigger with the standing hull, gs-timer with the feet, so a floor
     at least PLAYER_HEIGHT under the mapper's sheet keeps HOP_REACH of air above it. A
     floor nearer the sheet is in the pit, as it was in Source; the sheet is never cut.
     """
@@ -4351,11 +4351,11 @@ def main(argv=None):
     out_dir = a.out_dir
     if doc.get("kind") == "arena" and os.path.basename(os.path.normpath(out_dir)) == "imported":
         # A combat map is not a course and is not kept in airdrift-maps (2026-10-17): it goes
-        # to the repository game-arena links at its own maps/imported, so the .import
+        # to the repository game-fatal-contact links at its own maps/imported, so the .import
         # markers written here still match the path they are mounted at.
-        # ARENA_SURF_DM_MAPS overrides the checkout (default: the sibling arena-surf-dm-maps).
+        # ARENA_SURF_DM_MAPS overrides the checkout (default: the sibling fc-surf-dm-maps).
         out_dir = os.path.join(os.environ.get("ARENA_SURF_DM_MAPS") or os.path.join(
-            os.path.dirname(os.path.abspath(__file__)), "..", "..", "arena-surf-dm-maps"), "maps")
+            os.path.dirname(os.path.abspath(__file__)), "..", "..", "fc-surf-dm-maps"), "maps")
         print("  kind arena: written to %s" % os.path.normpath(out_dir))
     d = os.path.join(out_dir, map_id)
     os.makedirs(d, exist_ok=True)

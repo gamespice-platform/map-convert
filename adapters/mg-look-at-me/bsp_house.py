@@ -1,5 +1,5 @@
 #!/usr/bin/env python3 -P
-"""Convert a compiled map (dotbsp intermediate JSON) into a Look At Me house layout, automatically.
+"""Convert a compiled map (gsbsp intermediate JSON) into a Look At Me house layout, automatically.
 
 Look At Me draws its houses from rooms on a 4 m grid (doors, keys, witch walks and the
 furniture proof all read that grid), so a converted house is the source's plan, not its

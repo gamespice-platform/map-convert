@@ -4,7 +4,7 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from dotbsp import coverage, inputs, movers   # noqa: E402
+from gsbsp import coverage, inputs, movers   # noqa: E402
 
 
 class Bsp:

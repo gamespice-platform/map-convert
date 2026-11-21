@@ -66,7 +66,7 @@ where it spawned (59 of 144 walked 8 m), and the game is the walk to somewhere t
 were: a small hotel's seekers began a few metres from the hiders' lobby, so the first was caught in two seconds and
 the map's whole round lasted under thirty. The far end of the building makes the seekers walk the length of it.
 
---terrain turns the map's displacement ground (sculpted terrain, which is not a brush) into dot-map's heightfield (`terrain` in the
+--terrain turns the map's displacement ground (sculpted terrain, which is not a brush) into gs-map's heightfield (`terrain` in the
 document, fitted to --terrain-budget bytes); without it a map whose yard is terrain has no floor. --graft-terrain=<doc.json> <bsp> swaps a
 committed document's old stepped field of boxes for the heightfield and sets what stood on it down on the new ground, leaving the rest as it is.
 
@@ -106,11 +106,11 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import bsp_read  # noqa: E402  (a shim over dot-map's shared reader; it puts dotbsp on sys.path)
-from dotbsp import boxes as dboxes, docboxes, passledger  # noqa: E402  (the shared passes over a document's boxes)
-from dotbsp import terrain as dterrain  # noqa: E402
-from dotbsp import sourceframe  # noqa: E402  (doc["source_frame"]: the origin shift and bounds, for the audit)
-from dotbsp import lights as dlights  # noqa: E402
+import bsp_read  # noqa: E402  (a shim over gs-map's shared reader; it puts gsbsp on sys.path)
+from gsbsp import boxes as dboxes, docboxes, passledger  # noqa: E402  (the shared passes over a document's boxes)
+from gsbsp import terrain as dterrain  # noqa: E402
+from gsbsp import sourceframe  # noqa: E402  (doc["source_frame"]: the origin shift and bounds, for the audit)
+from gsbsp import lights as dlights  # noqa: E402
 import build_maps  # noqa: E402
 
 S = 0.01905
@@ -121,7 +121,7 @@ MIN_SIZE = 0.0   # --min-size=m: boxes with a longest side under this are droppe
 TERRAIN_TINT = (0.85, 0.9, 0.78)
 
 
-terrain_tris = dterrain.terrain_tris  # swap_terrain and its helpers live in dot-map (dotbsp.terrain)
+terrain_tris = dterrain.terrain_tris  # swap_terrain and its helpers live in gs-map (gsbsp.terrain)
 swap_terrain = dterrain.swap_terrain
 
 # This game's catalogue has no food_* or survival_*: a person hides, not a bottle. "" drops.
@@ -362,7 +362,7 @@ def vec(s):
 
 
 def brush_boxes(bsp, index):
-    """dot-map's boxes.decompose for one brush: ([(u range), (v range), (z range), phi], cut), cut 1 when
+    """gs-map's boxes.decompose for one brush: ([(u range), (v range), (z range), phi], cut), cut 1 when
     it had to be cut into slabs. The ranges are in Source units, in a frame turned phi degrees."""
     first, count, _ = bsp.brushes[index]
     planes = [bsp.planes[s[0]][:4] for s in bsp.brushsides[first:first + count] if not s[3]]

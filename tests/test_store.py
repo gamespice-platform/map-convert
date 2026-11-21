@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                          # noqa: E402
-from dotbsp import movers, reader, store              # noqa: E402
+from gsbsp import movers, reader, store              # noqa: E402
 
 
 class Pairs:
@@ -160,7 +160,7 @@ class RoundTrip(unittest.TestCase):
 
 
     def test_a_link_target_may_be_a_wildcard_or_a_class(self):
-        from dotbsp import movers
+        from gsbsp import movers
         named = {"snow_p1": [3], "snow_p2": [4], "door": [5]}
         self.assertEqual(movers._resolve("snow_p*", named, {}), [3, 4])
         self.assertEqual(movers._resolve("door", named, {}), [5])

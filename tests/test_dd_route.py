@@ -13,7 +13,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import mesh  # noqa: E402
+from gsbsp import mesh  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location(
     "bsp_route", os.path.join(HERE, "..", "adapters", "mg-dangerous-delivery", "bsp_route.py"))

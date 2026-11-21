@@ -6,7 +6,7 @@ import unittest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, os.path.dirname(__file__))
 
-from dotbsp import mapcfg
+from gsbsp import mapcfg
 
 
 class MapCfg(unittest.TestCase):
@@ -51,7 +51,7 @@ class Automatic(unittest.TestCase):
     def test_store_and_regen_emit_the_starter(self):
         import argparse
         import synth
-        from dotbsp import regen, store
+        from gsbsp import regen, store
         ents = [{"classname": "worldspawn"}, {"classname": "info_player_start", "origin": "16 16 1"},
                 {"classname": "trigger_once", "origin": "0 0 0", "OnTrigger": "cmd,Command,sv_airaccelerate 150,0,-1"},
                 {"classname": "point_servercommand", "targetname": "cmd", "origin": "8 8 8"}]
@@ -65,14 +65,14 @@ class Automatic(unittest.TestCase):
                                   map_rules=None, ratchet=False, baseline=None, coverage=None, catalogue=None,
                                   name="surf_fix", scale="visual", y0=0.0, crop=None)
         self.assertIn(regen.cmd(args), (0, 4))
-        with open(os.path.join(os.path.dirname(out), "dot_map", "map", "surf_fix.yml")) as f:
+        with open(os.path.join(os.path.dirname(out), "gs_map", "map", "surf_fix.yml")) as f:
             self.assertIn("# sv_airaccelerate: 150", f.read())
         import json
         with open(out + ".json") as f:
             self.assertEqual(json.load(f)["settings"], {"sv_airaccelerate": 150})
         with open(out + ".doc.json") as f:
             doc = json.load(f)
-        self.assertEqual(doc["format"], "dot-bsp-source")
+        self.assertEqual(doc["format"], "gs-bsp-source")
         self.assertEqual(doc["sha256"], h)
 
 

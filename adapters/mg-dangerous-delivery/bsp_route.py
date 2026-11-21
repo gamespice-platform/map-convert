@@ -4,7 +4,7 @@
     python3 -P adapters/mg-dangerous-delivery/bsp_route.py <prefix> <out.json> [--id ID] [--name N]
         [--blurb B] [--cargo C] [--start X,Z] [--end X,Z] [--cell 2] [--max-length 3000]
 
-`<prefix>` names a converted map's `<prefix>.json` and `<prefix>.bin` (dotbsp.mesh). A route in
+`<prefix>` names a converted map's `<prefix>.json` and `<prefix>.bin` (gsbsp.mesh). A route in
 that game is not geometry: it is a list of segments (length, turn, climb, walls, rails) the game
 builds its own terrain from, so this reads the shape of the map's road and writes that shape.
 
@@ -38,7 +38,7 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(os.path.dirname(HERE)))
-from dotbsp import mesh as _mesh  # noqa: E402
+from gsbsp import mesh as _mesh  # noqa: E402
 
 ROAD_WORDS = ("road", "asphalt", "tarmac", "street", "intsect", "alley")
 SURFACE_WORDS = ROAD_WORDS + ("gravel", "path")   # a road in a non-blended texture; on a blend only the layer says
@@ -533,7 +533,7 @@ def route_doc(doc, m, rid=None, name=None, blurb=None, cargo="crates", start=Non
     climb = sum(abs(s["climb"]) for s in segs)
     widths = sorted(s["width"] for s in segs)
     route = {"format": 1, "kind": "route", "id": rid, "name": name or mapname,
-             "author": "dot-map-convert bsp_route", "blurb": blurb or ("The longest road through %s." if stats["road_share"] >= 0.5 else "Across country over %s.") % mapname,
+             "author": "gs-map-convert bsp_route", "blurb": blurb or ("The longest road through %s." if stats["road_share"] >= 0.5 else "Across country over %s.") % mapname,
              "level": max(1, min(9, 1 + int(total // 700) + int(climb // 60))),
              "pay": int(max(300, round(total * 0.3 / 10.0) * 10)), "width": float(widths[len(widths) // 2]),
              "cargo": cargo, "zones": {"map": zone}, "segments": segs}

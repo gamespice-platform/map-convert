@@ -20,7 +20,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dotbsp import mesh, overlays, reader  # noqa: E402
+from gsbsp import mesh, overlays, reader  # noqa: E402
 
 
 def frame_of(doc_path):

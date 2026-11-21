@@ -1,4 +1,4 @@
-"""dotbsp.mesh's tests. Run: python3 -P tests/test_mesh.py
+"""gsbsp.mesh's tests. Run: python3 -P tests/test_mesh.py
 
 Every map is written by tests/synth.py with `faces=True`, so the drawn faces are known exactly.
 """
@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                          # noqa: E402
-from dotbsp import classes, mesh, movers, paths, reader, units  # noqa: E402
+from gsbsp import classes, mesh, movers, paths, reader, units  # noqa: E402
 
 MATS = ("concrete/concretefloor001", "metal/metalwall001")
 
@@ -267,7 +267,7 @@ class Movers(unittest.TestCase):
 
 
 class Entities(unittest.TestCase):
-    REAL = os.path.join(paths.dot_map_dir(), "examples", "bsp_mesh", "zm_4way_tunnel.entities.json")
+    REAL = os.path.join(paths.gs_map_dir(), "examples", "bsp_mesh", "zm_4way_tunnel.entities.json")
 
     def test_trigger_multiple_and_once_are_volumes_with_outputs(self):
         bsp = load(entity_box=(0, 0, 0, 64, 64, 64), entity_class="trigger_multiple",

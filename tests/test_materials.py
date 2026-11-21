@@ -5,7 +5,7 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from dotbsp import materials, rules  # noqa: E402
+from gsbsp import materials, rules  # noqa: E402
 
 
 def vtf_rgba(alphas, w=4, h=4):

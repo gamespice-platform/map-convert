@@ -8,9 +8,9 @@ import unittest
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 sys.path.insert(0, ROOT)
-from dotbsp import docboxes as D  # noqa: E402
+from gsbsp import docboxes as D  # noqa: E402
 
 
 def box(x0, x1, y0, y1, z0, z1, mat="plaster"):

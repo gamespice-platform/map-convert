@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                          # noqa: E402
-from dotbsp import fidelity, movers, reader           # noqa: E402
+from gsbsp import fidelity, movers, reader           # noqa: E402
 
 
 class Pairs:
@@ -163,7 +163,7 @@ class ShippedReports(unittest.TestCase):
         import tempfile
         sys.path.insert(0, os.path.join(os.path.dirname(HERE), "tools"))
         import coverage_gameplay
-        from dotbsp import store
+        from gsbsp import store
         root = tempfile.mkdtemp()
         data = synth.build(entities=[{"classname": "worldspawn"},
                                      {"classname": "zz_unheard_of", "targetname": "z", "OnTrigger": "z,Kill,,0,-1"}])

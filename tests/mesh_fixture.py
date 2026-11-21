@@ -13,9 +13,9 @@ sys.path.insert(0, os.path.dirname(HERE))
 sys.path.insert(0, HERE)
 
 import synth                                 # noqa: E402
-from dotbsp import mesh, movers, paths, reader  # noqa: E402
+from gsbsp import mesh, movers, paths, reader  # noqa: E402
 
-OUT = os.path.join(paths.dot_map_dir(), "examples", "bsp_mesh", "fixture")
+OUT = os.path.join(paths.gs_map_dir(), "examples", "bsp_mesh", "fixture")
 
 
 def bsp():
@@ -44,7 +44,7 @@ def glass_bsp():
 def write_glass(prefix=GLASS_OUT):
     b = glass_bsp()
     m = mesh.build(b)
-    return mesh.write(m, prefix, credit={"author": "dot-map tests"}, name="glass",
+    return mesh.write(m, prefix, credit={"author": "gs-map tests"}, name="glass",
                       extra={"movers": movers.movers(b), "volumes": movers.volumes(b), "links": movers.links(b),
                              "entities": movers.generic(b), "breakables": mesh.breakables(b, m)})
 
@@ -54,7 +54,7 @@ def write(prefix=OUT):
     m = mesh.build(b)
     extra = {"movers": movers.movers(b), "volumes": movers.volumes(b),
              "links": movers.links(b), "entities": movers.generic(b)}
-    return mesh.write(m, prefix, credit={"author": "dot-map tests"}, name="fixture", extra=extra)
+    return mesh.write(m, prefix, credit={"author": "gs-map tests"}, name="fixture", extra=extra)
 
 
 if __name__ == "__main__":

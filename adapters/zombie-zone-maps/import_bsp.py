@@ -4,14 +4,14 @@
     python3 -P tools/import_bsp.py tools/bsp/zs_ravenstreet.json path/to/zs_ravenstreet_v1.bsp [out_dir]
     python3 -P tools/import_bsp.py tools/bsp/zs_ravenstreet.json zs_ravenstreet.json [out_dir]
 
-The second form reads the family's intermediate document (dot-map-convert/bsp.py
+The second form reads the family's intermediate document (gs-map-convert/bsp.py
 convert`) instead of the map; the first builds that document in memory. Either way this file
-is the game's adapter: reading the format and cutting brushes into boxes are dot-map's
-(`tools/bsp/`, found beside this repository or at `$DOTBSP_PATH`), so a reader fix reaches
+is the game's adapter: reading the format and cutting brushes into boxes are gs-map's
+(`tools/bsp/`, found beside this repository or at `$GSBSP_PATH`), so a reader fix reaches
 every game that converts maps.
 
 The game's maps are boxes, not meshes, so this reads the *brushes* (the solid volume the
-engine collides with) and writes each as a box, by dot-map's `boxes.decompose`:
+engine collides with) and writes each as a box, by gs-map's `boxes.decompose`:
 
   * an axis-aligned brush, a brush turned about the vertical, or an upright prism that fills
     most of a turned rectangle is one box (with `yaw`);
@@ -45,28 +45,28 @@ sys.path.insert(0, HERE)
 import ambient  # noqa: E402
 
 
-def _dotbsp_path():
-    """dot-map-convert: $DOTBSP_PATH, else the sibling checkout dot-bootstrap makes."""
-    for p in (os.environ.get("DOTBSP_PATH", ""), os.path.join(HERE, "..", "..", "dot-map-convert")):
-        if p and os.path.isfile(os.path.join(p, "dotbsp", "reader.py")):
+def _gsbsp_path():
+    """gs-map-convert: $GSBSP_PATH, else the sibling checkout gs-bootstrap makes."""
+    for p in (os.environ.get("GSBSP_PATH", ""), os.path.join(HERE, "..", "..", "gs-map-convert")):
+        if p and os.path.isfile(os.path.join(p, "gsbsp", "reader.py")):
             return os.path.abspath(p)
-    sys.exit("import_bsp: dot-map-convert was not found; clone dot-map beside this "
-             "repository (dot-bootstrap does) or set DOTBSP_PATH to its checkout")
+    sys.exit("import_bsp: gs-map-convert was not found; clone gs-map beside this "
+             "repository (gs-bootstrap does) or set GSBSP_PATH to its checkout")
 
 
-sys.path.insert(1, _dotbsp_path())
-from dotbsp import boxes as dboxes, classes as dclasses, docboxes, intermediate, reader, texturemap  # noqa: E402
-from dotbsp import lights as dlights  # noqa: E402
-from dotbsp import terrain as dterrain  # noqa: E402
-from dotbsp import flood as dflood, movers  # noqa: E402
+sys.path.insert(1, _gsbsp_path())
+from gsbsp import boxes as dboxes, classes as dclasses, docboxes, intermediate, reader, texturemap  # noqa: E402
+from gsbsp import lights as dlights  # noqa: E402
+from gsbsp import terrain as dterrain  # noqa: E402
+from gsbsp import flood as dflood, movers  # noqa: E402
 
 TERRAIN_AUTO_M2 = 500.0    # displacement ground that turns the heightfield on for a spec that does not say
-# The displacement ground (dotbsp.terrain.Heightfield) the floods walk by slope; None without terrain.
+# The displacement ground (gsbsp.terrain.Heightfield) the floods walk by slope; None without terrain.
 TERRAIN = None
 # Its walk points after the last flood, which the game's graph is built on (nav_emulate mirrors it).
 TERRAIN_PTS = []
 FACES = []
-# The world pack's collision hulls the document will collide with (dotbsp.audit.collision_hulls), whose walkable tops
+# The world pack's collision hulls the document will collide with (gsbsp.audit.collision_hulls), whose walkable tops
 # the nav flood stands on: the budget drops the small boxes that cut a ramp, and the hull is what the game walks up.
 NAV_HULLS = []
 HULL_WALK_NY = 0.7      # a hull face this upright or flatter (normal y) is a floor; a steeper one is a wall
@@ -75,7 +75,7 @@ GRAPH_MAIN = [0, 0]    # [points on the main ground, points] of the last convers
 MAIN_SHARE_MIN = 0.6    # a whole-map graph below this share falls back to the spec's drop_small/max_boxes (see budgeted)
 
 
-# A map compiled with an empty game lump (no static props) crashes dot-map's reader; the fix
+# A map compiled with an empty game lump (no static props) crashes gs-map's reader; the fix
 # belongs there, and until it is made this adapter reads such a map as having no props.
 _game_lumps = reader.Bsp.game_lumps
 
@@ -117,7 +117,7 @@ MIN_FLOOR_Y = None    # spec min_floor_y: a sump the horde drops into and cannot
 HEAD = 1.7            # headroom a floor needs
 SLAB = 0.4
 
-# The surface of a brush comes from dot-map's shared list (dot-map-convert/dotbsp/source_textures.tsv), the one every
+# The surface of a brush comes from gs-map's shared list (gs-map-convert/gsbsp/source_textures.tsv), the one every
 # conversion reads; a new texture goes there, never into this file. `bsp.py unmapped <bsp>` lists what it misses.
 TEXTURE_MAP = texturemap.load()
 
@@ -131,7 +131,7 @@ GAME_MATERIAL = {
     "plaster_worn": "plaster", "stone_wall": "stone", "roof_tiles": "roof", "tile_floor": "tile",
     "brick_red": "brick", "mud": "dirt", "snow": "concrete", "flat": "concrete",
     "rock": "stone", "stone_block": "stone", "roof_clay": "roof", "ceiling_tile": "ceiling", "foliage_card": "grass",
-    # See-through generics (dot-map vis.SEE_THROUGH_GENERIC): the box keeps a metal or glass look, the drawn world cuts them out.
+    # See-through generics (gs-map vis.SEE_THROUGH_GENERIC): the box keeps a metal or glass look, the drawn world cuts them out.
     "fence": "metal", "grate": "metal", "bars": "metal", "ladder": "metal", "chainlink": "metal", "shield": "glass", "invisible": "concrete",
 }
 
@@ -184,7 +184,7 @@ def selected_hulls(map_id, sel):
     prefix = os.path.join(HERE, "..", "world", world_pack(map_id), map_id)
     if not os.path.isfile(prefix + ".json"):
         return []
-    from dotbsp import audit as daudit, mesh as dmesh
+    from gsbsp import audit as daudit, mesh as dmesh
     if prefix not in _HULL_READ:
         _HULL_READ.clear()
         _HULL_READ[prefix] = dmesh.read(prefix)[1].hulls
@@ -1080,7 +1080,7 @@ def link_solids(doc, extra_boxes=()):
     sel = doc.get("world_collision")
     prefix = os.path.join(HERE, "..", "world", doc.get("world", ""), doc["id"])
     if sel and os.path.isfile(prefix + ".json"):
-        from dotbsp import audit as daudit, mesh as dmesh
+        from gsbsp import audit as daudit, mesh as dmesh
         _man, world = dmesh.read(prefix)
         for h in daudit.collision_hulls(world.hulls, sel):
             solids.add_hull(h)
@@ -2344,7 +2344,7 @@ def prior_solid_props(path):
 def write_hulls(doc, out_dir):
     """`<out_dir>/hulls/<id>.{json,bin}`: the hulls `world_collision` selects, in the server's maps pack,
     which carries no world. Removed when the document collides with its boxes alone."""
-    from dotbsp import audit as daudit, mesh as dmesh
+    from gsbsp import audit as daudit, mesh as dmesh
     prefix = os.path.join(out_dir, "hulls", doc["id"])
     for ext in (".json", ".bin"):
         if os.path.exists(prefix + ext):
@@ -2395,7 +2395,7 @@ def convert(argv, skip=(), keep_small=0, max_boxes=0):
             print("terrain: %d m2 of displacements, taken as the heightfield (spec \"terrain\": false opts out)" % area)
 
     # `terrain`: ground that is displacements (sculpted heightmaps, not brushes) has no box at all.
-    # It ships as dot-map's heightfield (the game collides with its triangles) and the floods walk
+    # It ships as gs-map's heightfield (the game collides with its triangles) and the floods walk
     # it by slope; a stepped box field stopped them at the first hill. Optional {"budget": bytes}.
     global TERRAIN, TERRAIN_PTS
     TERRAIN, TERRAIN_PTS = None, []
@@ -2417,7 +2417,7 @@ def convert(argv, skip=(), keep_small=0, max_boxes=0):
         if not m.startswith("*"):
             continue
         cls = e.get("classname")
-        # dot-map's world-treatment classes (func_wall, func_breakable, func_physbox...) are drawn by the
+        # gs-map's world-treatment classes (func_wall, func_breakable, func_physbox...) are drawn by the
         # global pack, so they collide here too: drawn and not solid is a floor somebody falls through.
         gate = cls in spec.get("gate_classes", [])
         if cls == spec.get("barricade_class"):
@@ -2839,7 +2839,7 @@ def convert(argv, skip=(), keep_small=0, max_boxes=0):
             if p:
                 cand.append({"id": cid, "at": p, "yaw": r3(parse_vec(e.get("angles", "0 0 0"))[1] % 360)})
 
-    # Static props are compiled out of the entity lump (dot-map's intermediate keeps them apart),
+    # Static props are compiled out of the entity lump (gs-map's intermediate keeps them apart),
     # and in most maps they are the furniture and the wrecks.
     pm_lower = {k.lower(): v for k, v in spec.get("prop_models", {}).items()}
     for sp in getattr(bs, "doc", {}).get("static_props", []) if isinstance(getattr(bs, "doc", None), dict) else []:
@@ -3513,7 +3513,7 @@ def convert(argv, skip=(), keep_small=0, max_boxes=0):
     if water:
         doc["water"] = water
         print("  water: %d volume(s)" % len(water))
-    # Toys: loose dot-props, from the spec's hints ([toy, anchor, dx, dz]); build_maps settles each
+    # Toys: loose gs-props, from the spec's hints ([toy, anchor, dx, dz]); build_maps settles each
     # onto clear floor, the same way the hand-built maps' are.
     prior_solid = prior_solid_props(os.path.join(out_dir, spec["id"] + ".json"))
     if spec.get("toys"):

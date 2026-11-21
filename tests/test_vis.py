@@ -1,4 +1,4 @@
-"""dotbsp.vis: run-length rows, the compacted PVS, occluder hull winding and the packed blocks."""
+"""gsbsp.vis: run-length rows, the compacted PVS, occluder hull winding and the packed blocks."""
 import os
 import struct
 import sys
@@ -7,7 +7,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import vis  # noqa: E402
+from gsbsp import vis  # noqa: E402
 
 
 def _fake(clusters, raw, offsets):

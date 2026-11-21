@@ -7,7 +7,7 @@
 set -u
 # HEAVY= (empty) runs the regen unqueued, for a box without heavy (gpu.sh py).
 HERE="$(cd "$(dirname "$0")" && pwd)"
-BSP="${DOTBSP_PATH:-$HERE/..}/bsp.py"
+BSP="${GSBSP_PATH:-$HERE/..}/bsp.py"
 ROOT="$(cd "${1:?usage: regen_worlds.sh <maps repo> [ids...]}" && pwd)"; shift
 SRC="${SRC:-$ROOT/sources}"; GAME="${GAME:-arena}"
 STORES="$ROOT"; [ -d "$ROOT/.stores" ] && STORES="$ROOT/.stores"

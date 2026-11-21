@@ -11,7 +11,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "adapters", "game-airdrift"))
 sys.path.insert(0, ROOT)
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 for READER in (os.environ.get("AIRDRIFT_TOOLS", "") or os.environ.get("G2G_TOOLS", ""),
                os.path.join(os.path.dirname(ROOT), "game-airdrift", "tools"),
                "/home/gamedev/godot/game-airdrift/tools"):
@@ -68,8 +68,8 @@ class StairRamps(unittest.TestCase):
 
     def test_ramp_is_under_the_drawn_stairs(self):
         # The ramp is where the game draws the model: the worlds/ placement (standins._shaped_placements, in metres)
-        # put through dot-map's bottom-centre rooting (ramps.godot_points) gives the same corners as the Hammer hull.
-        from dotbsp import ramps, standins
+        # put through gs-map's bottom-centre rooting (ramps.godot_points) gives the same corners as the Hammer hull.
+        from gsbsp import ramps, standins
         pick = standins.picks()[STAIRS]
         for origin, yaw in (((482, 5316, -2053), 270), ((-1997, 1808, -2053), 90)):
             spots = [(STAIRS, origin, (0, yaw, 0), "1", 6)]
@@ -96,7 +96,7 @@ class StairRamps(unittest.TestCase):
 
     def test_modelmap_rerun_keeps_the_hand_set_stairs_row(self):
         # 8c11a4b reran modelmap and the row went (the model is in no ranking): the stairs lost their collision.
-        from dotbsp import modelmap
+        from gsbsp import modelmap
         kept = modelmap.unranked_rows(os.path.join(modelmap.RULES, modelmap.PICKS), set())
         self.assertIn(STAIRS, [r[0] for r in kept])
         self.assertNotIn(STAIRS, [r[0] for r in modelmap.unranked_rows(os.path.join(modelmap.RULES, modelmap.PICKS), {STAIRS})])

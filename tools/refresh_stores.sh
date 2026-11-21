@@ -1,6 +1,6 @@
 #!/bin/bash
 # Bring a maps repository's raw model store up to date with the model library, so it cannot go stale.
-#   tools/refresh_stores.sh <maps repo> [library]      (library: $GS_MODEL_LIBRARY, $DOT_MODEL_LIBRARY, ~/art-library/models)
+#   tools/refresh_stores.sh <maps repo> [library]      (library: $GS_MODEL_LIBRARY, $GS_MODEL_LIBRARY, ~/art-library/models)
 # `<maps repo>/.stores/model-library` is mostly symlinks into the library, made once; a model added to the library later (a new
 # kit, a new `own` stand-in) was missing and storepack/regen failed on it. This adds a link for every library file the store lacks
 # (or links to nothing), and never touches a file already there (regen writes real copies of generated models, `.import` files
@@ -8,7 +8,7 @@
 set -euo pipefail
 [ $# -ge 1 ] || { echo "usage: tools/refresh_stores.sh <maps repo> [library]" >&2; exit 2; }
 DEST="$(cd "$1" && pwd)/.stores/model-library"
-LIB="${2:-${GS_MODEL_LIBRARY:-${DOT_MODEL_LIBRARY:-$HOME/art-library/models}}}"
+LIB="${2:-${GS_MODEL_LIBRARY:-$HOME/art-library/models}}"
 [ -d "$LIB" ] || { echo "refresh_stores: no model library at $LIB" >&2; exit 2; }
 [ -d "$DEST" ] || { echo "refresh_stores: $DEST does not exist (stage it with tools/stage_stores.sh)" >&2; exit 2; }
 LIB="$(cd "$LIB" && pwd)"

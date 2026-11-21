@@ -15,7 +15,7 @@ pass behind each lost brush; the map passes at or under them, so a new loss stil
 
 Box documents (hide-n-seek, prop-hunt, murder-mystery, game-playlot) were shifted by the importer so the
 map's origin stands on open ground. A document imported since 2026-11-07 records the shift, the --bounds crop and the
-source map's name and hash in `source_frame` (dotbsp/sourceframe.py): the audit then uses that exact frame
+source map's name and hash in `source_frame` (gsbsp/sourceframe.py): the audit then uses that exact frame
 (`frame=recorded`), audits only inside the crop, and does no registration. An older document, or one whose recorded
 hash is not the .bsp found, falls back to `register()`, which recovers the shift:
 an FFT correlation of the source's solid footprints with the boxes' (x, z), a histogram of top heights (y),
@@ -36,7 +36,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, ".."))
 import numpy as np  # noqa: E402
-from dotbsp import audit, classes, docboxes, mesh, reader, sourceframe, terrain, units  # noqa: E402
+from gsbsp import audit, classes, docboxes, mesh, reader, sourceframe, terrain, units  # noqa: E402
 
 CELL = 0.5       # metres per raster cell for the footprint correlation
 SRC_ROOTS = ["~/projects/mapsrc", "~/godot/inspirations"]
@@ -346,8 +346,8 @@ def targets(repo, idx, only):
         pref = [p for p in cands if os.path.basename(p)[:-4].lower() in mid.lower() or mid.lower().split("_", 1)[-1] in os.path.basename(p).lower()]
         return (pref or sorted(cands, key=os.path.getsize, reverse=True))[0]
 
-    # "g2gfast-maps" below is a legacy id: a checkout still under the pre-rename name.
-    if name in ("arena-surf-dm-maps", "fc-surf-dm-maps", "airdrift-maps", "g2gfast-maps"):
+    # "airdrift-maps" below is a legacy id: a checkout still under the pre-rename name.
+    if name in ("fc-surf-dm-maps", "fc-surf-dm-maps", "airdrift-maps", "airdrift-maps"):
         for d in sorted(glob.glob(os.path.join(repo, "worlds", "*", "*.json")) + glob.glob(os.path.join(repo, "worlds", "*.json"))):
             if d.endswith((".coverage.json", ".doc.json", "credits.json")):
                 continue

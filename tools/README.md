@@ -1,21 +1,21 @@
 # What is where
 
-Everything that converts a map, a model, a texture or a sound lives in this repository; a map or game repository keeps only its data (specs, rules, the converted documents) and thin launchers. Runtime code stays in the addons (`dot-map/addons/dot_map/*.gd`).
+Everything that converts a map, a model, a texture or a sound lives in this repository; a map or game repository keeps only its data (specs, rules, the converted documents) and thin launchers. Runtime code stays in the addons (`gs-map/addons/gs_map/*.gd`).
 
 | Where | What |
 | --- | --- |
-| `bsp.py`, `dotbsp/` | the converter: reader, store, intermediate, mesh, `regen`, licence pass |
-| `dotbsp/*.tsv`, `rules/` | the mapping tables: original texture, model and sound to its free replacement (or kept), classes, materials, PBR and model picks |
+| `bsp.py`, `gsbsp/` | the converter: reader, store, intermediate, mesh, `regen`, licence pass |
+| `gsbsp/*.tsv`, `rules/` | the mapping tables: original texture, model and sound to its free replacement (or kept), classes, materials, PBR and model picks |
 | `defs/` | entity definitions to `io/catalogue.json` |
 | `tools/models/` | Blender (headless) scripts for the hand-made fixture models |
-| `tools/bake_textures.gd`, `art_coverage.py` | texture bake (run with `godot --path ../dot-map --script`) and the art coverage report |
-| `tools/audit_maps.py`, `audit_passes.py` | the shared audit of a maps repository's documents against their source maps (lost brushes and floor; recorded per-map exemptions in the repository's `tools/audit_exempt.json`), and the attribution of that loss to the importer pass that removed the boxes (`dotbsp/passledger.py`; import with `DOTBSP_PASS_LEDGER=1` to write `<document>.passes.json`) |
+| `tools/bake_textures.gd`, `art_coverage.py` | texture bake (run with `godot --path ../gs-map --script`) and the art coverage report |
+| `tools/audit_maps.py`, `audit_passes.py` | the shared audit of a maps repository's documents against their source maps (lost brushes and floor; recorded per-map exemptions in the repository's `tools/audit_exempt.json`), and the attribution of that loss to the importer pass that removed the boxes (`gsbsp/passledger.py`; import with `GSBSP_PASS_LEDGER=1` to write `<document>.passes.json`) |
 | `tools/build_provides.py` | the one writer of a maps repository's `provides.json`; each repository's `tools/build_provides.py` is a config |
 | `tools/check_playable.py` | every spawn and teleport destination of a maps repository lands where a player can stand (not in a solid, out of bounds, over nothing or in a pit), read from the converted `<id>.json` and `<id>.bin` only; failures not yet fixed are held by exact count in the repository's `tools/playable_known.json`; the repository's `tools/check_playable.py` launches it like `build_provides.py` |
 | `tools/check_zone_fidelity.py` | every respawn volume of a maps repository catches a player only where Source's trigger_teleport could (sideways at most the player hull past the drawn trigger, never above its top, never over a block top drawn above it), every teleport is accounted for in the importer's `teleport_audit` with none `broken`, and no START/STAGE/CHECKPOINT/END zone is buried in a pit; read from the converted `<id>.json` only; failures not yet fixed are held by exact count in the repository's `tools/zone_fidelity_known.json`; the repository's `tools/check_zone_fidelity.py` launches it like `check_playable.py` |
 | `tools/crouch_passages.py` | which floor of a converted map only a crouched player reaches (the required crouch passages) and which floor a given crouch hull (`--crouch`, default 54 units) loses against an older one (`--old`, default 36): flood fill over the collision hulls from the spawns, with each cut-off region's area, entrance, headroom and the hull forming its ceiling; `--root <maps repository>` |
 | `tools/regen_worlds.sh`, `stage_stores.sh` | regenerate a maps repository's worlds from the store; stage the raw stores |
-| `tools/overlay_views.py` | `--view` lines for `tools/screenshot.sh` that see each overlay of a texture where it is drawn: on a displacement the decal sits on the hill, not at its origin on the base plane, so a camera picked round the origin can be inside the terrain (`dotbsp.overlays.overlay_views`) |
+| `tools/overlay_views.py` | `--view` lines for `tools/screenshot.sh` that see each overlay of a texture where it is drawn: on a displacement the decal sits on the hill, not at its origin on the base plane, so a camera picked round the origin can be inside the terrain (`gsbsp.overlays.overlay_views`) |
 | `adapters/<repo>/` | the per-game importers (a game's own map document from an intermediate or a `.bsp`) and their checks |
 | `adapters/adapter_launch.py` | runs an adapter in its map repository's namespace |
 
@@ -28,12 +28,12 @@ Everything that converts a map, a model, a texture or a sound lives in this repo
 | `zombie-zone-maps/import_bsp.py`, `build_worlds.py`, `auto_spec.py`, `completeness.py`, `coverage_report.py`, `check_worlds.py`, `make_stores_licence.py` | Zombie Zone document, drawn world, spec from a store entry, and the checks on them |
 | `hide-n-seek-maps/import_bsp.py`, `murder-mystery-maps/import_bsp.py` | those games' box documents |
 | `playlot-maps/import_bsp.py` | PLAYLOT box document plus its world pack through the mesh route (README, "PLAYLOT world") |
-| `mg-prop-hunt-maps/import_bsp.py`, `bsp_environment.py` | prop-hunt document and its environment pass; its audit first lowers floating props onto the support below (`dotbsp/restack.py`, `max_drop` 0 = unlimited, strict raises when none) and drops only what has none |
+| `mg-prop-hunt-maps/import_bsp.py`, `bsp_environment.py` | prop-hunt document and its environment pass; its audit first lowers floating props onto the support below (`gsbsp/restack.py`, `max_drop` 0 = unlimited, strict raises when none) and drops only what has none |
 | `mg-wipeout-maps/import_world.py` | wipeout course from a regenerated world |
 | `mg-deathrun-maps/bsp_to_course.py`, `plan_route.py`, `draft_spec.py` | deathrun course from a spec, the route planner over the document the importer would write, and the first spec for a community map |
 | `mg-dangerous-delivery/bsp_route.py` | Dangerous Delivery route document (segments of length, turn, climb, width, walls, rails) along the longest drivable road of a converted map; no launcher there yet, run it here with the converted map's prefix |
 | `mg-look-at-me/bsp_layout.py` | floor skeleton (rooms on the 4 m grid) from an intermediate |
-| `game-airdrift/bsp_import.py`, `bsp_mechanics.py`, `bsp_props.py`, `vtf.py`, `stock_*.py`, `vrf_import.py`, `teleport_traps.py`, `migrate_batch.py` | the Airdrift mesh, lightmap and texture pipeline, its stock-asset stand-ins and surveys Also the arena maps: per-side spawns (`team` red/blue from `TeamNum`), `control_points`, `resupply` and the authored `flag_spawns` and `modes` of `zones/<id>.json` land in the manifest. `bsp_import.py` also writes `collision.hull_kinds` (hull indexes by kind: clip, glass, fence, sky; absent = all solid) from `dotbsp.materials.hull_kind`, the rule the drawn mesh uses; `migrate_batch.py` re-imports a batch headlessly (and with `--regen` runs `bsp.py regen g2g/<id>`) and writes a TSV of hull counts and kinds. |
+| `game-airdrift/bsp_import.py`, `bsp_mechanics.py`, `bsp_props.py`, `vtf.py`, `stock_*.py`, `vrf_import.py`, `teleport_traps.py`, `migrate_batch.py` | the Airdrift mesh, lightmap and texture pipeline, its stock-asset stand-ins and surveys Also the arena maps: per-side spawns (`team` red/blue from `TeamNum`), `control_points`, `resupply` and the authored `flag_spawns` and `modes` of `zones/<id>.json` land in the manifest. `bsp_import.py` also writes `collision.hull_kinds` (hull indexes by kind: clip, glass, fence, sky; absent = all solid) from `gsbsp.materials.hull_kind`, the rule the drawn mesh uses; `migrate_batch.py` re-imports a batch headlessly (and with `--regen` runs `bsp.py regen g2g/<id>`) and writes a TSV of hull counts and kinds. |
 
 ## Stayed in the map and game repositories, on purpose
 
@@ -41,6 +41,6 @@ Everything that converts a map, a model, a texture or a sound lives in this repo
 - `bsp_read.py` shims: they only name the reader for the adapter.
 - `relight.sh`, `solid_props.sh`, `publish*.sh`, `g2gmaps.py`: a game's pipeline and publishing around the converter, not conversion.
 - `mg-deathrun-maps` `apply_theme.py`: a table of per-map looks written into specs (the game's own data).
-- `fc-dm-maps`, `arena-surf-dm-maps`, `hide-n-seek-maps` `tools/regen_worlds.sh`: launchers (or, for hide-n-seek, a `worlds.tsv` loop) over the shared script; `stage_packs.sh` differs per repository in its publish rule and stays.
+- `fc-dm-maps`, `fc-surf-dm-maps`, `hide-n-seek-maps` `tools/regen_worlds.sh`: launchers (or, for hide-n-seek, a `worlds.tsv` loop) over the shared script; `stage_packs.sh` differs per repository in its publish rule and stays.
 - `zombie-zone-maps` `regen_all.sh`, `ship_*.sh`: they read that game's `convert/ship.tsv`, specs and ship lists; the generic loop is `tools/regen_worlds.sh` here.
-- `dot-map/tools/*.gd|sh`: need a Godot project (screenshots, benches, occluder bake).
+- `gs-map/tools/*.gd|sh`: need a Godot project (screenshots, benches, occluder bake).

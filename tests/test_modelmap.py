@@ -11,7 +11,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import modelmap  # noqa: E402
+from gsbsp import modelmap  # noqa: E402
 
 
 def rec(ident, dims, source="Poly Haven"):
@@ -138,7 +138,7 @@ class ModelMap(unittest.TestCase):
     def test_portable_stairs_are_a_staircase_not_a_table(self):
         # cp_orange_x3 (owner 2026-11-10): the trainyard's portable stairs are the climb to the wall top. The free
         # name table's `table` matched "portable" and drew a bench; the library pick is a staircase as tall as that wall.
-        from dotbsp import standins
+        from gsbsp import standins
         free = standins.models()
         self.assertIsNone(free.get("props_trainyard/portable_stairs001.mdl"))
         self.assertEqual(free.get("props_c17/furnituretable001a.mdl")["stand_in"], "table")

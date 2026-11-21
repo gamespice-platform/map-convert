@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Write .stores/licence.json: the licence block dot-cloud's publisher signs into the stores pack, so the site can refuse
+"""Write .stores/licence.json: the licence block gs-cloud's publisher signs into the stores pack, so the site can refuse
 anything that is not CC0, MIT, public domain or CC-BY. Poly Haven and ambientCG are told apart by name (ambientCG ids end in
 digits: Bricks024); every one of the 760 textures any world credits matched that rule. Sketchfab models come from
 tools/stores_sketchfab_licences.tsv (uid, author, licence, url), re-checked against the worlds' credits.json and the model picks;

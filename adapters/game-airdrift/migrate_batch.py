@@ -1,4 +1,4 @@
-"""Headless batch migration of Airdrift maps: re-import (hull kinds) and optionally regen into dot-map worlds.
+"""Headless batch migration of Airdrift maps: re-import (hull kinds) and optionally regen into gs-map worlds.
 
     python3 -I migrate_batch.py --repo ../game-airdrift --src ../inspirations/airdrift --out DIR [--regen WORLDS] [--jobs 4] [ids... | --all]
 
@@ -51,7 +51,7 @@ def one(a, mid, bsp_index):
         status = "ok"
     else:
         cmd = [sys.executable, *PYFLAGS, os.path.join(a.repo, "tools", "bsp_import.py"), bsp, a.out, "--id", mid]
-        env = dict(os.environ, DOTBSP_PATH=ROOT)
+        env = dict(os.environ, GSBSP_PATH=ROOT)
         r = subprocess.run(cmd, env=env, stdin=subprocess.DEVNULL, capture_output=True, text=True)
         open(os.path.join(a.logs, mid + ".import.log"), "w").write(r.stdout + r.stderr)
         if r.returncode != 0 or not os.path.exists(manifest):

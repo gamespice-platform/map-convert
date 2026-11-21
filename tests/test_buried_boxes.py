@@ -10,7 +10,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path[:0] = [ROOT, os.path.join(ROOT, "adapters", "zombie-zone-maps")]
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 # ambient.py and nav_emulate.py live with the map repository: the sibling checkout, or $ZOMBIE_ZONE_MAPS_PATH.
 ZZM = os.environ.get("ZOMBIE_ZONE_MAPS_PATH") or os.path.join(os.path.dirname(ROOT), "zombie-zone-maps")
 sys.path.append(os.path.join(ZZM, "tools"))

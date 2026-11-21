@@ -9,7 +9,7 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))
 
-from dotbsp import flood, movers  # noqa: E402
+from gsbsp import flood, movers  # noqa: E402
 
 
 def floor(x0, z0, x1, z1):

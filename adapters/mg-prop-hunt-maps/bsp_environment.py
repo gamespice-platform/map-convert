@@ -9,9 +9,9 @@ the `env_fog_controller` (colour, start, end, density cap), the sky's name (only
 sky textures are never carried), and the `point_spotlight` / `env_fire` entities, which `import_bsp.py` leaves out.
 A map the author lit with lamps alone (no `light_environment`) keeps the environment it has. No community map in this
 repository has a `func_precipitation`, so none has weather; when one does, this is where it is read (the same pass in
-murder-mystery-maps' importer writes a dot-weather block).
+murder-mystery-maps' importer writes a gs-weather block).
 
-This lives here, not in dot-map's shared reader, only until nightly item `dotbsp-environment` moves it there: every
+This lives here, not in gs-map's shared reader, only until nightly item `gsbsp-environment` moves it there: every
 game's converter reads the same entities, and murder-mystery-maps carries the same code.
 """
 import json

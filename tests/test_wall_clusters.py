@@ -5,9 +5,9 @@ import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
-os.environ.setdefault("DOTBSP_PATH", ROOT)
+os.environ.setdefault("GSBSP_PATH", ROOT)
 
-from dotbsp import exposure  # noqa: E402
+from gsbsp import exposure  # noqa: E402
 
 SIZES = {"box_s": {"size": [0.5, 0.5, 0.5]}}
 

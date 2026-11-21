@@ -1,8 +1,8 @@
 # defs
 
-`build.py` generates `../rules/entity_defs.json`, the class catalogue: for every entity class its bases, keys (type, default, choice values), inputs and outputs, and which sources confirmed it (`fgd`, `css`, `l4d2`). `dotbsp/defs.py` reads it (`resolve` folds the bases in).
+`build.py` generates `../rules/entity_defs.json`, the class catalogue: for every entity class its bases, keys (type, default, choice values), inputs and outputs, and which sources confirmed it (`fgd`, `css`, `l4d2`). `gsbsp/defs.py` reads it (`resolve` folds the bases in).
 
-The file is derived data only: names, types and defaults, never descriptions or the definition files. The generator reads the definition files and the datamap dumps from outside the repository (`$DOTBSP_DEFS`, default `~/mapsrc/defs`, dumps in `../dumps`), so regenerating needs that machine:
+The file is derived data only: names, types and defaults, never descriptions or the definition files. The generator reads the definition files and the datamap dumps from outside the repository (`$GSBSP_DEFS`, default `~/mapsrc/defs`, dumps in `../dumps`), so regenerating needs that machine:
 
     heavy -- python3 -P defs/build.py        # rewrite
     heavy -- python3 -P defs/build.py --check  # fail when stale

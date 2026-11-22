@@ -14,6 +14,7 @@ driven by buttons) is not run, because this game is not a scripting engine; what
 player FEELS standing in a volume is, because a map plays wrong without it.
 """
 
+import collections
 import math
 import re
 
@@ -68,6 +69,22 @@ def _int(e, key, default=0):
         return default
 
 
+def _starts_off(bsp, e):
+    """StartDisabled, and not switched on by the map as it spawns (gsbsp.movers.spawn_enabled):
+    a trigger a logic_auto enables runs all round in Source, so it is imported as running."""
+    if _int(e, "StartDisabled") != 1:
+        return False
+    on = getattr(bsp, "_spawn_enabled", None)
+    if on is None:
+        from gsbsp.movers import spawn_enabled
+        on = spawn_enabled(bsp.entities)
+        try:
+            bsp._spawn_enabled = on
+        except AttributeError:
+            pass
+    return e.get("targetname", "").strip().lower() not in on
+
+
 def _float(e, key, default=0.0):
     try:
         return float(e.get(key, default))
@@ -97,6 +114,16 @@ def entity_brushes(bsp, e, origin_of):
         out.append((i, ([min(p[a] for p in pts) + o[a] for a in range(3)],
                         [max(p[a] for p in pts) + o[a] for a in range(3)])))
     return out
+
+
+def cut_brushes(bsp, e, origin_of, cut=None):
+    """Boxes in Hammer coordinates covering a brush entity: one per brush, or with [param cut]
+    (`bsp_import.hull_boxes`) the boxes inside each non-box brush, so a wedge or a diagonal
+    sheet does not act over the whole of its bounding box."""
+    if cut is None:
+        return [box for _i, box in entity_brushes(bsp, e, origin_of)]
+    o = origin_of(e)
+    return [c for i, box in entity_brushes(bsp, e, origin_of) for c in cut(bsp, i, o, box)]
 
 
 def brush_materials(bsp, i):
@@ -190,7 +217,7 @@ def water_volumes(bsp, origin_of):
 
 # ---------------------------------------------------------------------- pushes ---
 
-def push_volumes(bsp, origin_of, inert_filters):
+def push_volumes(bsp, origin_of, inert_filters, cut=None):
     """Every `trigger_push` that pushes a player: a box per brush, a velocity, a flag.
 
     `push` is Source's own `pushdir` x `speed` in units/s, Godot axes. `once` is the
@@ -203,14 +230,14 @@ def push_volumes(bsp, origin_of, inert_filters):
         if e.get("classname") != "trigger_push":
             continue
         flags = _int(e, "spawnflags", SF_TRIGGER_CLIENTS)
-        if not flags & SF_TRIGGER_CLIENTS or _int(e, "StartDisabled") == 1:
+        if not flags & SF_TRIGGER_CLIENTS or _starts_off(bsp, e):
             continue
         if e.get("filtername", "").strip().lower() in inert_filters:
             continue
         speed = _float(e, "speed", 40.0)
         d = angle_vector(e.get("pushdir", "0 0 0"))
         push = godot_dir((d[0] * speed, d[1] * speed, d[2] * speed))
-        for _i, (lo, hi) in entity_brushes(bsp, e, origin_of):
+        for lo, hi in cut_brushes(bsp, e, origin_of, cut):
             g = godot_box(lo, hi)
             out.append({"min": g[0], "max": g[1], "push": push,
                         "once": bool(flags & SF_PUSH_ONCE),
@@ -246,7 +273,7 @@ def booster_volumes(bsp, origin_of, inert_filters):
     for e in bsp.entities:
         if e.get("classname") not in ("trigger_multiple", "trigger_once"):
             continue
-        if _int(e, "StartDisabled") == 1:
+        if _starts_off(bsp, e):
             continue
         flags = _int(e, "spawnflags", SF_TRIGGER_CLIENTS)
         if not flags & SF_TRIGGER_CLIENTS:
@@ -275,30 +302,30 @@ def booster_volumes(bsp, origin_of, inert_filters):
     return out
 
 
-def gravity_volumes(bsp, origin_of):
+def gravity_volumes(bsp, origin_of, cut=None):
     """`trigger_gravity`: inside it a player falls at `gravity` times the server's."""
     out = []
     for e in bsp.entities:
-        if e.get("classname") != "trigger_gravity" or _int(e, "StartDisabled") == 1:
+        if e.get("classname") != "trigger_gravity" or _starts_off(bsp, e):
             continue
         scale = _float(e, "gravity", 1.0)
-        for _i, (lo, hi) in entity_brushes(bsp, e, origin_of):
+        for lo, hi in cut_brushes(bsp, e, origin_of, cut):
             g = godot_box(lo, hi)
             out.append({"min": g[0], "max": g[1], "scale": scale})
     return out
 
 
-def hurt_volumes(bsp, origin_of):
+def hurt_volumes(bsp, origin_of, cut=None):
     """`trigger_hurt`: damage per second. A timer run has no health, so the game reads a
     lethal one (100 or more) as a death -- back to the spawn -- and the rest as nothing."""
     out = []
     for e in bsp.entities:
-        if e.get("classname") != "trigger_hurt" or _int(e, "StartDisabled") == 1:
+        if e.get("classname") != "trigger_hurt" or _starts_off(bsp, e):
             continue
         if not _int(e, "spawnflags", 1) & SF_TRIGGER_CLIENTS:
             continue
         damage = _float(e, "damage", 10.0)
-        for _i, (lo, hi) in entity_brushes(bsp, e, origin_of):
+        for lo, hi in cut_brushes(bsp, e, origin_of, cut):
             g = godot_box(lo, hi)
             out.append({"min": g[0], "max": g[1], "damage": damage})
     return out
@@ -367,7 +394,7 @@ def bhop_blocks(bsp, origin_of, destinations, inert_filters):
     """
     plates = []
     for e in bsp.entities:
-        if e.get("classname") != "trigger_teleport" or _int(e, "StartDisabled") == 1:
+        if e.get("classname") != "trigger_teleport" or _starts_off(bsp, e):
             continue
         if not _int(e, "spawnflags", 1) & SF_TRIGGER_CLIENTS:
             continue
@@ -496,6 +523,58 @@ def inert_filters(bsp, names_too=True):
     return dead
 
 
+# Entities the game does not run: map logic and the triggers it has no counterpart for. Their
+# outputs go nowhere, so a timer, relay or counter that drives a push or a door does nothing.
+DROPPED_PREFIXES = ("logic_", "math_", "filter_")
+DROPPED_CLASSES = ("point_teleport", "trigger_proximity", "trigger_wind", "trigger_look",
+                   "trigger_playermovement", "trigger_teleport_relative", "point_servercommand",
+                   "point_clientcommand", "game_player_equip", "env_entity_maker")
+
+
+def dropped_entities(bsp):
+    """Counter of class -> count of the map's entities the game does not run (DROPPED_*), plus
+    `StartDisabled <class>` for each push, gravity and hurt trigger dropped for starting off
+    (only a button, timer or relay the game does not run would switch it on)."""
+    out = collections.Counter()
+    for e in bsp.entities:
+        cls = e.get("classname", "")
+        if cls.startswith(DROPPED_PREFIXES) or cls in DROPPED_CLASSES:
+            out[cls] += 1
+        elif cls in ("trigger_push", "trigger_gravity", "trigger_hurt") and _starts_off(bsp, e):
+            out["StartDisabled " + cls] += 1
+    return out
+
+
+SWITCHED = ("trigger_push", "trigger_gravity", "trigger_hurt", "trigger_teleport")
+
+
+def switched_off(bsp, origin_of):
+    """The triggers left out for starting off that the map's logic switches on later, so a
+    manifest names each one the game does not run rather than dropping it silently:
+    `{class, name, by, min, max}`, where `by` is the sorted classes whose outputs Enable or
+    Toggle it (a `logic_timer` or a button, which this game does not run) and the box is
+    Godot's, around all its brushes. A trigger nothing ever switches on is dead, not listed."""
+    by = collections.defaultdict(set)
+    from gsbsp.movers import outputs
+    for e in bsp.entities:
+        for o in outputs(e):
+            if o["input"].lower() in ("enable", "toggle"):
+                by[o["target"].strip().lower()].add(e.get("classname", ""))
+    out = []
+    for e in bsp.entities:
+        cls = e.get("classname", "")
+        name = e.get("targetname", "").strip().lower()
+        if cls not in SWITCHED or not name or name not in by or not _starts_off(bsp, e):
+            continue
+        boxes = entity_brushes(bsp, e, origin_of)
+        if not boxes:
+            continue
+        g = godot_box([min(b[0][a] for _i, b in boxes) for a in range(3)],
+                      [max(b[1][a] for _i, b in boxes) for a in range(3)])
+        out.append({"class": cls, "name": name, "by": sorted(by[name]), "min": g[0], "max": g[1]})
+    return out
+
+
 def trap_blocks(bsp, traps, origin_of, destinations):
     """The anti-standing traps `conditional_teleports` dropped, as per-player blocks.
 
@@ -549,8 +628,9 @@ def trap_blocks(bsp, traps, origin_of, destinations):
     return out
 
 
-def mechanics(bsp, origin_of, destinations, lift, yaw_to_godot, traps=()):
-    """Everything above, as the manifest's `mechanics` block."""
+def mechanics(bsp, origin_of, destinations, lift, yaw_to_godot, traps=(), cut=None):
+    """Everything above, as the manifest's `mechanics` block. [param cut] (`bsp_import.hull_boxes`)
+    splits non-box push, gravity and hurt brushes into the boxes inside them."""
     inert = inert_filters(bsp)
     blocks = []
     for b in bhop_blocks(bsp, origin_of, destinations, inert) + trap_blocks(bsp, traps, origin_of, destinations):
@@ -560,9 +640,9 @@ def mechanics(bsp, origin_of, destinations, lift, yaw_to_godot, traps=()):
         blocks.append(b)
     return {
         "water": water_volumes(bsp, origin_of),
-        "push": push_volumes(bsp, origin_of, inert) + booster_volumes(bsp, origin_of, inert),
-        "gravity": gravity_volumes(bsp, origin_of),
-        "hurt": hurt_volumes(bsp, origin_of),
+        "push": push_volumes(bsp, origin_of, inert, cut) + booster_volumes(bsp, origin_of, inert),
+        "gravity": gravity_volumes(bsp, origin_of, cut),
+        "hurt": hurt_volumes(bsp, origin_of, cut),
         "conveyors": conveyors(bsp, origin_of),
         "ladders": ladders(bsp, origin_of),
         "blocks": blocks,

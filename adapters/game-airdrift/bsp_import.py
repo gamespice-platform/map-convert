@@ -3013,6 +3013,13 @@ HULL_SLAB = 256.0
 HULL_SLAB_RISE = 48.0
 HULL_SLAB_MIN = 48.0
 HULL_SLABS_MAX = 64
+# Cells a diagonal brush no slab fits is cut into (hull_boxes); 0 is one per HULL_SLAB_MIN square.
+HULL_GRID_CELLS = 32
+# ...and only when its cells' middles find it in under this share of them.
+HULL_GRID_COVER = 0.5
+# Boxes one such brush may become (0 = unlimited): its cells are quartered on air until
+# this many, then coarser, down to the plain grid, which may exceed it.
+HULL_GRID_MAX = 64
 
 
 def hull_boxes(bsp, brush, origin, box):
@@ -3082,26 +3089,117 @@ def hull_boxes(bsp, brush, origin, box):
         out, over = [], 0.0
         for i in range(n):
             s0, s1 = lo[axis] + step * i, lo[axis] + step * (i + 1)
-            o0, o1 = lo[other] + 1.0, hi[other] - 1.0
-            cols = []
-            for s in (s0, s1):
-                for o in (o0, o1):
-                    xy = [0.0, 0.0]
-                    xy[axis], xy[other] = s, o
-                    cols.append(column(xy[0], xy[1]))
-            if any(c is None for c in cols):
-                continue
-            zb = max(c[0] for c in cols)
-            zt = min(c[1] for c in cols)
-            if zt - zb < 1.0:
-                zb = max(lo[2], min(c[0] for c in cols))
-                zt = min(hi[2], max(c[1] for c in cols))
-                over += (zt - zb) * step
-            a, b = [0.0, 0.0, zb], [0.0, 0.0, zt]
-            a[axis], b[axis] = s0, s1
-            a[other], b[other] = o0, o1
-            out.append((a, b))
+            whole = cell(axis, s0, s1, lo[other] + 1.0, hi[other] - 1.0)
+            if whole is not None:
+                out.append(whole[0])
+                over += whole[1] * step
         return out, over
+
+    def cell(axis, s0, s1, o0, o1, bound=False):
+        """One box of a cut as (box, its height where it over-reaches, the air it holds past
+        the brush), or None if it misses.
+
+        Inside the brush at its four corner columns when that fits, else bounding them.
+        Without `bound` a corner column outside the brush is a miss; with it the cell is
+        kept while any of nine columns (corners, edge midpoints, middle) is inside, and
+        bounds only the columns that are."""
+        other = 1 - axis
+        cols = []
+        for s in (s0, s1):
+            for o in (o0, o1):
+                xy = [0.0, 0.0]
+                xy[axis], xy[other] = s, o
+                cols.append(column(xy[0], xy[1]))
+        partial = any(c is None for c in cols)
+        if partial:
+            if not bound:
+                return None
+            # The middle and the edge midpoints too: a strip narrower than the cell can
+            # cross it between its corners, and a cell it is dropped from is a hole in the pit.
+            ms, mo = (s0 + s1) / 2.0, (o0 + o1) / 2.0
+            for s, o in ((ms, mo), (ms, o0), (ms, o1), (s0, mo), (s1, mo)):
+                xy = [0.0, 0.0]
+                xy[axis], xy[other] = s, o
+                cols.append(column(xy[0], xy[1]))
+            cols = [c for c in cols if c is not None]
+            if not cols:
+                return None
+        zb = max(c[0] for c in cols)
+        zt = min(c[1] for c in cols)
+        reach = air = 0.0
+        if zt - zb < 1.0 or partial:
+            zb = max(lo[2], min(c[0] for c in cols))
+            zt = min(hi[2], max(c[1] for c in cols))
+            reach = zt - zb
+            # Air the box holds over and under the brush at its worst column: how far
+            # the floor and the roof each climb across it, not the brush's own depth.
+            air = (max(c[0] for c in cols) - zb) + (zt - min(c[1] for c in cols))
+        a, b = [0.0, 0.0, zb], [0.0, 0.0, zt]
+        a[axis], b[axis] = s0, s1
+        a[other], b[other] = o0, o1
+        return (a, b), reach, air
+
+    def piece(x0, x1, y0, y1, floor):
+        """One cell of the grid: whole if all four corner columns are in the brush and the
+        box leaves at most HULL_SLAB_RISE of air over or under it, else quartered down to
+        `floor`, where it bounds what of the brush its nine columns hold. A cell off the
+        brush's edge is quartered because it covers floor the brush does not (arcane's
+        red blocks stand one unit under the sheet, right beside it)."""
+        c = cell(0, x0, x1, y0, y1)
+        if c is not None and c[2] <= HULL_SLAB_RISE:
+            return [c[0]]
+        if max(x1 - x0, y1 - y0) > floor * 1.5:
+            xs = [x0, (x0 + x1) / 2.0, x1] if x1 - x0 > floor * 1.5 else [x0, x1]
+            ys = [y0, (y0 + y1) / 2.0, y1] if y1 - y0 > floor * 1.5 else [y0, y1]
+            return [b for i in range(len(xs) - 1) for j in range(len(ys) - 1)
+                    for b in piece(xs[i], xs[i + 1], ys[j], ys[j + 1], floor)]
+        c = cell(0, x0, x1, y0, y1, bound=True)
+        return [c[0]] if c is not None else []
+
+    def grid():
+        """The brush as rows of cells along x, each inside it or bounding what it holds."""
+        size = [hi[0] - lo[0] - 2.0, hi[1] - lo[1] - 2.0]
+        if size[0] <= 0.0 or size[1] <= 0.0:
+            return []
+        side = HULL_SLAB_MIN if HULL_GRID_CELLS <= 0 else \
+            max(HULL_SLAB_MIN, math.sqrt(size[0] * size[1] / HULL_GRID_CELLS))
+        nx, ny = (max(1, int(math.ceil(size[a] / side))) for a in (0, 1))
+        wx, wy = size[0] / nx, size[1] / ny
+        # A brush that fills most of its box (a wedge, a bevelled block) keeps the box, as
+        # it always did: only one that leaves most of it empty is worth the extra zones.
+        filled = sum(1 for i in range(nx) for j in range(ny)
+                     if column(lo[0] + 1.0 + wx * (i + 0.5), lo[1] + 1.0 + wy * (j + 0.5)) is not None)
+        if filled >= HULL_GRID_COVER * nx * ny:
+            return []
+        floor = HULL_SLAB_MIN
+        while True:
+            out = rows(nx, ny, wx, wy, floor)
+            if HULL_GRID_MAX <= 0 or len(out) <= HULL_GRID_MAX or floor >= side:
+                return out
+            floor *= 2.0
+
+    def rows(nx, ny, wx, wy, floor):
+        """The grid's cells, pieced down to `floor`, a row's equal ones merged."""
+        out = []
+        for i in range(nx):
+            x0 = lo[0] + 1.0 + wx * i
+            run = None
+            for j in range(ny):
+                y0 = lo[1] + 1.0 + wy * j
+                got = piece(x0, x0 + wx, y0, y0 + wy, floor)
+                c = got[0] if len(got) == 1 else None
+                if c is not None and run is not None and run[1][1] == c[0][1] \
+                        and run[0][2] == c[0][2] and run[1][2] == c[1][2]:
+                    run[1][1] = c[1][1]             # the same column range: one box
+                    continue
+                if run is not None:
+                    out.append(run)
+                run = c
+                if len(got) > 1:
+                    out.extend(got)
+            if run is not None:
+                out.append(run)
+        return out
 
     # Along whichever axis the brush climbs: a wedge cut across its slope is a row of
     # slabs each holding the whole climb, which bounds it no better than its box did.
@@ -3111,10 +3209,21 @@ def hull_boxes(bsp, brush, origin, box):
     alt, alt_over = slabs(1 - first_axis)
     if alt_over < over - 1e-6 or (not out and alt):
         out = alt
-    # A brush no slab fits inside (a sliver, a spike) keeps its box: a pit that catches
-    # a little too much is a run lost, and one that catches nothing is a player falling
-    # forever, which no run survives.
-    return out or [box]
+    # A brush no slab fits inside (a sliver, a spike) is gridded, and one no cell of the
+    # grid finds keeps its box: a pit that catches a little too much is a run lost, and
+    # one that catches nothing is a player falling forever, which no run survives.
+    if out:
+        return out
+    # [b]A brush drawn on the diagonal misses the corners of every slab of its box.[/b]
+    # bhop_arcane_v2's pits under stage 2 are sloped sheets at 24 degrees across the
+    # axes, so no slab fitted, and the whole box came back: 711 by 1,024 units with a
+    # roof 283 above its floor, over the red blocks the sheet runs beneath, which
+    # respawned a player jumping across them (the 2026-11-21 footage, 4:11 on the
+    # timer). Such a brush is cut into a grid of square cells instead, at most
+    # HULL_GRID_CELLS of them; a cell with any of nine columns in the brush bounds the
+    # columns that are, one that misses is gone, and a row's cells with one z range
+    # are one box.
+    return grid() or [box]
 
 
 def trim_to_hull(zone, arrivals, bsp, brush, origin):
@@ -4537,7 +4646,7 @@ def main(argv=None):
         bsp, a.min_zone_thickness, doc, solids, floor_boxes(bsp, solids, solid_props))
     zones = emit_zones(z)
     mech = bsp_mechanics.mechanics(bsp, entity_origin, z.destinations, DESTINATION_LIFT,
-                                   yaw_to_godot, z.traps)
+                                   yaw_to_godot, z.traps, cut=hull_boxes)
     capped = cap_pits_under_blocks(zones, mech["blocks"], solids)
     if capped:
         notes.append("%d pit slabs lowered below the top of a block in their footprint" % capped)
@@ -4614,6 +4723,12 @@ def main(argv=None):
         "push_volumes": mech["push"],
         "trigger_volumes": other,
     }
+    # What the game does not run, kept in the manifest and not only in this log: the
+    # classes (bsp_mechanics.dropped_entities) and each trigger logic switches on later.
+    dropped_ents = bsp_mechanics.dropped_entities(bsp)
+    switched = bsp_mechanics.switched_off(bsp, entity_origin)
+    if dropped_ents or switched:
+        manifest["not_run"] = {"classes": dict(sorted(dropped_ents.items())), "switched_off": switched}
     points, resupply, flags = objective_markers(bsp, doc)
     if points:
         manifest["control_points"] = points
@@ -4659,6 +4774,15 @@ def main(argv=None):
         print("  %d brush entities left non-solid: %s"
               % (sum(skipped_entities.values()),
                  ", ".join("%s x%d" % kv for kv in skipped_entities.most_common(6))))
+    # Every map says what of its logic does not run, so a map whose pushes a logic_timer
+    # switches on reads as such here rather than as a missing push in play.
+    if switched:
+        print("  SWITCHED OFF %d triggers the map's logic turns on later: %s"
+              % (len(switched), ", ".join(sorted({"%s %s" % (t["class"], t["name"]) for t in switched})[:8])))
+    if dropped_ents:
+        print("  DROPPED %d entities the game does not run: %s"
+              % (sum(dropped_ents.values()),
+                 ", ".join("%s x%d" % kv for kv in sorted(dropped_ents.items(), key=lambda kv: (-kv[1], kv[0])))))
     print("  lightmap %dx%d, %d lit faces, %.1f%% of luxels clipped to white"
           % (lm_w, lm_h, len(place) - 1, lm_clipped))
     if sky is not None:

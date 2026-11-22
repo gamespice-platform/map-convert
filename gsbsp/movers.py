@@ -139,6 +139,40 @@ def outputs(e):
     return out
 
 
+def spawn_enabled(entities):
+    """Lower-case targetnames a map switches on as it spawns and leaves on for the round.
+
+    A trigger that is `StartDisabled` is off only until the map's logic says otherwise, and
+    some maps say so at once: surf_the_gloaming's lethal `owie` floor is enabled by its
+    `logic_auto`, surf_japan_ptad's `afkpush` twenty seconds in. An importer that runs no
+    outputs and drops every StartDisabled trigger dropped those too, though in Source they run
+    all round. Followed from every `logic_auto` through what it Triggers (relays, to any
+    depth), delays added along the way; a name counts when the last Enable, Disable or Toggle
+    it receives is an Enable or a Toggle. One switched on and off again on a timer (bhop_exodus'
+    `ppush`, surf_parrot_selector's jail teleports) is an event, not here.
+    """
+    by_name = {}
+    for e in entities:
+        n = e.get("targetname", "").strip().lower()
+        if n:
+            by_name.setdefault(n, []).append(e)
+    todo = [(e, 0.0) for e in entities if e.get("classname") == "logic_auto"]
+    seen, last = set(), {}
+    while todo and len(seen) < 100000:
+        e, at = todo.pop()
+        if (id(e), at) in seen:
+            continue
+        seen.add((id(e), at))
+        for o in outputs(e):
+            target, inp, when = o["target"].lower(), o["input"].lower(), at + o["delay"]
+            if inp in ("enable", "toggle", "disable"):
+                if target not in last or when >= last[target][0]:
+                    last[target] = (when, inp)
+            elif inp in ("trigger", "forcespawn"):
+                todo.extend((t, when) for t in by_name.get(target, ()))
+    return {n for n, (_when, inp) in last.items() if n and inp != "disable"}
+
+
 def _model_size(bsp, mi):
     lo, hi = bsp.model_bounds(mi)
     return [hi[k] - lo[k] for k in range(3)], lo, hi

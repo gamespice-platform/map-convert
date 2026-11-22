@@ -260,6 +260,33 @@ def drop_door_leaves(boxes):
 
 
 @passledger.tracked("drop_small", lambda boxes, *a, **k: boxes)
+def sill_boxes(boxes, openings, pad=0.3, slack=0.05):
+    """The solid boxes under the boards of each barricaded window: its sill and the frame rail on it.
+
+    `openings` is [(min corner, max corner)] of each barricade's brush in game metres. A box whose footprint lies
+    within `pad` of the barricade's and whose top is no higher than the boards' bottom (plus `slack`) is what stands
+    between the horde and the window once the boards are down: the game's prune body (lifted 0.3 m, 1.75 m tall)
+    does not clear a 0.61 m sill, so the street of zs_ravenstreet reached none of the houses (198 of 440 pairs)."""
+    out = []
+    for b in boxes:
+        x0, x1 = b["at"][0] - b["size"][0] / 2, b["at"][0] + b["size"][0] / 2
+        z0, z1 = b["at"][2] - b["size"][2] / 2, b["at"][2] + b["size"][2] / 2
+        top = b["at"][1] + b["size"][1] / 2
+        for mn, mx in openings:
+            if x0 >= mn[0] - pad and x1 <= mx[0] + pad and z0 >= mn[2] - pad and z1 <= mx[2] + pad and mn[1] > 0.1 and 0.1 < top <= mn[1] + slack:
+                out.append(b)
+                break
+    return out
+
+
+def props_near_openings(props, centres, radius):
+    """The props (dicts with an `at` [x, y, z]) whose footprint lies within `radius` metres of any barricade centre
+    ([cx, cz] pairs): a lounge's chairs piled behind a boarded window shut the way in the capsule needs, and no
+    zombie could ever break in to them. The spec's `clear_barricade_props` drops them."""
+    r2 = radius * radius
+    return [p for p in props if any((p["at"][0] - cx) ** 2 + (p["at"][2] - cz) ** 2 <= r2 for cx, cz in centres)]
+
+
 def drop_small(boxes, min_size):
     """Drops boxes whose longest side is under `min_size` metres (trim, rails, clutter) and returns how many; a map over the game's wire limit shrinks most here."""
     keep = [b for b in boxes if max(b["size"]) >= min_size]

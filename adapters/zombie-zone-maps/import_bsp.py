@@ -2332,13 +2332,20 @@ def prior_world_collision(path):
         return False
 
 
+CLEAR_AROUND = []   # ([(cx, cz)], radius) set from the spec
+
+
 def prior_solid_props(path):
     """The previous document's `solid_props` (tools/solid_props.sh), or []."""
     try:
         with open(path) as f:
-            return json.load(f).get("solid_props", [])
+            recs = json.load(f).get("solid_props", [])
     except (OSError, ValueError):
         return []
+    if CLEAR_AROUND:    # spec `clear_barricade_props`: the boxes of the props it dropped go too
+        gone = docboxes.props_near_openings([{"at": r[:3], "rec": r} for r in recs], CLEAR_AROUND[0], CLEAR_AROUND[1])
+        recs = [r for r in recs if not any(g["rec"] is r for g in gone)]
+    return recs
 
 
 def write_hulls(doc, out_dir):
@@ -2725,7 +2732,7 @@ def convert(argv, skip=(), keep_small=0, max_boxes=0):
                 boxes.append({"at": [r3(x), 1.1, r3((a + b_) / 2)], "size": [0.8, 2.2, r3(b_ - a)],
                               "mat": "metal", "tint": [0.42, 0.4, 0.38]})
 
-    barricades, bar_boxes, bar_geo = [], [], []
+    barricades, bar_boxes, bar_geo, bar_open = [], [], [], []
     bc = spec.get("barricade_class")
     for e in ents:
         if bc and e.get("classname") == bc and str(e.get("model", "")).startswith("*"):
@@ -2749,8 +2756,15 @@ def convert(argv, skip=(), keep_small=0, max_boxes=0):
                     "size": [r3(v) for v in sz], "mat": "wood", "tint": [0.62 - 0.05 * (k % 3), 0.46 - 0.04 * (k % 3), 0.3],
                     "nav": False, "barricade": bid})
             bar_geo.append((bid, (mn[0] + mx[0]) / 2, (mn[2] + mx[2]) / 2, thin))
+            bar_open.append((mn, mx))
             barricades.append({"id": bid, "label": "the boards at x %d z %d" % (round((mn[0] + mx[0]) / 2), round((mn[2] + mx[2]) / 2)),
                                "health": spec.get("barricade_health", 1800)})
+
+    # `open_sills`: the sill and rail under each barricade's boards are not solid, so the horde walks in once the boards are down.
+    if spec.get("open_sills") and bar_open:
+        sills = docboxes.sill_boxes(boxes, bar_open)
+        keep_only(boxes, [b for b in boxes if b not in sills], "open_sills")
+        print("  open_sills: %d sill/rail boxes under %d barricades dropped" % (len(sills), len(bar_open)))
 
     def src_to_game(e):
         return gpt(parse_vec(e["origin"]), y0)
@@ -2858,6 +2872,13 @@ def convert(argv, skip=(), keep_small=0, max_boxes=0):
     if spec.get("drop_props"):
         # [x, z] of single props to leave out: one that settled inside a wall or on nothing (headless_maps names them).
         cand = [c for c in cand if not any(abs(c["at"][0] - x) < 0.3 and abs(c["at"][2] - z) < 0.3 for x, z in spec["drop_props"])]
+
+    if spec.get("clear_barricade_props"):
+        # Furniture within this many metres of a barricade (a lounge's chairs behind a boarded window) shuts the way in.
+        gone = docboxes.props_near_openings(cand, [(cx, cz) for _b, cx, cz, _t in bar_geo], float(spec["clear_barricade_props"]))
+        cand = [c for c in cand if c not in gone]
+        CLEAR_AROUND[:] = [[(cx, cz) for _b, cx, cz, _t in bar_geo], float(spec["clear_barricade_props"])]
+        print("  clear_barricade_props: %d props near %d barricades dropped" % (len(gone), len(bar_geo)))
 
     def blocks_of(plist):
         out = {}

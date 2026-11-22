@@ -108,7 +108,7 @@ def _blend_records(s):
     return out
 
 
-def annotate(doc, outdir=None, table=None, prop_table=None, models=(), free_models=None, free_sounds=None, shaped=None, pbr_store=None, model_store=None):
+def annotate(doc, outdir=None, table=None, prop_table=None, models=(), free_models=None, free_sounds=None, shaped=None, pbr_store=None, model_store=None, skins=()):
     """Add `free` to every surface of the manifest `doc` and a `licence` block; write the generated
     images under `outdir` when given. `models` is the placed model paths (static props and
     prop entities); `prop_table` a `PropTable` of the game's stand-ins. Returns the block."""
@@ -133,6 +133,19 @@ def annotate(doc, outdir=None, table=None, prop_table=None, models=(), free_mode
             p = os.path.join(outdir, r["file"])
             if not os.path.exists(p):
                 textures.write(p, r["generic"], r["colour"])
+    have = {s["material"] for s in doc["surfaces"]}
+    skin_rows = []
+    for m in sorted(set(skins) - have):
+        # a placed model's own skin: a converter that bakes the model into the mesh draws it, but no surface here has it
+        r = replacement(None, None, table, m)
+        key = _key(r)
+        u = used.setdefault(key, dict(r, sources=collections.Counter(), surfaces=0, area=0.0))
+        u["sources"][m] += 1
+        if r["kind"] == "generated" and outdir and not os.path.exists(os.path.join(outdir, r["file"])):
+            textures.write(os.path.join(outdir, r["file"]), r["generic"], r["colour"])
+        skin_rows.append({"material": m, "free": key})
+    if skin_rows:
+        doc["skin_materials"] = skin_rows
     total = sum(u["area"] for u in used.values() if u["kind"] == "pbr") or 1.0
     store = pbr_store or (os.path.join(outdir, "pbr") if outdir else None)
     free = []

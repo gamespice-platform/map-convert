@@ -90,6 +90,12 @@ class Models(unittest.TestCase):
         self.assertAlmostEqual(hi[1] - lo[1], 50 * 0.01905, places=4)
         self.assertEqual(m.material_paths({"materials/models/props/wood.vmt"}), ["models/props/wood"])
 
+    def test_skin_materials_lists_the_packed_models_skins(self):
+        pak = {"models/p/box.mdl": make_mdl(), "models/p/box.vvd": make_vvd(), "models/p/box.dx90.vtx": make_vtx(),
+               "materials/models/props/wood.vmt": b""}
+        self.assertEqual(models.skin_materials(pak, ["models/p/box.mdl", "models/p/absent.mdl"]), ["models/props/wood"])
+        self.assertEqual(models.skin_materials({}, ["models/p/box.mdl"]), [])
+
     def test_rejects(self):
         with self.assertRaises(mdl.ModelError):
             mdl.parse(b"x" * 300, b"", b"")

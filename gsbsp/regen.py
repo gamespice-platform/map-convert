@@ -49,7 +49,7 @@ def applied(rs):
 
 
 def build(path, name, sha, credit, out, rs, scale=units.VISUAL, y0=0.0, cat=None, pbr_store=None, model_store=None, crop=None, orig_textures=False, orig_max_side=0,
-          overlays=False, detail=False, orig_models=False, orig_content=(), sky_detail=True):
+          overlays=False, detail=False, orig_models=False, orig_content=(), sky_detail=True, tier_manifest=None):
     """Write the map at `out` (prefix); returns (manifest, coverage report, problems)."""
     with open(path, "rb") as f:
         bsp = reader.Bsp(path, data=f.read()).load()
@@ -103,7 +103,12 @@ def build(path, name, sha, credit, out, rs, scale=units.VISUAL, y0=0.0, cat=None
     stairs(props, m)
     doc = mesh.write(m, out, credit=credit, name=name, extra=extra)
     from . import importer
-    licence.annotate(doc, outdir, table=rs.free_table(), models=importer.placed_models(bsp),
+    from . import models as _models
+    placed_mdl = importer.placed_models(bsp)
+    skins = _models.skin_materials(bsp.read_pak([], only=(".mdl", ".vvd", ".vtx", ".vmt")), placed_mdl)
+    if tier_manifest:
+        skins = sorted(set(skins) | {t["material"] for t in _json(tier_manifest).get("surfaces", []) if t.get("material")})
+    licence.annotate(doc, outdir, table=rs.free_table(), models=placed_mdl, skins=skins,
                      free_models=rs.models_view(), free_sounds=rs.sounds_view(), shaped=shaped,
                      pbr_store=os.path.abspath(pbr_store or os.path.join(outdir, os.pardir, "pbr-library")),
                      model_store=os.path.abspath(model_store or os.path.join(outdir, os.pardir, "model-library")))
@@ -232,6 +237,7 @@ def cmd(args):
                                    overlays=getattr(args, "overlays", False) or getattr(args, "no_omit", False),
                                    detail=getattr(args, "detail", False) or getattr(args, "no_omit", False),
                                    sky_detail=not getattr(args, "no_sky_detail", False),
+                                   tier_manifest=getattr(args, "tier_manifest", None),
                                    orig_models=getattr(args, "orig_models", False),
                                    orig_content=tuple(getattr(args, "orig_content", None) or ()))
     except (ValueError, OSError) as e:

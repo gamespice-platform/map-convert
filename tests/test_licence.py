@@ -349,5 +349,19 @@ class Import(unittest.TestCase):
             self.assertTrue(licence.check(doc))
 
 
+class ModelSkins(unittest.TestCase):
+    def test_a_model_skin_with_no_surface_is_mapped_and_listed(self):
+        with tempfile.TemporaryDirectory() as out:
+            doc, _ = importer.ship(load(), "t", os.path.join(out, "t"), allow_unknown=True)
+            surf = {s["material"] for s in doc["surfaces"]}
+            self.assertNotIn("skin_materials", doc)
+            licence.annotate(doc, out, skins=["models/zz/brickwall_skin", doc["surfaces"][0]["material"]])
+            rows = doc["skin_materials"]
+            self.assertEqual([r["material"] for r in rows], ["models/zz/brickwall_skin"])     # a surface's own material is not repeated
+            keys = {t["key"] for t in doc["licence"]["textures"]}
+            self.assertIn(rows[0]["free"], keys)
+            self.assertNotIn("models/zz/brickwall_skin", surf)
+
+
 if __name__ == "__main__":
     unittest.main()

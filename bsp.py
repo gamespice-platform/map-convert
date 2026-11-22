@@ -498,6 +498,7 @@ def main(argv):
     rg.add_argument("--no-models", action="store_true", help="draw props with the name and shape tables only, not the library picks (rules/models/picks.tsv)")
     rg.add_argument("--model-store", help="where the picked library models are copied once, by id (default: model-library beside the pack folder)")
     rg.add_argument("--pbr-store", help="where the shared PBR sets are written once, by id and tier (default: pbr-library beside the pack folder)")
+    rg.add_argument("--tier-manifest", help="a converter's baked mesh manifest of this map: every material it draws that this world has no surface for (water undersides, props' skins, stand-ins) is mapped to a free set and listed in `skin_materials`")
     pm = sub.add_parser("pbrmap", help="pick a PBR library set for every texture name the converted maps use; writes rules/pbr")
     pm.add_argument("--root", action="append", help="a directory holding <game>/world/<map>/ (repeatable; default ~/godot)")
     pm.add_argument("--library", help="the library's materials folder; default $GS_ART_LIBRARY or ~/art-library/materials")

@@ -79,6 +79,23 @@ def convert(pak, key, cache=None, glb=True):
     return (mdl.to_glb(m, textures) if glb else None), rec
 
 
+def skin_materials(pak, keys):
+    """Sorted material names (`.vmt` path stems, first skin) of the packed models among `keys` -- the names a
+    converter bakes a prop's surfaces under, so a world document can say what each is drawn with. A model the
+    pak does not hold, or this reader cannot parse, adds none."""
+    out = set()
+    for key in keys:
+        key = str(key).lower().replace("\\", "/")
+        if key not in pak:
+            continue
+        try:
+            _glb, rec = convert(pak, key, glb=False)
+        except (mdl.ModelError, struct_error):
+            continue
+        out.update(m["vmt"] for m in rec["materials"] if m.get("vmt"))
+    return sorted(out)
+
+
 def placed(bsp):
     """{normalised model path: count} over entities and static props."""
     out = {}

@@ -259,7 +259,6 @@ def drop_door_leaves(boxes):
 
 
 
-@passledger.tracked("drop_small", lambda boxes, *a, **k: boxes)
 def sill_boxes(boxes, openings, pad=0.3, slack=0.05):
     """The solid boxes under the boards of each barricaded window: its sill and the frame rail on it.
 
@@ -287,6 +286,7 @@ def props_near_openings(props, centres, radius):
     return [p for p in props if any((p["at"][0] - cx) ** 2 + (p["at"][2] - cz) ** 2 <= r2 for cx, cz in centres)]
 
 
+@passledger.tracked("drop_small", lambda boxes, *a, **k: boxes)
 def drop_small(boxes, min_size):
     """Drops boxes whose longest side is under `min_size` metres (trim, rails, clutter) and returns how many; a map over the game's wire limit shrinks most here."""
     keep = [b for b in boxes if max(b["size"]) >= min_size]

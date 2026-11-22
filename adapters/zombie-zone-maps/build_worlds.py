@@ -43,7 +43,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 import import_bsp  # noqa: E402  (puts gs-map-convert on the path, and owns the material table)
-from gsbsp import environment, importer, licence, mesh, models, movers, reader, standins, units  # noqa: E402
+from gsbsp import environment, importer, licence, mesh, models, movers, pbrmap, reader, standins, units  # noqa: E402
 
 # Metres of world one batch covers: the game's own (ZzMap.CHUNK), because the compatibility renderer
 # lights a mesh with at most eight lamps and a chunk is about a room, which is about a lamp.
@@ -171,7 +171,12 @@ def main(argv):
     raw = importer.raw_dir("zz", map_id)
     packed = models.measure(bsp, raw=raw if os.path.isdir(raw) else None)
     shaped = standins.shape_matches(bsp, packed=packed)
-    licence.annotate(doc, out_dir, models=importer.placed_models(bsp), shaped=shaped)
+    # The PBR library tier, as `bsp.py regen` does: a face gets a library set (stored once, by id) rather than the flat table swatch.
+    # GS_PBR_STORE / GS_MODEL_STORE name the shared stores (tools/regen_all.sh passes them); without them the pack's sibling folders.
+    pbrmap.ENABLED = True
+    stores = {"pbr_store": os.path.abspath(os.environ.get("GS_PBR_STORE") or os.path.join(root, "pbr-library")),
+              "model_store": os.path.abspath(os.environ.get("GS_MODEL_STORE") or os.path.join(root, "model-library"))}
+    licence.annotate(doc, out_dir, models=importer.placed_models(bsp), shaped=shaped, **stores)
     doc["props"] = standins.placements(bsp, y0=y0, shaped=shaped, packed=packed)
     problems = licence.check(doc)
     with open(os.path.join(out_dir, map_id + ".json"), "w") as f:

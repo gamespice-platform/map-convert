@@ -157,7 +157,9 @@ def cmd_audit(args):
             out = audit.Union(out, audit.Hulls(audit.collision_hulls(mesh.read(args.world)[1].hulls, doc["world_collision"])))
         # a box document stands still: the world and the classes gs-map treats as world collide
         classes_of = lambda c: c == "worldspawn" or (classes.treatment(c)[0] == "world" and c not in args.passable)  # noqa: E731
-    r = audit.audit(bsp, out, scale, y0, classes_of, keep=audit.region(args.within, args.band, args.skip),
+    # the sill boxes the importer dropped on purpose (spec open_sills) are not brushes a body is missing
+    skips = list(args.skip) + ([audit.box_skip(b) for b in doc.get("dropped_sills", [])] if not args.mesh else [])
+    r = audit.audit(bsp, out, scale, y0, classes_of, keep=audit.region(args.within, args.band, skips),
                     skip_entity=None if args.mesh else docboxes.entity_starts_hidden)
     print("%s: brushes collided %d of %d; floor samples with ground %d of %d" % (
         src.name, r["brushes_collided"], r["brushes_expected"], r["floor_samples"] - r["floor_missed"], r["floor_samples"]))

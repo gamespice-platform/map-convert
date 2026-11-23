@@ -3530,6 +3530,9 @@ def convert(argv, skip=(), keep_small=0, max_boxes=0):
             r = max(b["size"][0], b["size"][2]) / 2
             doc["dropped_lids"].append([r3(b["at"][0] - r), r3(b["at"][1] - b["size"][1] / 2), r3(b["at"][2] - r),
                                         r3(b["at"][0] + r), r3(b["at"][1] + b["size"][1] / 2), r3(b["at"][2] + r)])
+    sills = [b for stage, b in DROPS if stage == "open_sills"]
+    if sills:    # the audit (walk_check) skips them: dropped on purpose, not lost
+        doc["dropped_sills"] = [{"at": b["at"], "size": b["size"]} for b in sills]
     water = water_volumes(bs, y0, floors, spec, doc["boxes"], doc["kill_y"])
     if water:
         doc["water"] = water

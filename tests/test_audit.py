@@ -90,6 +90,16 @@ class Audit(unittest.TestCase):
         self.assertEqual(r["brushes_collided"], r["brushes_expected"])
         self.assertIsNone(audit.region())
 
+    def test_dropped_sill_is_not_lost(self):
+        """A box the importer dropped on purpose (doc `dropped_sills`, spec open_sills) is skipped through `box_skip`, not counted lost."""
+        bsp = load(boxes=self.BOXES)
+        out = audit.Boxes([box_of(self.BOXES[0])])
+        self.assertEqual(audit.audit(bsp, out)["brushes_collided"], 1)
+        dropped = box_of(self.BOXES[1])
+        r = audit.audit(bsp, out, keep=audit.region(skips=[audit.box_skip(dropped)]))
+        self.assertEqual(r["brushes_expected"], 1)
+        self.assertEqual(r["brushes_collided"], 1)
+
     def test_terrain_holds_what_it_buries(self):
         """A document's terrain field stands for the brushes under it and is ground for the tops at it."""
         bsp = load(boxes=self.BOXES[:1])

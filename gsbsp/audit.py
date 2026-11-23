@@ -230,6 +230,11 @@ COLLIDES = frozenset(("solid", "detail", "window", "grate", "playerclip", "clip"
 """Contents kinds a player is stopped by; water, slime, npcclip, triggers, origin, areaportal and the sky are not."""
 
 
+def box_skip(b):
+    """The `--skip` text for a box dict ({at, size}, game metres): the region it fills."""
+    return ",".join(repr(round(b["at"][k] + sg * b["size"][k] / 2, 3)) for sg in (-1, 1) for k in range(3))
+
+
 def region(within=None, band=None, skips=()):
     """A `keep(game point)` from comma lists (see `bsp.py audit --within/--band/--skip`), or None for everything."""
     nums = lambda t: [float(v) for v in t.split(",")]  # noqa: E731

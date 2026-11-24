@@ -20,8 +20,8 @@ class AdapterLaunch(unittest.TestCase):
 
     def test_a_launcher_under_the_old_name_runs_the_same_file_as_the_new(self):
         # legacy id: launchers in checkouts made before a rename still pass the old name.
-        for old, new, name in (("game-airdrift", "game-airdrift", "bsp_import.py"),
-                               ("playlot-maps", "playlot-maps", "import_bsp.py")):
+        for old, new, name in (("game-g2gfast", "game-airdrift", "bsp_import.py"),
+                               ("game-playground-maps", "playlot-maps", "import_bsp.py")):
             path = adapter_launch.adapter_path(new, name)
             self.assertTrue(os.path.isfile(path), path)
             self.assertEqual(adapter_launch.adapter_path(old, name), path)
@@ -34,7 +34,7 @@ class AdapterLaunch(unittest.TestCase):
             kept = adapter_launch.ROOT
             adapter_launch.ROOT = tmp
             try:
-                for repo in ("game-airdrift", "game-airdrift"):
+                for repo in ("game-airdrift", "game-g2gfast"):
                     g = {"__file__": "/launcher/tools/probe.py", "__name__": "__main__"}
                     adapter_launch.run(g, repo, "probe.py")
                     self.assertEqual(g["RAN"], "/launcher/tools/probe.py", repo)

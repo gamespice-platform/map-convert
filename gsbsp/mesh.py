@@ -365,6 +365,9 @@ SURF_TRANS = 0x10
 GLASS_CLASSES = ("func_reflective_glass",)
 # Generic ids drawn as a see-through generated pattern (alpha-cut wire, bars, foliage; additive energy) in the glass path.
 SEE_THROUGH = ("fence", "grate", "bars", "ladder", "foliage_card", "shield")
+# A displacement is a ground sheet, never a see-through card: gm_fork's river bed is displacements of nature/canal_reeds
+# (an alpha-tested reed texture), which drew as bright green opaque card tiles among the water. It is bed, so mud.
+DISPLACEMENT_CARD_GROUND = "mud"
 BREAKABLE_CLASSES = ("func_breakable", "func_breakable_surf")
 
 
@@ -736,6 +739,8 @@ def _add_face(bsp, f, name, mi, ei, cls, targetname, off, surfaces, tmap, classi
         hit = tmap.lookup(classify(name))
         if hit is not None:
             s.generic, s.tint = hit[0], (list(hit[1]) if hit[1] else None)
+        if disp and s.generic == "foliage_card":
+            s.generic = DISPLACEMENT_CARD_GROUND
         s.water = _is_water(name, s.generic, disp)
         s.decal = None if s.water else decal_kind(s.generic)
         s.glass = None if s.water or s.decal else glass_kind(s.generic, cls)

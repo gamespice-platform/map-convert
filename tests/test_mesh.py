@@ -56,6 +56,19 @@ class Liquids(unittest.TestCase):
         self.assertFalse(mesh._is_water("island/blend_sandwatersand", "", disp=True))
 
 
+    FORK = "/home/gamedev/projects/mapsrc/maps/original/gm_fork/gm_fork.bsp"
+
+    @unittest.skipUnless(os.path.exists(FORK), "gm_fork.bsp not on this box")
+    def test_a_reed_displacement_is_bed_not_cards(self):
+        # gm_fork's river bed is displacements of nature/canal_reeds; drawn as foliage cards they were bright green tiles.
+        m = mesh.build(reader.Bsp(self.FORK).load())
+        reeds = [s for s in m.surfaces if s.displacement and "canal_reeds" in s.material]
+        self.assertTrue(reeds)
+        for s in reeds:
+            self.assertIsNone(s.glass)
+            self.assertEqual(s.generic, mesh.DISPLACEMENT_CARD_GROUND)
+
+
 class Build(unittest.TestCase):
     def test_box_is_twelve_triangles_wound_as_stored(self):
         m = mesh.build(load())

@@ -63,10 +63,12 @@ NAMES = [
     ("wood", r"wood|plank|planks|door|crate|barrel|log|bark|timber|board|cabinet|desk|shelf|furniture"),
     ("grass", r"grass|lawn|moss|leaf|leaves|foliage|ivy|hedge|bush|plant"),
     ("ground", r"dirt|sand|mud|gravel|soil|path|terrain|ground|beach|swamp"),
-    ("stone", r"rock|cliff|stone|cave|granite|marble|cobble|slate|paving"),
-    ("roof", r"roof|shingle|thatch"),
+    ("stone", r"rock|cliff|stone|cave|granite|marble|cobble|slate|paving|courtyard"),
+    # `[a-z]*roof`: the word rule needs a word start and a roof is `tarpaperroof002a`, `rubberroof002a`
+    ("roof", r"[a-z]*roof|shingle|thatch"),
     ("concrete", r"concrete|cement|conc|cinder|pavement|sidewalk|curb|bunker|cmu"),
-    ("plaster", r"plaster|stucco|wallpaper|paint|drywall|wall|ceiling|trim"),
+    # `building_template003b`, `buildingset040a` are facades; unplaced they took the nearest colour of ANY category (paving stones)
+    ("plaster", r"plaster|stucco|wallpaper|paint|drywall|wall|ceiling|trim|building|facade|storefront"),
 ]
 # A photo kind of the older tables -> category, for a name no word places.
 KIND_CATEGORY = {

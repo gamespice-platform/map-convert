@@ -46,6 +46,28 @@ class PbrMap(unittest.TestCase):
         self.assertEqual(pbrmap.category("zz/qq", "tile_dark"), "tile")
         self.assertIsNone(pbrmap.category("zz/qq"))
 
+    def test_town_facades_and_roofs_are_placed(self):
+        # unplaced names took the nearest colour of ANY category: paving on facades, tiles on roofs
+        self.assertEqual(pbrmap.category("building_template/building_template003b"), "plaster")
+        self.assertEqual(pbrmap.category("composite/buildingset040a"), "plaster")
+        self.assertEqual(pbrmap.category("storefront_template/storefront_template001d"), "plaster")
+        self.assertEqual(pbrmap.category("props/tarpaperroof002a"), "roof")
+        self.assertEqual(pbrmap.category("metal/milroof004"), "roof")
+        self.assertEqual(pbrmap.category("building_template/courtyard_template006e"), "stone")
+
+    def test_shipped_table_keeps_facades_off_paving(self):
+        # gm_fork's town (pgc_fork) drew grey blocks; needs no BSP, the table is the contract
+        rows = {}
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "rules", "pbr", "textures.tsv")) as f:
+            for line in f:
+                c = line.rstrip("\n").split("\t")
+                if len(c) > 1 and not c[0].startswith("#"):
+                    rows[c[0]] = c[1]
+        self.assertNotIn("PavingStones", rows["building_template/building_template003b"])
+        self.assertNotIn("Tiles086", rows["props/rubberroof002a"])
+        self.assertNotIn("square_tiles", rows["props/tarpaperroof002a"])
+        self.assertNotIn("pavement", rows["building_template/courtyard_template006e"])
+
     def test_nearest_colour_inside_the_category_and_blocked_sets_left_out(self):
         lib = pbrmap.load_library(self.lib)
         self.assertNotIn("pizza_1", lib)

@@ -33,3 +33,7 @@ clock	button	Kenney Interface Sounds	https://kenney.nl/assets/interface-sounds	K
 (critical|headshot)	button	Kenney Interface Sounds	https://kenney.nl/assets/interface-sounds	Kenney	CC0-1.0
 sdm/(okuu|sounanoka|uuu|vuvuzela|zawarudo)|happy_birthday					
 ambient/creatures/|^bot\.stuck					
+carhonk	button	Kenney Interface Sounds	https://kenney.nl/assets/interface-sounds	Kenney	CC0-1.0
+endgame|victory	bell	Kenney Impact Sounds	https://kenney.nl/assets/impact-sounds	Kenney	CC0-1.0
+circus	amb_city	Gamespice audio stock ambience (synthesised)	https://github.com/gamespice-platform/audio	Gamespice (audio authors)	CC0-1.0
+voyage	amb_eerie	Gamespice audio stock ambience (synthesised)	https://github.com/gamespice-platform/audio	Gamespice (audio authors)	CC0-1.0

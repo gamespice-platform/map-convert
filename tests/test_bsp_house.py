@@ -86,6 +86,26 @@ class TestBspHouse(unittest.TestCase):
         self.assertEqual(outs(bsp_house.convert_mesh(doc(), spec)[0]), [])
         rooms = bsp_house.convert_mesh(doc(), dict(spec, exits=[[1.0, 5.0, "w"]]))[0]
         self.assertEqual(outs(rooms), [("Hall", "w")])
+        # An exit's 4th element is its floor; a floor with no plan there finds no room.
+        self.assertEqual(outs(bsp_house.convert_mesh(doc(), dict(spec, exits=[[1.0, 5.0, "w", 0]]))[0]), [("Hall", "w")])
+
+    def test_a_teleport_joins_two_rooms_with_no_doorway(self):
+        # The wall between the rooms is whole: only the spec's teleport joins them, a door with both ends on walls.
+        spec = dict(SPEC, mode="mesh", cell=2.0, pack="test", pack_metres_per_unit=0.01905)
+        info = {}
+        alone = bsp_house.convert_mesh(doc(0), spec, info)[0]
+        self.assertEqual([r["name"] for r in alone], ["Hall"])
+        self.assertEqual(len(info["shift"]), 2)
+        rooms = bsp_house.convert_mesh(doc(0), dict(spec, teleports=[{"from": [100, 200, 1], "to": [700, 200, 1]}]))[0]
+        ward = next(r for r in rooms if r["name"] == "Ward")
+        self.assertEqual(ward["from"], "Hall")
+        self.assertEqual((ward["door"]["side"], ward["door"]["warp"]["side"]), ("w", "e"))
+        self.assertLess(ward["door"]["c"][0], 2.0)
+        self.assertGreater(ward["door"]["warp"]["c"][0], 18.0)
+
+    def test_teleports_are_mesh_mode_only(self):
+        with self.assertRaises(SystemExit):
+            bsp_house.convert(doc(0), dict(SPEC, teleports=[{"from": [100, 200, 1], "to": [700, 200, 1]}]))
 
 if __name__ == "__main__":
     unittest.main()

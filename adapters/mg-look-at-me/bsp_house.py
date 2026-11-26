@@ -12,7 +12,9 @@ deals puzzles, furniture and witches on it.
     python3 -P bsp_house.py intermediate.json spec.json --out layout.json [--ascii]
 
 The spec (in the game's repository, next to the layout it makes) holds every choice: the scale,
-the storeys, the stairs and the alterations (mirror, rooms dropped or renamed). The same
+the storeys, the stairs, the teleports (mesh mode: `{"from": [x, y, z], "to": [x, y, z]}` in map
+units, for storeys the source joins only by trigger_teleport) and the alterations (mirror, rooms dropped or
+renamed). The same
 intermediate and spec give the same layout, byte for byte. Needs numpy only.
 """
 import argparse, hashlib, json, math, sys
@@ -224,6 +226,9 @@ def convert(doc, spec):
             for (x, z, w, d) in rects(cells):
                 pieces.append({"floor": f, "x": x, "z": z, "w": w, "d": d, "label": l})
 
+    if spec.get("teleports"):
+        raise SystemExit("teleports are a mesh-mode spec's (\"mode\": \"mesh\")")
+
     cellmap = {}
     for i, p in enumerate(pieces):
         for t in range(p["w"]):
@@ -388,8 +393,9 @@ def opening(group, res):
 OPPOSITE = {"n": "s", "s": "n", "e": "w", "w": "e"}
 
 
-def convert_mesh(doc, spec):
-    """The layout of a mesh-mode house (see the note above) and a few counts."""
+def convert_mesh(doc, spec, info=None):
+    """The layout of a mesh-mode house (see the note above) and a few counts. `info`, if given,
+    gets "shift": the metres the plan was moved by to start at 0,0 (spec exits are given before it)."""
     if spec.get("mirror"):
         raise SystemExit("mesh mode: the drawn source cannot be mirrored")
     ras = Raster(doc, spec)
@@ -497,6 +503,31 @@ def convert_mesh(doc, spec):
                 return k
         return None
 
+    def wall_at(pt):
+        """(piece, door centre, side) of the wall nearest a map point [x, y, z], on the storey whose band holds z."""
+        st = next((st for st in spec["storeys"] if st["z"][0] - 16 <= pt[2] <= st["z"][1] + 16), None)
+        if st is None:
+            return None
+        f = st["floor"]
+        m, lab = pm[f], labs[f]
+        ys, xs = np.nonzero(m)
+        if not ys.size:
+            return None
+        px, py = (pt[0] * S - ras.x0) / RES, (pt[1] * S - ras.y0) / RES
+        k = int(((xs - px) ** 2 + (ys - py) ** 2).argmin())
+        j0, i0 = int(ys[k]), int(xs[k])
+        room = lab[j0, i0]
+        best = None
+        for (di, dj), side in (((0, 1), "n"), ((0, -1), "s"), ((1, 0), "e"), ((-1, 0), "w")):
+            i, j, n = i0, j0, 0
+            while 0 <= i + di < lab.shape[1] and 0 <= j + dj < lab.shape[0] and lab[j + dj, i + di] == room:
+                i, j, n = i + di, j + dj, n + 1
+            if best is None or n < best[0]:
+                best = (n, i, j, di, dj, side)
+        _, i, j, di, dj, side = best
+        x, z = local(i + 0.5 + di * 0.5, j + 0.5 + dj * 0.5)
+        return int(m[j0, i0]) - 1, [round(float(x), 2), round(float(z), 2)], side
+
     openings = {k: [] for k in range(P + len(stairs))}
     # A doorway between two source rooms may straddle a cell edge and so touch two pieces: it is
     # measured whole, per pair of rooms, and goes to the pair of pieces that hold most of it.
@@ -519,8 +550,8 @@ def convert_mesh(doc, spec):
             same = pieces[p]["label"] == pieces[q]["label"]
             openings[p].append(dict(o, to=q, open=same))
             openings[q].append(dict(o, side=OPPOSITE[o["side"]], to=p, open=same))
-    for ex in spec.get("exits", []):  # [x, z, side] in grid metres before the plan is moved to 0,0: a way out the raster cannot see
-        k = cellmap_of(ex[0], ex[1], 0)
+    for ex in spec.get("exits", []):  # [x, z, side(, floor)] in grid metres before the plan is moved to 0,0 (main prints the move)
+        k = cellmap_of(ex[0], ex[1], ex[3] if len(ex) > 3 else 0)
         if k is not None:
             sky.setdefault(k, []).extend((ex[0] + t * 0.25 * (ex[2] in "ns"), ex[1] + t * 0.25 * (ex[2] in "ew"), ex[2]) for t in range(-3, 4))
     for p, pts in sorted(sky.items()):
@@ -528,6 +559,16 @@ def convert_mesh(doc, spec):
             o = opening(g, RES)
             if o["w"] >= spec.get("min_exit", 1.0):
                 openings[p].append(dict(o, to=None, out=True))
+
+    # Teleports: storeys the source joins only by trigger_teleport. Each end is a door on the wall
+    # nearest the spec's point; opening one walks you out of the other.
+    for t in spec.get("teleports", []):
+        a, b = wall_at(t["from"]), wall_at(t["to"])
+        if a is None or b is None:
+            raise SystemExit("teleport %s: an end is on no storey's floor" % t)
+        (p, ca, sa), (q, cb, sb) = a, b
+        openings[p].append({"c": ca, "w": 1.0, "side": sa, "to": q, "warp": {"c": cb, "side": sb}})
+        openings[q].append({"c": cb, "w": 1.0, "side": sb, "to": p, "warp": {"c": ca, "side": sa}})
 
     cellmap = {}
     for i, p in enumerate(pieces):
@@ -709,6 +750,8 @@ def convert_mesh(doc, spec):
             room["door"] = {"cell": [pc[0] - x0, pc[1] - z0], "side": o["side"], "c": shifted(o["c"]), "w": min(o["w"], spec.get("door_max", 2.4))}
             if o.get("open"):
                 room["door"]["open"] = True
+            if o.get("warp"):
+                room["door"]["warp"] = {"c": shifted(o["warp"]["c"]), "side": o["warp"]["side"]}
         ops = []
         for o in openings[i]:
             entry = {"c": shifted(o["c"]), "w": o["w"], "side": o["side"], "to": name_of.get(o["to"], "")}
@@ -716,6 +759,8 @@ def convert_mesh(doc, spec):
                 entry["open"] = True
             if o.get("out"):
                 entry["out"] = True
+            if o.get("warp"):
+                entry["warp"] = {"c": shifted(o["warp"]["c"]), "side": o["warp"]["side"]}
             # A stairwell's arches: off its upper landing or its lower, and the whole edge it shares.
             if "top" in o:
                 entry.update({"top": o["top"], "span": o["span"]})
@@ -723,6 +768,8 @@ def convert_mesh(doc, spec):
         room["openings"] = ops
     # The pack is in Godot axes (x, z, -y) at its own metres per unit; the grid's local z of a
     # source y is gh*cell - (y*S - y0) - z0*cell.
+    if info is not None:
+        info["shift"] = [round(x0 * cell, 2), round(z0 * cell, 2)]
     world = {"pack": spec["pack"], "scale": round(S / spec["pack_metres_per_unit"], 6),
              "origin": [round(float(-(ras.x0 + x0 * cell)), 3), round(float(-base * S), 3), round(float(gh * cell + ras.y0 - z0 * cell), 3)]}
     return rooms, P + len(stairs) - len(order), world
@@ -755,8 +802,9 @@ def main():
     raw = open(a.intermediate, "rb").read()
     spec = json.load(open(a.spec))
     mesh = spec.get("mode") == "mesh"
+    info = {}
     if mesh:
-        rooms, lost, world = convert_mesh(json.loads(raw), spec)
+        rooms, lost, world = convert_mesh(json.loads(raw), spec, info)
     else:
         rooms, lost = convert(json.loads(raw), spec)
     out = {"format": 1, "name": spec["name"], "title": spec["title"]}
@@ -774,6 +822,9 @@ def main():
     cell = out.get("cell", CELL)
     print("%d rooms (%s), %d pieces not reached, %d m2" % (len(rooms), ", ".join("floor %d: %d" % (f, sum(r["floor"] == f for r in rooms)) for f in floors),
           lost, sum(r["w"] * r["d"] for r in rooms) * cell * cell))
+    if mesh:
+        # A spec exit's [x, z] is a point of the plan plus this (the layout's own c values less it).
+        print("pre-shift offset %.2f, %.2f m" % tuple(info["shift"]))
     if a.ascii:
         print(ascii_plan(rooms))
     return 0

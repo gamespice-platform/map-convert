@@ -41,6 +41,15 @@ class TestBspHouse(unittest.TestCase):
         open_ = bsp_house.Raster(d, dict(SPEC, wall_classes=["func_wall"])).walls
         self.assertEqual(len(shut) - len(open_), 1)
 
+    def test_a_never_solid_pane_in_the_doorway_is_walked_through(self):
+        d = doc()
+        d["entities"].append({"index": 3, "classname": "func_brush", "keys": {"Solidity": "1"}})
+        d["models"].append({"index": 5, "entity": 3})
+        d["brushes"].append({"model": 5, "player_solid": True, "mins": [392, 180, 0], "maxs": [408, 220, 128]})
+        shut, _ = bsp_house.convert(d, SPEC)
+        open_, _ = bsp_house.convert(d, dict(SPEC, honour_solidity=True))
+        self.assertEqual((len(shut), len(open_)), (1, 2))
+
     def test_two_rooms_through_the_doorway(self):
         rooms, lost = bsp_house.convert(doc(), SPEC)
         self.assertEqual([r["name"] for r in rooms][:1], ["Hall"])
@@ -69,6 +78,14 @@ class TestBspHouse(unittest.TestCase):
         self.assertAlmostEqual(door["c"][1], world["origin"][2] - 200 * 0.0254, delta=0.5)
         self.assertAlmostEqual(world["scale"], 0.0254 / 0.01905, places=4)
         self.assertEqual(bsp_house.convert_mesh(doc(), spec), (rooms, lost, world))
+
+    def test_a_spec_exit_is_a_way_out_of_a_sealed_house(self):
+        # The test house has no opening to the open (a source that leaves by teleport); the spec names one.
+        spec = dict(SPEC, mode="mesh", cell=2.0, pack="test", pack_metres_per_unit=0.01905)
+        outs = lambda rooms: [(r["name"], o["side"]) for r in rooms for o in r.get("openings", []) if o.get("out")]
+        self.assertEqual(outs(bsp_house.convert_mesh(doc(), spec)[0]), [])
+        rooms = bsp_house.convert_mesh(doc(), dict(spec, exits=[[1.0, 5.0, "w"]]))[0]
+        self.assertEqual(outs(rooms), [("Hall", "w")])
 
 if __name__ == "__main__":
     unittest.main()

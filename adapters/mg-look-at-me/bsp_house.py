@@ -74,7 +74,11 @@ class Raster:
     def __init__(self, doc, spec):
         self.S = spec["scale"]
         self.walls = []
-        ent = {e["index"]: e["classname"] for e in doc["entities"]}
+        # A func_brush with Solidity 1 ("never solid") is a scripted pane the player walks through;
+        # opt-in per spec so houses laid out before it keep their plan until they are regenerated.
+        never = spec.get("honour_solidity")
+        ent = {e["index"]: ("func_brush_never_solid" if never and e["classname"] == "func_brush" and str((e.get("keys") or {}).get("Solidity")) == "1"
+                            else e["classname"]) for e in doc["entities"]}
         owner = {m["index"]: ent.get(m["entity"]) for m in doc["models"]}
         for b in doc["brushes"]:
             cls = None if b["model"] == 0 else owner.get(b["model"])
@@ -515,7 +519,7 @@ def convert_mesh(doc, spec):
             same = pieces[p]["label"] == pieces[q]["label"]
             openings[p].append(dict(o, to=q, open=same))
             openings[q].append(dict(o, side=OPPOSITE[o["side"]], to=p, open=same))
-    for ex in spec.get("exits", []):  # [x, z, side] in grid-local metres: a way out the raster cannot see
+    for ex in spec.get("exits", []):  # [x, z, side] in grid metres before the plan is moved to 0,0: a way out the raster cannot see
         k = cellmap_of(ex[0], ex[1], 0)
         if k is not None:
             sky.setdefault(k, []).extend((ex[0] + t * 0.25 * (ex[2] in "ns"), ex[1] + t * 0.25 * (ex[2] in "ew"), ex[2]) for t in range(-3, 4))

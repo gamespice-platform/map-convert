@@ -526,7 +526,15 @@ def convert_mesh(doc, spec, info=None):
                 best = (n, i, j, di, dj, side)
         _, i, j, di, dj, side = best
         x, z = local(i + 0.5 + di * 0.5, j + 0.5 + dj * 0.5)
-        return int(m[j0, i0]) - 1, [round(float(x), 2), round(float(z), 2)], side
+        # Onto the piece's own wall (the raster edge can sit a pixel or two off it), clear of its corners.
+        k = int(m[j0, i0]) - 1
+        r = pieces[k]
+        x0, z0, x1, z1 = r["x"] * cell, r["z"] * cell, (r["x"] + r["w"]) * cell, (r["z"] + r["d"]) * cell
+        if side in "ns":
+            x, z = min(max(x, x0 + 0.75), x1 - 0.75), z0 if side == "n" else z1
+        else:
+            x, z = x0 if side == "w" else x1, min(max(z, z0 + 0.75), z1 - 0.75)
+        return k, [round(float(x), 2), round(float(z), 2)], side
 
     openings = {k: [] for k in range(P + len(stairs))}
     # A doorway between two source rooms may straddle a cell edge and so touch two pieces: it is

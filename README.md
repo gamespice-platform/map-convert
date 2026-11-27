@@ -1,6 +1,8 @@
 Reads community maps in the VBSP v19-21 format, inventories a folder of them, and writes each as one documented intermediate JSON that a game's thin adapter turns into that game's own map document. Python 3, standard library only (plus `unrar` or `7z` on the path to list `.rar`/`.7z` downloads, and `fastgmad` for `.gma` workshop archives).
 
-It is the one place the family reads Source-engine (VBSP) maps. A map repository keeps only its data and a thin adapter; the reader, the brush cutter, the texture, model and sound mapping and the audits live here, so a fix reaches every game.
+This is a tool in the [GameSpice](https://gamespice.net) family, MIT licensed and built with Claude Code. Its tests are plain Python scripts under `tests/` (see Tests below). The maps in [Zee's Games](https://zeesgames.com) were converted with it before they went onto live servers.
+
+It is the one place the family reads VBSP maps. A map repository keeps only its data and a thin adapter; the reader, the brush cutter, the texture, model and sound mapping and the audits live here, so a fix reaches every game.
 
 ## Quick start
 
@@ -120,7 +122,7 @@ One JSON object. Map units and map axes throughout (Z up, 1 unit = 0.01905 m, Go
 
 The adapters in `adapters/` convert a map into each game's own document. A map repository (for example fc-dm-maps or zombie-zone-maps) keeps its data and a thin launcher that calls into this converter.
 
-### PLAYLOT world
+### Playlot world
 
 `adapters/playlot-maps/import_bsp.py <map.bsp> <config>` writes two things into the maps repository. The first is `maps/<id>.json`, the box document. Its boxes are what collides, and they are drawn only when the second output is missing. The second is the world pack, `maps/world/pg_world_<name>/` beside the document (`<name>` is the id without `pgc_`), which is the map as drawn. The pack comes from the mesh route: `bsp.py store` and then `bsp.py regen`. It holds `<id>.json` and `<id>.bin` (`gs-bsp-mesh` v1), `textures/`, `credits.json`, `CREDITS.md` and `<id>.coverage.json`. The pack contains the map's faces and displacements, free (CC0) textures, model stand-ins, `environment` (sky, sun, fog) and the lightmap. The PBR sets and models it points at are written once, under `maps/world/.stores/{pbr,model}-library`. Pass `--no-world` to skip the regen and `--store=<dir>` to choose the lossless store (the default is `$GSBSP_STORE`).
 
@@ -139,6 +141,23 @@ The document names the pack in a top-level `world` key:
 | `crop` | optional: the config's `region` in the pack's frame (`x0,z0,x1,z1,ymin,ymax`), as passed to `regen --crop`. Faces, props and entities centred outside it are left out, just as boxes are |
 
 A game draws the pack in place of the box meshes with `GSMapDrawnWorld.attach(parent, mesh, {"transform": Transform3D(Basis.IDENTITY, offset), ...})` and keeps the boxes' collision. When the pack is missing or will not read, or its scale differs, the game draws the boxes. Once the pack exists, the document's `attribution` names the free textures and stand-ins instead of the box grid.
+
+## Used by
+
+No game vendors it. Map repositories run it, and these games have adapters in `adapters/`:
+
+- [Airdrift](https://zeesgames.com/airdrift)
+- [Dangerous Delivery](https://zeesgames.com/dangerous-delivery)
+- [Deathrun](https://zeesgames.com/deathrun)
+- [Hide n Seek](https://zeesgames.com/hide-n-seek)
+- [Look At Me](https://zeesgames.com/look-at-me)
+- [Murder Mystery](https://zeesgames.com/murder-mystery)
+- [Playlot](https://zeesgames.com/playlot)
+- [Prop Hunt](https://zeesgames.com/prop-hunt)
+- [Wipeout](https://zeesgames.com/wipeout)
+- [Zombie Zone](https://zeesgames.com/zombie-zone)
+
+The whole collection is at [zeesgames.com](https://zeesgames.com).
 
 ## Credits and removal
 

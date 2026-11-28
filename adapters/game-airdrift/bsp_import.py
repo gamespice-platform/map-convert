@@ -3535,7 +3535,9 @@ SPAWN_TEAMS = {("info_player_teamspawn", "2"): "red", ("info_player_teamspawn", 
 # An arena map's two-sided spawn classes. The mapper put each side's spawns at its own end, and
 # the game's positional split (FcMapImported.split_spawns_for_teams) disagreed with them on a fifth
 # of the combat surf maps (surf_pavilion 25 of 50, surf_xiv_v2a 16 of 30).
-ARENA_SPAWN_SIDES = {"info_player_terrorist": "red", "info_player_counterterrorist": "blue"}
+ARENA_SPAWN_SIDES = {"info_player_terrorist": "red", "info_player_counterterrorist": "blue",
+                     "info_player_axis": "red", "info_player_allies": "blue"}   # Day of Defeat: Source sides
+DOD_OWNERS = {"1": "blue", "2": "red"}   # dod_control_point point_default_owner: 1 Allies, 2 Axis, 0 neutral
 
 
 def spawn_disabled(bsp, e):
@@ -3559,14 +3561,19 @@ def objective_markers(bsp, doc):
     points = []
     capture = {}  # point entity targetname -> capture radius, map units
     for e in bsp.entities:
-        if e.get("classname") == "trigger_capture_area" and e.get("area_cap_point"):
+        if e.get("classname") in ("trigger_capture_area", "dod_capture_area") and e.get("area_cap_point"):
             box = brush_box(bsp, e)
             if box is not None:
                 capture[e["area_cap_point"]] = max(box[1][0] - box[0][0], box[1][1] - box[0][1]) / 2.0
     for e in bsp.entities:
-        if e.get("classname") == "team_control_point" and "origin" in e:
-            owner = SPAWN_TEAMS.get(("info_player_teamspawn", str(e.get("point_default_owner", "")))) or ""
-            index = int(float(e.get("point_index", 0) or 0))
+        if e.get("classname") in ("team_control_point", "dod_control_point") and "origin" in e:
+            if e["classname"] == "dod_control_point":
+                owner = DOD_OWNERS.get(str(e.get("point_default_owner", "")).strip(), "")
+                index = len(points)   # DoD:S points have no index: entity order
+                e = dict(e, point_printname=e.get("point_printname") or e.get("point_name", ""))
+            else:
+                owner = SPAWN_TEAMS.get(("info_player_teamspawn", str(e.get("point_default_owner", "")))) or ""
+                index = int(float(e.get("point_index", 0) or 0))
             origin = list(to_godot(entity_origin(e)))
             # `index`/`name`/`origin` are the first schema; `id`/`position`/`radius`/`order` the
             # shared control point mode's (order is settled below from the map's master).
@@ -3613,7 +3620,7 @@ def classify_zones(bsp, min_thickness=MIN_ZONE_THICKNESS, doc=None, solids=None,
     spawns = []
     for e in bsp.entities:
         cls = e.get("classname", "")
-        if cls in ("info_player_terrorist", "info_player_counterterrorist",
+        if cls in ("info_player_terrorist", "info_player_counterterrorist", "info_player_axis", "info_player_allies",
                    "info_player_start", "info_player_teamspawn",
                    "info_player_deathmatch") and "origin" in e:
             src = entity_origin(e)

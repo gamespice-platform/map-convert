@@ -3484,6 +3484,30 @@ def round_teleports(z, rule):
     return dropped
 
 
+def switched_teleports(z):
+    """Drop every teleport that starts disabled and is not switched on as the round starts.
+
+    Not opt-in on a combat map (`"kind": "arena"`): a fact about the map's start state. A
+    `StartDisabled` teleport does nothing until map logic enables it, and this importer
+    runs none of a map's outputs, so imported as a pit it fired from the first second:
+    surf_forbidden_ways_reloaded's `tele_TO_END` and `tele_shortend` (a button's) and its
+    `tele_jail_top` (a `trigger_once`'s) sent every runner through them to the end or a
+    jail. One the map's `logic_auto` leaves on (gsbsp.movers.spawn_enabled, the rule
+    bsp_mechanics already holds its triggers to) runs all round and stays a pit. Race maps
+    keep [method round_teleports]: there a button-enabled teleport can be how the next
+    section opens.
+    """
+    names = []
+    for i, e in list(z.entities("trigger_teleport")):
+        if bsp_mechanics._starts_off(z.bsp, e):
+            z.claimed.add(i)
+            names.append(e.get("targetname", "") or "#%d" % i)
+    if names:
+        z.notes.append("%d teleports dropped that start disabled and only map events enable (%s)"
+                       % (len(names), ", ".join(sorted(set(names))[:12])))
+    return len(names)
+
+
 def floor_boxes(bsp, solids, props):
     """Everything a player can stand on, as boxes: the brushes, the solid props' hulls and
     each displacement triangle.
@@ -3590,6 +3614,8 @@ def classify_zones(bsp, min_thickness=MIN_ZONE_THICKNESS, doc=None, solids=None,
         conditional_teleports(z, doc["conditional_teleports"])
     if "round_teleports" in doc:
         round_teleports(z, doc["round_teleports"])
+    if doc.get("kind") == "arena":
+        switched_teleports(z)
     # After the zones file's own lists, so one that names these teleports still resolves.
     parented_teleports(z)
     if "sealed_teleports" in doc:

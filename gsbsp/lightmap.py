@@ -18,6 +18,11 @@ PAD = 1
 SURF_LIGHT, SURF_NOLIGHT, SURF_BUMPLIGHT = 0x1, 0x400, 0x800
 LUMP_LIGHTING_HDR, LUMP_FACES_HDR = 53, 58
 WHITE = 4           # the unlit patch at the page-0 origin, in texels
+# A bake whose sun is far brighter than the engine's range (light_environment brightness 200: surf_olympics, 11 % of its texels
+# above 3 and some at 40) draws every sunlit wall as flat white, textures gone. Source's LDR path clamps such light; when
+# `BURNT_FRACTION` of the texels are above `BURNT_PEAK` the whole bake is capped at `BURNT_CAP`, hue kept (a texel's channels
+# scale together), so a sunlit wall shows its texture. Ordinary bakes (a few percent above 1, machinery 31 % above 1.5) pass untouched.
+BURNT_PEAK, BURNT_FRACTION, BURNT_CAP = 3.0, 0.02, 1.0
 
 
 def rgb9e5(rgb):
@@ -42,6 +47,7 @@ class Atlas:
         self.place = {}
         self.lit_faces = 0
         self.texels = 0
+        self.burnt = 0.0    # the fraction of texels above BURNT_PEAK in the source bake
 
 
 def _light_lump(bsp):
@@ -89,6 +95,14 @@ def pack(bsp, faces):
         return None
     jobs.sort(key=lambda j: -j[1].shape[0])
     atlas = Atlas()
+    peaks = np.concatenate([lx.reshape(-1, 3).max(axis=1) for _, lx in jobs])
+    atlas.burnt = float((peaks > BURNT_PEAK).mean())
+    if atlas.burnt >= BURNT_FRACTION:
+        capped = []
+        for f, lx in jobs:
+            top = lx.max(axis=-1, keepdims=True)
+            capped.append((f, lx * np.minimum(1.0, BURNT_CAP / np.maximum(top, 1e-9))))
+        jobs = capped
     cur = {"x": WHITE + 2 * PAD, "y": 0, "shelf": WHITE + 2 * PAD, "blocks": []}
     pages = []
 

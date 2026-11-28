@@ -1329,14 +1329,14 @@ def merge_convex_brushes(bsp, brushes):
             if side[3]:
                 continue
             pl = bsp.planes[side[0]]
-            planes.append(((pl[0], pl[1], pl[2]), pl[3]))
+            planes.append(((pl[0], pl[1], pl[2]), pl[3], key((pl[0], pl[1], pl[2]), pl[3])))
         items.append({"pts": [tuple(p) for p in bsp.brush_hull(i)], "planes": planes,
                       "contents": contents, "alive": True,
                       "kind": _gsmaterials.hull_kind(_docboxes.brush_material_names(bsp, i), contents)})
 
     def behind(pts, planes, skip):
-        for n, d in planes:
-            if key(n, d) == skip:
+        for n, d, k in planes:
+            if k == skip:
                 continue
             for p in pts:
                 if n[0] * p[0] + n[1] * p[1] + n[2] * p[2] - d > MERGE_EPSILON:
@@ -1344,10 +1344,12 @@ def merge_convex_brushes(bsp, brushes):
         return True
 
     by_plane = collections.defaultdict(list)
+    by_plane_has = collections.defaultdict(set)    # who is in by_plane[q] already: a brush that grew is listed once, not once per merge
     for k, it in enumerate(items):
-        it["keys"] = {key(n, d) for n, d in it["planes"]}
+        it["keys"] = {q[2] for q in it["planes"]}
         for q in it["keys"]:
             by_plane[q].append(k)
+            by_plane_has[q].add(k)
     # A worklist rather than a restart after every merge: a brush that grew is asked
     # again, with the sides it gained, until nothing beside it will join it.
     pending = collections.deque(range(len(items)))
@@ -1357,8 +1359,7 @@ def merge_convex_brushes(bsp, brushes):
         grew = it["alive"]
         while grew:
             grew = False
-            for n, d in list(it["planes"]):
-                mine = key(n, d)
+            for n, d, mine in list(it["planes"]):
                 theirs = key((-n[0], -n[1], -n[2]), -d)
                 for b in by_plane.get(theirs, ()):
                     other = items[b]
@@ -1368,11 +1369,18 @@ def merge_convex_brushes(bsp, brushes):
                     if not (behind(other["pts"], it["planes"], mine)
                             and behind(it["pts"], other["planes"], theirs)):
                         continue
-                    it["planes"] = [q for q in it["planes"] if key(*q) != mine] + \
-                        [q for q in other["planes"] if key(*q) != theirs]
-                    it["keys"] = {key(*q) for q in it["planes"]}
+                    # One entry per plane: two brushes of a slab share their top and bottom, and the copies
+                    # only make every later test walk the same plane again.
+                    joined = {}
+                    for q in it["planes"] + other["planes"]:
+                        if q[2] != mine and q[2] != theirs:
+                            joined.setdefault(q[2], q)
+                    it["planes"] = list(joined.values())
+                    it["keys"] = {q[2] for q in it["planes"]}
                     for q in it["keys"]:
-                        by_plane[q].append(a)
+                        if a not in by_plane_has[q]:
+                            by_plane_has[q].add(a)
+                            by_plane[q].append(a)
                     # Keep the corners; the faces they shared are inside now and a convex
                     # shape built from these points is the merged hull regardless.
                     it["pts"] = list({(round(p[0], 3), round(p[1], 3), round(p[2], 3))

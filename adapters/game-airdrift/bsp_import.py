@@ -2512,6 +2512,174 @@ def lift_out_of_solid(bsp, point, height=72.0, limit=256.0):
     return point
 
 
+SPAWN_MAX_DROP = 96.0     # a spawn this far over the floor under it is a player dropped in (tools/check_spawns.py's `high`)
+SPAWN_MIN_COUNT = 16      # fewer spawns than this and a full server stacks players on one spot (check_spawns' `few`)
+SPAWN_EYE, SPAWN_WALL = 64.0, 32.0
+
+
+def _solid_planes(bsp):
+    """[[(nx, ny, nz, d)]] for every player-solid brush, built once per BSP."""
+    cached = getattr(bsp, "_spawn_planes", None)
+    if cached is None:
+        cached = []
+        for i in sorted(bsp.model_brushes(0)):      # the world: a trigger's or buy zone's brush is no floor
+            if not bsp.brushes[i][2] & MASK_PLAYERSOLID:
+                continue
+            first, count, _ = bsp.brushes[i]
+            cached.append([tuple(bsp.planes[sd[0]][:4]) for sd in bsp.brushsides[first:first + count]])
+        bsp._spawn_planes = cached
+    return cached
+
+
+def _disp_tris(bsp):
+    """[(triangle, lo, hi)] of every displacement surface (Source axes), built once per BSP."""
+    cached = getattr(bsp, "_spawn_disp", None)
+    if cached is None:
+        cached = []
+        for f in bsp.faces:
+            if f[6] < 0 or bsp.face_material(f)[1] & SKIP_MASK:
+                continue
+            for t in bsp.displacement_tris(f):
+                cached.append((t, [min(p[a] for p in t) for a in range(3)], [max(p[a] for p in t) for a in range(3)]))
+        bsp._spawn_disp = cached
+    return cached
+
+
+def solid_at(bsp, point):
+    """Is a point inside any player-solid brush (Source axes)?"""
+    x, y, z = point
+    for planes in _solid_planes(bsp):
+        for nx, ny, nz, d in planes:
+            if nx * x + ny * y + nz * z - d > 0.1:
+                break
+        else:
+            return True
+    return False
+
+
+def floor_below(bsp, point, reach=1024.0):
+    """Z of the highest player-solid brush top under point (Source axes), or None.
+
+    Brush tops and displacement surfaces.
+    """
+    x, y, z = point
+    best = None
+    for tri, lo, hi in _disp_tris(bsp):
+        if not (lo[0] <= x <= hi[0] and lo[1] <= y <= hi[1]):
+            continue
+        (ax, ay, az), (bx, by, bz), (cx, cy, cz) = tri
+        den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+        if abs(den) < 1e-9:
+            continue
+        l1 = ((by - cy) * (x - cx) + (cx - bx) * (y - cy)) / den
+        l2 = ((cy - ay) * (x - cx) + (ax - cx) * (y - cy)) / den
+        if min(l1, l2, 1.0 - l1 - l2) < -1e-6:
+            continue
+        h = l1 * az + l2 * bz + (1.0 - l1 - l2) * cz
+        if z - reach <= h <= z + 4.0 and (best is None or h > best):
+            best = h
+    for planes in _solid_planes(bsp):
+        top, bottom, ok = math.inf, -math.inf, True
+        for nx, ny, nz, d in planes:
+            r = d - nx * x - ny * y
+            if abs(nz) < 1e-6:
+                if r < -0.01:
+                    ok = False
+                    break
+            elif nz > 0:
+                top = min(top, r / nz)
+            else:
+                bottom = max(bottom, r / nz)
+        if ok and top >= bottom - 0.01 and z - reach <= top <= z + 4.0 and (best is None or top > best):
+            best = top
+    return best
+
+
+def settle_spawns(bsp, spawns):
+    """Spawns a player can start at: not hanging in the air, not facing a wall, and enough of them.
+
+    [b]Three faults a deathmatch map's mapper never sees, because Source forgives them.[/b]
+    A spawn left 130 units over its floor drops the player in (and tools/check_spawns.py
+    reports it as `high`); one a few units from a wall puts the player's nose in it; and a
+    map built for 12 players stacks a full FC server on 12 spots. Each is fixed here, once,
+    for every map the arena importer reads, instead of per map in a known list:
+    - a spawn more than SPAWN_MAX_DROP over the brush floor under it is lowered onto it;
+    - one with a wall within SPAWN_WALL of eye height straight ahead is turned to the nearest
+      yaw that has none;
+    - fewer than SPAWN_MIN_COUNT spawns are padded with extra points beside existing ones
+      (same side, same facing) on the same floor, clear of brushes and 48 units from every
+      other spawn.
+    Returns the notes to record. Source axes in, `origin_src` and the Godot `origin` out.
+    """
+    notes = []
+
+    def put(sp, src):
+        sp["origin_src"] = list(src)
+        sp["origin"] = list(to_godot(src))
+
+    lowered = 0
+    for sp in spawns:
+        x, y, z = sp["origin_src"]
+        fl = floor_below(bsp, (x, y, z))
+        if fl is not None and z - fl > SPAWN_MAX_DROP:
+            put(sp, (x, y, fl + 1.0))
+            lowered += 1
+    if lowered:
+        notes.append("%d spawn(s) lowered onto the floor under them (they hung more than %d units up)" % (lowered, SPAWN_MAX_DROP))
+
+    def faces_wall(src, yaw):
+        r = math.radians(yaw)
+        for k in range(1, int(SPAWN_WALL // 8) + 1):
+            if solid_at(bsp, (src[0] + math.cos(r) * 8 * k, src[1] + math.sin(r) * 8 * k, src[2] + SPAWN_EYE)):
+                return True
+        return False
+
+    turned = 0
+    for sp in spawns:
+        yaw = sp["yaw_src"]
+        if not faces_wall(sp["origin_src"], yaw):
+            continue
+        for off in (45, -45, 90, -90, 135, -135, 180):
+            if not faces_wall(sp["origin_src"], yaw + off):
+                sp["yaw_src"] = (yaw + off) % 360.0
+                sp["yaw"] = yaw_to_godot(sp["yaw_src"])
+                turned += 1
+                break
+    if turned:
+        notes.append("%d spawn(s) turned away from a wall they faced" % turned)
+
+    if 0 < len(spawns) < SPAWN_MIN_COUNT:
+        base, added = list(spawns), 0
+        ring = [(dx, dy) for r in (64.0, 96.0, 128.0) for dx, dy in
+                ((r, 0), (-r, 0), (0, r), (0, -r), (r, r), (-r, r), (r, -r), (-r, -r))]
+        for step in range(len(ring)):
+            for sp in base:
+                if len(spawns) >= SPAWN_MIN_COUNT:
+                    break
+                x, y, z = sp["origin_src"]
+                dx, dy = ring[(step + base.index(sp) * 3) % len(ring)]
+                at = (x + dx, y + dy, z)
+                if any(math.dist(at[:2], o["origin_src"][:2]) < 48.0 and abs(at[2] - o["origin_src"][2]) < 72 for o in spawns):
+                    continue
+                home = floor_below(bsp, (x, y, z + 4.0))
+                fl = floor_below(bsp, (at[0], at[1], z + 4.0))
+                if home is None or fl is None or abs(fl - home) > 8.0:
+                    continue
+                at = (at[0], at[1], z + (fl - home))     # the same height over the floor as the spawn it sits beside
+                if solid_at(bsp, (at[0], at[1], fl + 1.0)) or any(solid_at(bsp, (at[0], at[1], fl + h)) for h in (36.0, 70.0)):
+                    continue
+                new = {"origin_src": list(at), "origin": list(to_godot(at)), "yaw": sp["yaw"], "yaw_src": sp["yaw_src"]}
+                if sp.get("team"):
+                    new["team"] = sp["team"]
+                if faces_wall(new["origin_src"], new["yaw_src"]):
+                    continue
+                spawns.append(new)
+                added += 1
+        if added:
+            notes.append("%d spawn point(s) added beside the map's own (it had %d, a full server needs %d)" % (added, len(base), SPAWN_MIN_COUNT))
+    return notes
+
+
 def resolve_box(z, spec):
     """A volume from whichever of the override's five ways of naming one it used."""
     ways = [k for k in ("box", "named", "teleport_to", "around", "near") if k in spec]
@@ -3666,6 +3834,9 @@ def classify_zones(bsp, min_thickness=MIN_ZONE_THICKNESS, doc=None, solids=None,
     if clear and len(clear) < len(spawns):
         z.notes.append("%d spawns dropped that stand inside a brush" % (len(spawns) - len(clear)))
         spawns = clear
+
+    if doc.get("kind") == "arena":
+        z.notes.extend(settle_spawns(bsp, spawns))
 
     label_zones(z, doc.get("ignore_labels"))
     resolve_overrides(z, doc)

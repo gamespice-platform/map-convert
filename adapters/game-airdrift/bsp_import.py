@@ -53,6 +53,7 @@ import bsp_props  # noqa: E402
 import stock_standins  # noqa: E402
 from gsbsp import controlpoints as _controlpoints  # noqa: E402
 from gsbsp import mood as _mood  # noqa: E402
+from gsbsp import teams as _teams  # noqa: E402
 from gsbsp import docboxes as _docboxes, materials as _gsmaterials, props as _gsprops, ramps as _ramps  # noqa: E402
 
 LUMP_LIGHTING, LUMP_PAKFILE, LUMP_PLANES = 8, 40, 1
@@ -3856,6 +3857,15 @@ def classify_zones(bsp, min_thickness=MIN_ZONE_THICKNESS, doc=None, solids=None,
 
     if doc.get("kind") == "arena":
         z.notes.extend(settle_spawns(bsp, spawns))
+        # Every combat map hosts team deathmatch, so a map whose mapper gave no spawn a side gets two: the game would
+        # cut the same halves at run time, written here so the manifest says it (gsbsp/teams.py).
+        if not any("team" in sp for sp in spawns):
+            sides = _teams.split_sides([sp["origin"] for sp in spawns])
+            for sp, side in zip(spawns, sides):
+                if side:
+                    sp["team"] = side
+            if any(sides):
+                z.notes.append("no spawn had a side: %d red and %d blue by position" % (sides.count("red"), sides.count("blue")))
 
     label_zones(z, doc.get("ignore_labels"))
     resolve_overrides(z, doc)
@@ -5015,8 +5025,9 @@ def main(argv=None):
         manifest["resupply"] = resupply
     if flags:
         manifest["flag_spawns"] = flags
-    if "modes" in doc:
-        manifest["modes"] = doc["modes"]
+    # Every combat map hosts free-for-all, team deathmatch and gun game; the zones file adds the rest (cp, ctf, snipers).
+    if "modes" in doc or doc.get("kind") == "arena":
+        manifest["modes"] = _teams.merge_modes(doc.get("modes"))
     movers = train_movers(bsp)
     if movers:
         manifest["train_movers"] = movers

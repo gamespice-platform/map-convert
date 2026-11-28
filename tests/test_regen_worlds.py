@@ -23,7 +23,7 @@ class RegenWorldsSource(unittest.TestCase):
             f.write(FAKE_BSP)
         for name in sources:
             open(os.path.join(repo, "sources", name), "w").close()
-        env = dict(os.environ, GSBSP_PATH=fake, HEAVY="", TMPDIR=d)
+        env = dict(os.environ, GSBSP_PATH=fake, HEAVY="", TMPDIR=d, GSBSP_STORE=os.path.join(d, "nostore"))
         p = subprocess.run(["bash", SCRIPT, repo] + ids, env=env, capture_output=True, text=True)
         self.last_repo = repo
         calls = os.path.join(fake, "calls.log")
@@ -74,7 +74,7 @@ class RegenKeepsSettledFields(unittest.TestCase):
         if importer:
             os.makedirs(os.path.join(repo, "maps", "w"))
             json.dump({}, open(os.path.join(repo, "maps", "w", "w.json"), "w"))
-        env = dict(os.environ, GSBSP_PATH=fake, HEAVY="", TMPDIR=d)
+        env = dict(os.environ, GSBSP_PATH=fake, HEAVY="", TMPDIR=d, GSBSP_STORE=os.path.join(d, "nostore"))
         p = subprocess.run(["bash", SCRIPT, repo, "w"], env=env, capture_output=True, text=True)
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
         return json.load(open(os.path.join(repo, "worlds", "w", "w.json")))
@@ -96,6 +96,46 @@ class RegenKeepsSettledFields(unittest.TestCase):
         done = mod.keep({"licence": {"models": [0], "textures": ["old"]}, "surfaces": ["o"]}, new)
         self.assertEqual(new, {"licence": {"models": [1], "textures": ["old"]}, "surfaces": ["o"]})
         self.assertEqual(sorted(done), ["licence.textures", "surfaces"])
+
+
+class StoreAlias(unittest.TestCase):
+    GOOD = b"VBSP" + b"\0" * 2000
+
+    def store(self, entries):
+        import json
+        d = tempfile.mkdtemp()
+        index = {}
+        for key, (h, body) in entries.items():
+            os.makedirs(os.path.join(d, h))
+            with open(os.path.join(d, h, "source.bsp"), "wb") as f:
+                f.write(body)
+            index[key] = h
+        with open(os.path.join(d, "index.json"), "w") as f:
+            json.dump(index, f)
+        return d
+
+    def pick(self, d, spec):
+        from importlib.machinery import SourceFileLoader
+        mod = SourceFileLoader("store_alias", os.path.join(os.path.dirname(HERE), "tools", "store_alias.py")).load_module()
+        return mod.pick(d, spec)
+
+    def test_hashed_alias_beats_bare(self):
+        d = self.store({"arena/m": ("aa", self.GOOD), "arena/m~bb": ("bb", self.GOOD)})
+        self.assertEqual(self.pick(d, "arena/m"), "arena/m~bb")
+
+    def test_bare_alias_used_when_alone(self):
+        d = self.store({"arena/m": ("aa", self.GOOD)})
+        self.assertEqual(self.pick(d, "arena/m"), "arena/m")
+
+    def test_corrupt_source_refused(self):
+        d = self.store({"arena/m": ("aa", b"junk")})
+        self.assertIsNone(self.pick(d, "arena/m"))
+        d = self.store({"arena/m": ("aa", self.GOOD), "arena/m~bb": ("bb", b"junk")})
+        self.assertEqual(self.pick(d, "arena/m"), "arena/m")
+
+    def test_several_hashed_aliases_are_ambiguous(self):
+        d = self.store({"arena/m~bb": ("bb", self.GOOD), "arena/m~cc": ("cc", self.GOOD)})
+        self.assertIsNone(self.pick(d, "arena/m"))
 
 
 if __name__ == "__main__":

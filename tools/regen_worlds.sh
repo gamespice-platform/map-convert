@@ -19,10 +19,10 @@ rc=0
 for m in "${ids[@]}"; do
     # A map id is hyphenated (cp-orange-x3) while its source BSP may keep the underscores (cp_orange_x3.bsp).
     f="$(find "$SRC/" -maxdepth 2 \( -iname "*$m.bsp" -o -iname "*${m//-/_}.bsp" \) | head -1)"
-    # No source file named for the id: the lossless store may already hold it as <game>/<id> (a map stored once, e.g. from a versioned archive name).
+    # No source file named for the id: the lossless store may already hold it as <game>/<id> (a map stored once, e.g. from a versioned archive name). store_alias.py prefers the hashed <game>/<id>~<hash> entry to the bare alias and refuses an entry whose source is no BSP.
     entry=""
     if [ -z "$f" ]; then
-        python3 -P -c 'import json,sys; sys.exit(0 if sys.argv[2] in json.load(open(sys.argv[1]))else 1)' "${GSBSP_STORE:-$HOME/mapsrc/store}/index.json" "$GAME/$m" 2>/dev/null && entry="$GAME/$m"
+        entry="$(python3 -P "$HERE/store_alias.py" "${GSBSP_STORE:-$HOME/mapsrc/store}" "$GAME/$m")"
         [ -z "$entry" ] && { echo "$m NO SOURCE"; rc=1; continue; }
     fi
     read -r author page < <(python3 -P -c 'import json,sys

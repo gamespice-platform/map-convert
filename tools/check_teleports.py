@@ -83,11 +83,17 @@ def first_pit(zones, p):
 
 
 def triggers(bsp, z):
-    """[{i, e, name, gated, boxes, sends: [godot landings this teleport may give]}] for every trigger_teleport."""
+    """[{i, e, name, gated, boxes, sends: [godot landings this teleport may give]}] for every trigger_teleport that moves players."""
     out = []
     for i, e in enumerate(bsp.entities):
         if e.get("classname") != "trigger_teleport":
             continue
+        try:
+            flags = int(e.get("spawnflags", "1") or 0)
+        except ValueError:
+            flags = 1
+        if not flags & 1:
+            continue    # no "clients" flag: moves props or NPCs only (surf_fastspiral_retro's phy1)
         target = e.get("target", "").strip()
         t = {"i": i, "e": e, "gated": bsp_mechanics._starts_off(bsp, e), "target": target,
              "name": "%s -> %s" % (e.get("targetname", "") or "#%d" % i, target or "(none)"),
@@ -231,7 +237,7 @@ def main(argv=None, root=None):
             failed += 1
             continue
         problems = check_map(bsp, m)
-        n = sum(1 for e in bsp.entities if e.get("classname") == "trigger_teleport")
+        n = len(triggers(bsp, bi.Zoner(bsp)))
         fails = [p for p in problems if p[0] in FAILS]
         kinds = {}
         for p in fails:

@@ -25,9 +25,22 @@ def get(url, tries=4):
 
 
 def extract(path, out):
+    """bsdtar, then 7z, then unzip, then python zipfile; stop at the first one that yields files."""
     os.makedirs(out)
-    if subprocess.run(["bsdtar", "-xf", path, "-C", out], stderr=subprocess.DEVNULL).returncode:
-        subprocess.run(["7z", "x", "-y", "-o" + out, path], stdout=subprocess.DEVNULL)
+    tries = [["bsdtar", "-xf", path, "-C", out], ["7z", "x", "-y", "-o" + out, path], ["unzip", "-o", "-q", path, "-d", out],
+             ["unar", "-q", "-f", "-o", out, path]]       # unar reads the old RAR methods 7z reports as unsupported
+    for cmd in tries:
+        subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        sizes = [os.path.getsize(os.path.join(r, n)) for r, _, fs in os.walk(out) for n in fs]
+        if sizes and min(sizes) > 0:
+            return
+        shutil.rmtree(out)
+        os.makedirs(out)
+    try:
+        import zipfile
+        zipfile.ZipFile(path).extractall(out)
+    except Exception:
+        pass
 
 
 def fetch(mod, root):
@@ -43,7 +56,10 @@ def fetch(mod, root):
     for f in meta["_aFiles"]:
         name = os.path.basename(f["_sFile"])
         p = os.path.join(d, name)
-        open(p, "wb").write(get(f["_sDownloadUrl"]))
+        data = get(f["_sDownloadUrl"])
+        if not data:
+            raise OSError("empty download for " + name)
+        open(p, "wb").write(data)
         extract(p, os.path.join(d, "x", name + ".d"))
     bsps, content = [], set()
     for r, _, fs in os.walk(os.path.join(d, "x")):

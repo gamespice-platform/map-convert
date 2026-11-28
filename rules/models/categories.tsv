@@ -1,6 +1,35 @@
 # name regex (on the model's file name)	library id regexes, best first, joined by | (NONE = generated only)	default w	h	d (m, when no size is known)	generated shape if nothing fits: box|cyl	colour; an optional 8th column "fixed" ignores the measured size (a weapon header box is an idle-pose hull, not its shape) and uses the default w h d
 # Final pass (2026-11-17): the last placeholder props of the FC, surf, hide-and-seek and wipeout maps get own CC0 models (tools/models/fc_final.py) or an existing CC0 model; a crane's LOD body is the dock crane, a kitchen vent is a cooker hood (own model)
 # Forest props (2026-11-28, review-dm-1): the oaks, woods bushes and river rocks of the nature maps were untextured Kenney stand-ins (grey in fog); Poly Haven CC0 models read as the same thing
+# Review batch (2026-11-28, fc-owner-maps-batch): the top unmapped TF2/CS:S props in the families pipes, lights, signs, doors, fences, vehicles and beams. Library ids are own CC0 (dm_*), Poly Haven CC0 (ph_*) or Kenney CC0; the generated box is CC0 too
+^groundlight\d*$	^ph_portable_searchlight$|^dm_securitylight$	0.4	1.2	0.4	cyl	d0d0c8
+^(construction_light|cap_?light|tracklight\d+)$	^dm_industriallamp$|^dm_shoplight$	0.5	0.5	0.5	cyl	d8d0a0
+^(lightstick|breenlight|teleporter_light|dispenser_light|dispenser_lvl3_light)$	^dm_lighttroffer$|^dm_lightdisc$	0.3	0.1	0.3	box	e8e8d0
+^hangingbulb$	^dm_lightpendant$|^ph_lightbulb_01$	0.2	0.4	0.2	cyl	e8e0b0
+^(lightpole|pole_a)$	^dm_utilitypole$|^dm_signpole$	0.3	6.0	0.3	cyl	5a5448
+^operative_tube_(long|straight)\d+$	^dm_pipestraight$	0.3	0.3	2.0	cyl	6a6a68
+^operative_tube_endcap$	^dm_pipecoupling$	0.3	0.3	0.3	cyl	6a6a68
+^operative_tube_tjoint\d+$	^dm_pipecluster$|^dm_pipeelbow$	1.0	0.3	1.0	cyl	6a6a68
+^wall_piping$	^dm_wallpiperun$	0.2	3.3	0.83	box	5a5a58
+^vent(001)?$	^dm_ventgrille$|^dm_roofvent$	0.6	0.6	0.3	box	7a7a78
+^(train_gate\d+\w*|gothic_gate_\w+|portcullis(_small)?)$	^ph_large_iron_gate$	3.0	3.0	0.3	box	4a4a48
+^(blastdoor\w+|operativespawndoor\d+|blue_?hangardoor\w+)$	^kenney_factory-kit_door-wide-closed$	2.0	3.0	0.3	box	6a6e70
+^(metal_barrier\d+|road_bumper\d+|train_?bumper(post)?)$	^dm_jerseybarrier$|^ph_concrete_road_barrier$	2.0	1.0	0.6	box	8a8a85
+^(nm2_hummer|swat_van_generic)$	^dm_panelvan$	2.0	2.0	5.0	box	4a5a48
+^bus$	^dm_minibus$	2.5	3.0	10.0	box	c8a030
+^kamaz$	^dm_boxtruck$	2.5	3.0	8.0	box	4a5a40
+^tractor$	^kenney_car-kit_tractor$	2.0	2.5	3.5	box	3a6a3a
+^diesel$	NONE	3.0	4.0	16.0	box	7a2a2a
+^flatcar$	^dm_traincar$	3.0	2.0	14.0	box	5a4a3a
+^(chain)?trainstationsign$	^dm_signpole$	0.2	2.5	1.0	box	2a4a7a
+^wall_clock$	^dm_deskclock$|^ph_wall_clock$	0.4	0.4	0.1	cyl	d8d8d0
+^(spytech_roofbeam\d+|metal_strut|steel_beam\w*|operativebeam\d+)$	^dm_ibeam$|^dm_roofbeams$	0.3	0.3	4.0	box	6a6a68
+^(corrugated_metal\d+|roof_metal\d+)$	NONE	2.0	2.0	0.1	box	7a6a58
+^rolling_gate$	^ph_rollershutter_door$	3.0	2.5	0.2	box	8a8a85
+^grandfather_clock_\d+$	^dm_grandfatherclock$	0.6	2.0	0.4	box	4a3020
+^toystore_locomotive_front$	NONE	2.5	3.5	6.0	box	7a2a2a
+^power_pylon(_angled)?$	^dm_catenarypole$|^dm_utilitypole$	1.0	15.0	1.0	box	5a5a58
+^track_(straight|arc|s_curve|y_joint)\w*$	^dm_railtrack$	1.0	0.2	2.0	box	6a6660
 ^tree_oak\d*$	^ph_island_tree_0[123]$|^ph_jacaranda_tree$	6.0	12.0	6.0	cyl	3a5a28
 ^(shrub_oak\d*|woods_bush)$	^ph_shrub_0[24]$|^ph_fern_02$	1.5	1.2	1.5	cyl	3a6a30
 ^rock(big|river)_\w+$	^ph_boulder_01$|^ph_namaqualand_boulder_0[2-5]$	1.5	1.2	1.5	box	707068

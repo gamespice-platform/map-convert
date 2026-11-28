@@ -119,7 +119,7 @@ class SnapToFloor(unittest.TestCase):
     def snap(self, pos, floors):
         from gsbsp import audit
         real = audit.floors
-        audit.floors = lambda b: [(f, None) for f in floors]
+        audit.floors = lambda b, skip_entity=None: [(f, None) for f in floors]
         try:
             return controlpoints.snap_to_floor(None, [("t", 1, "", "", pos)])[0][4]
         finally:
@@ -133,6 +133,19 @@ class SnapToFloor(unittest.TestCase):
 
     def test_no_floor_in_radius_stays(self):
         self.assertEqual(self.snap([100, 100, 500], [(5000, 100, 0)]), [100, 100, 500])
+
+    def test_floors_skip_hidden_brush_entities(self):
+        # a disabled func_brush is dropped by the importer, so a point snapped onto its top would float over nothing
+        from gsbsp import audit, mesh
+        seen = []
+        real = audit.floors
+        audit.floors = lambda b, skip_entity=None: seen.append(skip_entity) or []
+        try:
+            controlpoints.snap_to_floor(None, [("t", 1, "", "", [0, 0, 0])])
+        finally:
+            audit.floors = real
+        self.assertIs(seen[0], mesh.hidden)
+        self.assertTrue(mesh.hidden({"classname": "func_brush", "StartDisabled": "1"}))
 
 
 if __name__ == "__main__":

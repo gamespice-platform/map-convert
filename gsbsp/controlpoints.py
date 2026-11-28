@@ -142,8 +142,9 @@ def snap_to_floor(bsp, found):
     """`found` is [(target, index, name, owner, origin in map units)]: a point whose origin floats in a pit, sits in a wall or
     hangs over nothing is moved to the nearest standable floor within SNAP_RADIUS (by construction, so the point is always
     one a player can stand on); points that already have a floor under them are left where the mapper put them."""
-    from . import audit
-    tops = audit.floors(bsp)
+    from . import audit, mesh
+    # the importer drops a hidden brush entity (a disabled func_brush, rendermode 10): its top is no floor to move a point onto
+    tops = audit.floors(bsp, skip_entity=mesh.hidden)
     cells = {}
     for (x, y, z), *_ in tops:
         cells.setdefault((int(x // 64), int(y // 64)), []).append((x, y, z))

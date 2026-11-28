@@ -4,6 +4,7 @@ Run: python3 -P tests/test_team_markers.py   (needs numpy, like the importer)
 
 import os
 import sys
+import tempfile
 import types
 import unittest
 
@@ -11,6 +12,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, os.path.join(ROOT, "adapters", "game-airdrift"))
 sys.path.insert(0, ROOT)
+sys.path.insert(0, HERE)
 
 os.environ.setdefault("GSBSP_PATH", ROOT)
 for READER in (os.environ.get("AIRDRIFT_TOOLS", "") or os.environ.get("G2G_TOOLS", ""),
@@ -21,6 +23,8 @@ for READER in (os.environ.get("AIRDRIFT_TOOLS", "") or os.environ.get("G2G_TOOLS
         break
 try:
     import bsp_import  # noqa: E402
+    import synth  # noqa: E402
+    from bsp_read import Bsp  # noqa: E402
 except ModuleNotFoundError as err:
     raise unittest.SkipTest("bsp_read or numpy not found (set AIRDRIFT_TOOLS): %s" % err)
 
@@ -49,6 +53,55 @@ class TeamMarkers(unittest.TestCase):
         self.assertEqual(len(flags), 1)
         self.assertEqual(flags[0]["team"], "red")
         self.assertEqual(flags[0]["origin"], list(bsp_import.to_godot([100.0, 200.0, 30.0])))
+
+
+def side_spawns(doc, *extra):
+    """classify_zones' spawns on a floor with a terrorist at -x, a counter-terrorist at +x and `extra`."""
+    ents = [{"classname": "worldspawn"},
+            {"classname": "info_player_terrorist", "origin": "-200 0 1", "angles": "0 0 0"},
+            {"classname": "info_player_counterterrorist", "origin": "200 0 1", "angles": "0 180 0"}]
+    ents += list(extra)
+    with tempfile.NamedTemporaryFile(suffix=".bsp") as fh:
+        fh.write(synth.build(boxes=((-512, -512, -64, 512, 512, 0),), entities=ents))
+        fh.flush()
+        bsp = Bsp(fh.name).load()
+        z, spawns = bsp_import.classify_zones(bsp, doc=doc)[:2]
+    return z, [(sp.get("team"), sp["origin_src"][0]) for sp in spawns]
+
+
+class ArenaSpawnSides(unittest.TestCase):
+    def test_combat_map_tags_terrorists_red_and_counter_terrorists_blue(self):
+        # The mapper's sides, not the game's positional split, decide a team's spawns.
+        _, got = side_spawns({"kind": "arena"})
+        self.assertEqual(got, [("red", -200.0), ("blue", 200.0)])
+
+    def test_course_keeps_one_shared_pool(self):
+        _, got = side_spawns({})
+        self.assertEqual(got, [(None, -200.0), (None, 200.0)])
+
+    def test_switched_off_spawns_are_dropped(self):
+        z, got = side_spawns({"kind": "arena"},
+                             {"classname": "info_player_counterterrorist", "origin": "220 0 1",
+                              "targetname": "late", "StartDisabled": "1"},
+                             {"classname": "info_player_counterterrorist", "origin": "240 0 1", "enabled": "0"})
+        self.assertEqual(got, [("red", -200.0), ("blue", 200.0)])
+        self.assertIn("2 spawn point(s) dropped that the map switches off", z.notes)
+
+    def test_spawn_the_map_enables_at_once_is_kept(self):
+        _, got = side_spawns({"kind": "arena"},
+                             {"classname": "info_player_counterterrorist", "origin": "220 0 1",
+                              "targetname": "late", "StartDisabled": "1"},
+                             {"classname": "logic_auto", "OnMapSpawn": "late,Enable,,0,-1"})
+        self.assertEqual(got, [("red", -200.0), ("blue", 200.0), ("blue", 220.0)])
+
+    def test_all_switched_off_keeps_them_rather_than_none(self):
+        ents = [{"classname": "worldspawn"},
+                {"classname": "info_player_deathmatch", "origin": "0 0 1", "enabled": "0"}]
+        with tempfile.NamedTemporaryFile(suffix=".bsp") as fh:
+            fh.write(synth.build(boxes=((-512, -512, -64, 512, 512, 0),), entities=ents))
+            fh.flush()
+            spawns = bsp_import.classify_zones(Bsp(fh.name).load(), doc={"kind": "arena"})[1]
+        self.assertEqual(len(spawns), 1)
 
 
 if __name__ == "__main__":

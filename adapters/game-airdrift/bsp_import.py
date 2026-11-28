@@ -3510,6 +3510,9 @@ def floor_boxes(bsp, solids, props):
 SPAWN_TEAMS = {("info_player_teamspawn", "2"): "red", ("info_player_teamspawn", "3"): "blue"}
 
 
+DEFAULT_CAPTURE_RADIUS = 192.0  # map units, when a point has no trigger_capture_area
+
+
 def objective_markers(bsp, doc):
     """Control points, resupply volumes and flag spawns, in Godot axes.
 
@@ -3518,11 +3521,34 @@ def objective_markers(bsp, doc):
     capture-the-flag layout is a choice the original map never made.
     """
     points = []
+    capture = {}  # point entity targetname -> capture radius, map units
+    for e in bsp.entities:
+        if e.get("classname") == "trigger_capture_area" and e.get("area_cap_point"):
+            box = brush_box(bsp, e)
+            if box is not None:
+                capture[e["area_cap_point"]] = max(box[1][0] - box[0][0], box[1][1] - box[0][1]) / 2.0
     for e in bsp.entities:
         if e.get("classname") == "team_control_point" and "origin" in e:
             owner = SPAWN_TEAMS.get(("info_player_teamspawn", str(e.get("point_default_owner", "")))) or ""
-            points.append({"index": int(float(e.get("point_index", 0) or 0)), "name": e.get("point_printname", ""),
-                           "origin": list(to_godot(entity_origin(e))), "owner": owner})
+            index = int(float(e.get("point_index", 0) or 0))
+            origin = list(to_godot(entity_origin(e)))
+            # `index`/`name`/`origin` are the first schema; `id`/`position`/`radius`/`order` the
+            # shared control point mode's (order is settled below from the map's master).
+            points.append({"index": index, "name": e.get("point_printname", ""), "origin": origin, "owner": owner,
+                           "id": index, "position": origin, "order": index,
+                           "radius": round(capture.get(e.get("targetname", ""), DEFAULT_CAPTURE_RADIUS), 2),
+                           "_target": e.get("targetname", "")})
+    # The master (or its round) lists the points in play order in `cpr_cp_names`; without a list the
+    # order is the point index.
+    listed = []
+    for e in bsp.entities:
+        if e.get("classname") == "team_control_point_round" and e.get("cpr_cp_names"):
+            listed = e["cpr_cp_names"].split()
+            break
+    for p in points:
+        if p["_target"] in listed:
+            p["order"] = listed.index(p["_target"])
+        del p["_target"]
     resupply = []
     for e in bsp.entities:
         if e.get("classname") == "func_regenerate":
@@ -3534,7 +3560,7 @@ def objective_markers(bsp, doc):
         src = [float(x) for x in f["origin_src"]]
         flags.append({"team": f["team"], "origin": list(to_godot(src)),
                       "yaw": yaw_to_godot(float(f.get("yaw_src", 0.0)))})
-    return sorted(points, key=lambda p: p["index"]), resupply, flags
+    return sorted(points, key=lambda p: (p["order"], p["index"])), resupply, flags
 
 
 def classify_zones(bsp, min_thickness=MIN_ZONE_THICKNESS, doc=None, solids=None, floors=None):
@@ -3561,6 +3587,10 @@ def classify_zones(bsp, min_thickness=MIN_ZONE_THICKNESS, doc=None, solids=None,
             spot = {"origin_src": src, "origin": list(to_godot(src)),
                     "yaw": yaw_to_godot(entity_yaw(e)), "yaw_src": entity_yaw(e)}
             side = SPAWN_TEAMS.get((cls, str(e.get("TeamNum", "")).strip()))
+            if not side and cls == "info_player_teamspawn":
+                # a map that leaves TeamNum 0 and names its spawns (Team_red_player_spawn) still has sides
+                name = str(e.get("targetname", "")).lower()
+                side = "red" if name.startswith("team_red") else "blue" if name.startswith("team_blue") else None
             # Only a spawn the mapper gave a side carries one; the rest stay a shared pool.
             if side:
                 spot["team"] = side

@@ -208,6 +208,7 @@ def small_albedos(block, outdir, store, px=SMALL_PX):
     `fallback_file`, so a client without the store slices draws the set's own colours and pattern, not a guess.
     Returns the bytes written."""
     from PIL import Image
+    from .textureimport import ask_for_mipmaps
     total = 0
     for t in block.get("textures", []):
         if t.get("kind") != "pbr":
@@ -231,6 +232,7 @@ def small_albedos(block, outdir, store, px=SMALL_PX):
             os.makedirs(os.path.dirname(out), exist_ok=True)
             with Image.open(src) as im:
                 im.convert("RGB").resize((px, px), Image.LANCZOS).save(out, "WEBP", quality=80, method=6)
+        ask_for_mipmaps(out)
         t["fallback_file"] = rel
         total += os.path.getsize(out)
     return total

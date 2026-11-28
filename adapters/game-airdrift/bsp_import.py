@@ -3746,8 +3746,13 @@ def objective_markers(bsp, doc, spawns=()):
             box = brush_box(bsp, e)
             if box is not None:
                 capture[e["area_cap_point"]] = max(box[1][0] - box[0][0], box[1][1] - box[0][1]) / 2.0
+    # a point that floats over nothing the importer draws moves to the nearest standable floor (the regen path's snap, shared)
+    cp_ents = [e for e in bsp.entities if e.get("classname") in ("team_control_point", "dod_control_point") and "origin" in e]
+    snapped = {id(e): pos for e, (*_, pos) in zip(cp_ents, _controlpoints.snap_to_floor(
+        bsp, [("", 0, "", "", list(entity_origin(e))) for e in cp_ents]))} if cp_ents and hasattr(bsp, "brushes") else {}
     for e in bsp.entities:
         if e.get("classname") in ("team_control_point", "dod_control_point") and "origin" in e:
+            moved = snapped.get(id(e))
             if e["classname"] == "dod_control_point":
                 owner = DOD_OWNERS.get(str(e.get("point_default_owner", "")).strip(), "")
                 index = len(points)   # DoD:S points have no index: entity order
@@ -3755,7 +3760,7 @@ def objective_markers(bsp, doc, spawns=()):
             else:
                 owner = SPAWN_TEAMS.get(("info_player_teamspawn", str(e.get("point_default_owner", "")))) or ""
                 index = int(float(e.get("point_index", 0) or 0))
-            origin = list(to_godot(entity_origin(e)))
+            origin = list(to_godot(moved or entity_origin(e)))
             # `index`/`name`/`origin` are the first schema; `id`/`position`/`radius`/`order` the
             # shared control point mode's (order is settled below from the map's master).
             points.append({"index": index, "name": e.get("point_printname", ""), "origin": origin, "owner": owner,

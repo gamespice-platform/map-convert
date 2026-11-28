@@ -5,7 +5,8 @@
 
 `bsp.py regen` copies each spawn's yaw from the BSP entity; a map whose spawns carry no angle (every yaw 0 in Source, -90
 here) drops players with their nose in a wall. This reads the world's own solid hulls (no source BSP needed), and for each
-spawn whose straight-ahead clearance at eye height is under --near metres tries 16 yaws and keeps the one with the longest
+spawn whose straight-ahead clearance at eye height is under --near metres (solid props count too, as an upright column
+as wide and tall as the prop's largest extent: a crate or tree in the face reads as a wall) tries 16 yaws and keeps the one with the longest
 clearance (only when it is at least 1.5 times better). Rewrites the json in place; --check only reports, exit 1 if any
 spawn would turn. Axes and units as the manifest: Godot, metres, yaw degrees about +y, 0 looks down -z.
 """
@@ -31,6 +32,13 @@ class Solids:
             pl = struct.unpack_from("<%df" % (4 * h["plane_count"]), blob, h["plane_offset"])
             self.hulls.append(((min(xs), min(ys), min(zs)), (max(xs), max(ys), max(zs)),
                                [pl[i:i + 4] for i in range(0, len(pl), 4)]))
+        for pr in doc.get("props", []):
+            # a solid prop as its bounding column: "size" is the stand-in's largest extent, "at" its base
+            if not pr.get("solid") or not isinstance(pr.get("size"), (int, float)) or pr["size"] <= 0:
+                continue
+            r, (x, y, z) = pr["size"] / 2, pr["at"]
+            self.hulls.append(((x - r, y, z - r), (x + r, y + pr["size"], z + r), [(1.0, 0.0, 0.0, x + r), (-1.0, 0.0, 0.0, r - x),
+                                                                                (0.0, 0.0, 1.0, z + r), (0.0, 0.0, -1.0, r - z)]))
         self.cell = {}
         for i, (lo, hi, _) in enumerate(self.hulls):
             for cx in range(int(lo[0] // 8), int(hi[0] // 8) + 1):

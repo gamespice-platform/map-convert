@@ -909,7 +909,7 @@ halo_texture_pack/halo_textures/halo_floor011	pbr_Metal033
 hawahi/donky_coin	pbr_Tiles070	
 hawahi/donky_controls	pbr_MetalPlates017A	
 hawahi/donky_screen	pbr_Tiles088	
-hawahi/donky_side	pbr_PaintedMetal015	
+hawahi/donky_side	pbr_Metal013	
 hawahi/donky_top	pbr_PavingStones058	
 hostel/metal/01	pbr_MetalWalkway005	
 komaokc/metal2	pbr_MetalPlates015A	
@@ -1091,7 +1091,7 @@ metal/metalwall066b	pbr_MetalWalkway014
 metal/metalwall066c	pbr_MetalWalkway014	
 metal/metalwall067a	pbr_PaintedMetal014	
 metal/metalwall069a	pbr_corrugated_iron_02	
-metal/metalwall070c	pbr_PaintedMetal017	
+metal/metalwall070c	pbr_MetalPlates009	
 metal/metalwall070f	pbr_Metal053C	
 metal/metalwall071a	pbr_MetalPlates013	
 metal/metalwall074a	pbr_worn_shutter	
@@ -1445,8 +1445,8 @@ spongebob/greenwoodfloor	pbr_WoodFloor035
 spongebob/krusty_krab/blank_sign	pbr_SheetMetal002	
 spongebob/krusty_krab/box	pbr_Metal056C	
 spongebob/krusty_krab/clam1	pbr_CorrugatedSteel002	
-spongebob/krusty_krab/clam2	pbr_PaintedMetal017	
-spongebob/krusty_krab/clam3	pbr_PaintedMetal017	
+spongebob/krusty_krab/clam2	pbr_PaintedMetal013	
+spongebob/krusty_krab/clam3	pbr_PaintedMetal013	
 spongebob/krusty_krab/closed	pbr_Metal058B	
 spongebob/krusty_krab/dkblue_metal	pbr_MetalPlates014	
 spongebob/krusty_krab/metalwall01	pbr_Metal058C	
@@ -1918,7 +1918,7 @@ bhop_caketorture/black	pbr_Ground014
 bhop_depot/bhop_depot	pbr_gravel_concrete_04	
 bhop_indiana/indiana_info	pbr_Wood071	
 bhwc2020/bhwc1	pbr_MetalPlates016B	
-bhwc2020/bhwc2	pbr_PaintedMetal015	
+bhwc2020/bhwc2	pbr_Metal013	
 bioshock/arcadia/grass	pbr_Grass001	
 bioshock/arcadia/stairs_stone_wall_diffuse	pbr_cobblestone_floor_03	
 bioshock/burgandy_carpet_diffuse	pbr_Fabric054	
@@ -2142,7 +2142,7 @@ color/white	pbr_Tiles011
 colors_solid/black	pbr_Ground014	
 colors_solid/green_100	pbr_Paint003	
 colour/metal/metalfloor003a_green	pbr_PaintedMetal006	
-colour/metal/metalfloor003a_pink	pbr_PaintedMetal015	
+colour/metal/metalfloor003a_pink	pbr_Metal013	
 colour/metal/metalfloor003a_red	pbr_Metal041C	
 colour/metal/metalfloor003a_white	pbr_Metal004	
 colour/metal/metalfloor003a_yellow	pbr_PaintedMetal009	
@@ -2152,7 +2152,7 @@ colour/metal/train_metalceiling_02_red	pbr_SheetMetal004
 colour/metal/train_metalceiling_02_white	pbr_corrugated_iron_02	
 colour/metal/train_metalceiling_02_yellow	pbr_metal_plate	
 colour/neon/green_neon	pbr_Paint003	
-colour/neon/purple_neon	pbr_PaintedMetal015	
+colour/neon/purple_neon	pbr_Metal013	
 colour/neon/red_neon	pbr_PaintedWood003	
 colour/neon/white_neon	pbr_Tiles011	
 colour/neon/yellow_neon	pbr_CorrugatedSteel008A	
@@ -2328,7 +2328,7 @@ cs_assault/assault_skybox_building02	pbr_DiamondPlate008D
 cs_assault/assault_skybox_building03	pbr_Tiles045	
 cs_assault/assault_skybox_building04	pbr_Concrete017	
 cs_assault/assault_window_decal01	pbr_Fabric032	
-cs_assault/metalwall001	pbr_PaintedMetal017	
+cs_assault/metalwall001	pbr_MetalPlates009	
 cs_assault/metalwall001a	pbr_Metal042B	
 cs_havana/awning01	pbr_PavingStones044	
 cs_havana/carving01	pbr_Facade004	
@@ -2624,8 +2624,8 @@ dev/dev_measuregeneric17	pbr_Rock031
 dev/dev_measuregeneric18	pbr_Marble013	
 dev/dev_measuregeneric19	pbr_RoofingTiles009	
 dev/dev_measuregeneric28	pbr_metal_plate_02	
-dev/dev_measuregeneric32	pbr_PaintedMetal015	
-dev/dev_measuregeneric32_glow	pbr_PaintedMetal015	
+dev/dev_measuregeneric32	pbr_Metal013	
+dev/dev_measuregeneric32_glow	pbr_Metal013	
 dev/dev_measuregeneric33	pbr_Wood004	
 dev/dev_measuregeneric33_glow	pbr_Wood004	
 dev/dev_measuregeneric34	pbr_Fabric074	
@@ -2668,11 +2668,11 @@ dev/value20	pbr_grey_plaster_02
 dev/value30	pbr_stone_wall	
 dev/value60	pbr_Ground061	
 dev/value70	pbr_Terrazzo006	
-dev/valuesand10	pbr_MetalWalkway014	
-dev/valuesand20	pbr_Metal056C	
-dev/valuesand30	pbr_Metal053C	
-dev/valuesand40	pbr_marble_01	
-dev/valuesand50	pbr_marble_rock_02	
+dev/valuesand10	pbr_sand_01	
+dev/valuesand20	pbr_sand_01	
+dev/valuesand30	pbr_sand_01	
+dev/valuesand40	pbr_sand_01	
+dev/valuesand50	pbr_sand_01	
 dev_glow/glow_blue_a-02	pbr_PaintedWood001	
 dev_glow/glow_gray-01	pbr_Ground014	
 dev_glow/glow_gray-21	pbr_Tiles011	
@@ -2713,7 +2713,7 @@ dev_nyro/dev_magenta_b-04	pbr_Tiles037
 dev_nyro/dev_magenta_b-05	pbr_Tiles037	
 dev_nyro/dev_magenta_b-07	pbr_DiamondPlate007B	
 dev_nyro/dev_magenta_c-02	pbr_Fabric009	
-dev_nyro/dev_magenta_c-03	pbr_PaintedMetal015	
+dev_nyro/dev_magenta_c-03	pbr_Metal013	
 dev_nyro/dev_magenta_d-06	pbr_Fabric044	
 dev_nyro/dev_magenta_d-07	pbr_Terrazzo008	
 dev_nyro/dev_magenta_d-08	pbr_Fabric032	
@@ -2729,7 +2729,7 @@ devneons/green_neon	pbr_Paint003
 devneons/grey_neon	pbr_Concrete023	
 devneons/orange_neon	pbr_DiamondPlate006A	
 devneons/pink_neon	pbr_Bricks077	
-devneons/purple_neon	pbr_PaintedMetal015	
+devneons/purple_neon	pbr_Metal013	
 devneons/red_neon	pbr_PaintedWood003	
 devneons/white_dev_neon	pbr_OfficeCeiling001	
 devneons/white_neon	pbr_Tiles011	
@@ -2945,7 +2945,7 @@ kiiru/colors/color15	pbr_Ground014
 kiiru/colors/color16	pbr_Fabric079	
 kiiru/colors/color17	pbr_Tiles045	
 kiiru/colors/color18	pbr_Bricks077	
-kiiru/colors/color2	pbr_PaintedMetal015	
+kiiru/colors/color2	pbr_Metal013	
 kiiru/colors/color3	pbr_Fabric074	
 kiiru/colors/color4	pbr_Fabric074	
 kiiru/colors/color5	pbr_Tiles134B	
@@ -3228,7 +3228,7 @@ niks/pas	pbr_Fabric074
 nothing/blacknofog	pbr_Ground014	
 nothing/blue_sky	pbr_Metal014	
 nothing/blue_skynol	pbr_Metal014	
-null/dream	pbr_PaintedMetal015	
+null/dream	pbr_Metal013	
 null/hand	pbr_rebar_reinforced_concrete	
 null/hand2	pbr_MetalPlates014	
 null/hdbg	pbr_oak_veneer_01	
@@ -3473,7 +3473,7 @@ realworldtextures2/metal/metal_120	pbr_Metal022
 realworldtextures2/metal/metal_124	pbr_Metal028	
 realworldtextures2/metal/metal_69	pbr_MetalPlates013	
 realworldtextures2/misc/mineral07	pbr_MetalPlates016A	
-realworldtextures2/misc/mineral_07	pbr_PaintedMetal015	
+realworldtextures2/misc/mineral_07	pbr_Metal013	
 realworldtextures2/misc/organic_09	pbr_rusty_corrugated_iron	
 realworldtextures2/misc/space_02	pbr_dark_paneled_wood	
 realworldtextures2/misc/space_08	pbr_Tiles045	
@@ -3636,10 +3636,10 @@ sprites/blend/tre12	pbr_Snow004
 sprites/blend/tre13	pbr_Tiles071	
 sprites/blend/tre15	pbr_MetalPlates016A	
 sprites/blend/tre16	pbr_Snow004	
-sprites/blend/tre17	pbr_PaintedMetal015	
+sprites/blend/tre17	pbr_Metal013	
 sprites/blend/tre18	pbr_PaintedWood008A	
 sprites/blend/tre19	pbr_Metal014	
-sprites/blend/tre2	pbr_PaintedMetal015	
+sprites/blend/tre2	pbr_Metal013	
 sprites/blend/tre20	pbr_Fabric032	
 sprites/blend/tre21	pbr_OfficeCeiling005	
 sprites/blend/tre22	pbr_Tiles003	

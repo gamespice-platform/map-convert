@@ -100,3 +100,10 @@ water/water_2fort_beneath.vmt	blue_plaster_wall	underwater or glass sheet: pale 
 water/water_well_beneath.vmt	blue_plaster_wall	underwater or glass sheet: pale blue plaster so it never reads untextured (maps-untextured-all-1)
 wood/standin_crate	PaintedWood003	wood or crate material: painted wood (maps-untextured-all-1)
 decals/ivy01	bark_willow	foliage or trunk material: willow bark (maps-untextured-all-1)
+cs_assault/metalwall001	MetalPlates009	hangar/tension beige wall panels: plain plate (PaintedMetal017 printed a DANGER sign, flipped where the mapper flipped the wall)
+metal/metalwall070c	MetalPlates009	plain painted wall panel: plate, not the DANGER sign PaintedMetal017
+dev/valuesand10	sand_01	wild-west/dust sand dev texture: sand (MetalWalkway014 drew the sand terrain as a perforated walkway)
+dev/valuesand20	sand_01	wild-west/dust sand dev texture: sand (MetalWalkway014 drew the sand terrain as a perforated walkway)
+dev/valuesand30	sand_01	wild-west/dust sand dev texture: sand (MetalWalkway014 drew the sand terrain as a perforated walkway)
+dev/valuesand40	sand_01	wild-west/dust sand dev texture: sand (MetalWalkway014 drew the sand terrain as a perforated walkway)
+dev/valuesand50	sand_01	wild-west/dust sand dev texture: sand (MetalWalkway014 drew the sand terrain as a perforated walkway)

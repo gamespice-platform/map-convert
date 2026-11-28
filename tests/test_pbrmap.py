@@ -203,6 +203,29 @@ class Pins(unittest.TestCase):
             self.assertEqual(rows.get(name), pbrmap.GENERIC + sid, name)
             self.assertIn(pbrmap.GENERIC + sid, free)
 
+    def test_a_lettered_set_never_stands_in_for_a_wall(self):
+        # PaintedMetal017 is a DANGER DO NOT ENTER sign: on hangar's flipped cs_assault/metalwall001
+        # faces it read as a mirrored, upside-down decal. A lettered set leaves the library at load.
+        d = os.path.join(self.lib, "ambientcg", "PaintedMetal017")
+        os.makedirs(d)
+        files = ["PaintedMetal017_Color.jpg", "PaintedMetal017_NormalGL.jpg", "PaintedMetal017_Roughness.jpg"]
+        for fn in files:
+            with open(os.path.join(d, fn), "wb") as f:
+                f.write(b"x")
+        with open(os.path.join(self.lib, "manifest.tsv"), "a") as f:
+            f.write("\t".join(["PaintedMetal017", "ambientCG", "https://x/PaintedMetal017", "A", "CC0-1.0", "",
+                               "0.7", "0.6", "0.5", ",".join(files)]) + "\n")
+        self.assertNotIn("PaintedMetal017", pbrmap.load_library(self.lib))
+
+    def test_the_shipped_tier_maps_no_name_to_a_lettered_set(self):
+        here = os.path.join(os.path.dirname(HERE), "rules", "pbr")
+        lettered = {pbrmap.GENERIC + s for s in pbrmap.TEXT_SETS}
+        with open(os.path.join(here, "textures.tsv"), encoding="utf-8") as f:
+            bad = [l.split("\t")[0] for l in f if not l.startswith("#") and "\t" in l and l.split("\t")[1] in lettered]
+        self.assertEqual(bad, [])
+        self.assertFalse(set(pbrmap.load_pins(os.path.join(here, "pins.tsv")).values()) & pbrmap.TEXT_SETS)
+        self.assertEqual(pbrmap.load_pins(os.path.join(here, "pins.tsv"))["cs_assault/metalwall001"], "MetalPlates009")
+
 
 if __name__ == "__main__":
     unittest.main()

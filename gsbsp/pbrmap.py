@@ -29,6 +29,11 @@ BLOCK = frozenset("""leather christmastreeornament pizza candy paymentcard sign 
 surfaceimperfections lava ice styrofoam sponge foam cork foil wicker bamboo tatami rope net chainmail solarpanel stickset
 shells flowerset painting sticker rubber porcelain ivory onyx cardboard paper acousticfoam glazedterracotta""".split())
 
+# Library sets whose photo carries lettering (PaintedMetal017 is a "DANGER DO NOT ENTER" sign,
+# PaintedMetal015 a "SECTOR 4B" band). Mappers flip and turn plain wall textures freely, which is
+# invisible on the original and prints the lettering upside-down or mirrored on these: never a stand-in.
+TEXT_SETS = frozenset(("PaintedMetal015", "PaintedMetal017"))
+
 # Library category -> id tokens (and, for Poly Haven, tags) that put a set in it.
 LIBRARY = {
     "brick": "brick bricks paintedbricks",
@@ -103,7 +108,7 @@ def load_library(root=None):
                 continue
             sid, source, url, author, lic, tags = row[:6]
             toks = _tokens(sid)
-            if toks & BLOCK or not os.path.isdir(os.path.join(root, source.lower(), sid)):
+            if toks & BLOCK or sid in TEXT_SETS or not os.path.isdir(os.path.join(root, source.lower(), sid)):
                 continue
             cats = {c for c, words in LIBRARY.items() if toks & set(words.split())}
             if not cats and source == "polyhaven":

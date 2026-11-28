@@ -29,8 +29,11 @@ def extract(path, out):
     os.makedirs(os.path.dirname(out), exist_ok=True)
     """bsdtar, then 7z, then unzip, then python zipfile; stop at the first one that yields files."""
     os.makedirs(out)
-    tries = [["bsdtar", "-xf", path, "-C", out], ["7z", "x", "-y", "-o" + out, path], ["unzip", "-o", "-q", path, "-d", out],
-             ["unar", "-q", "-f", "-o", out, path]]       # unar reads the old RAR methods 7z reports as unsupported
+    # unar first: for old RAR methods bsdtar and 7z "succeed" with zero-filled files (7z reports Unsupported Method),
+    # which gave BSPs with a zeroed entity lump (anvil, hill_classic, tunisia, farmers, daybreak) and, in the same
+    # way, dm_moron, convoy-v2 and outset. unar extracts them whole.
+    tries = [["unar", "-q", "-f", "-o", out, path], ["bsdtar", "-xf", path, "-C", out], ["7z", "x", "-y", "-o" + out, path],
+             ["unzip", "-o", "-q", path, "-d", out]]
     for cmd in tries:
         subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         sizes = [os.path.getsize(os.path.join(r, n)) for r, _, fs in os.walk(out) for n in fs]

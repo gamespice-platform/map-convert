@@ -3587,6 +3587,10 @@ def classify_zones(bsp, min_thickness=MIN_ZONE_THICKNESS, doc=None, solids=None,
             spot = {"origin_src": src, "origin": list(to_godot(src)),
                     "yaw": yaw_to_godot(entity_yaw(e)), "yaw_src": entity_yaw(e)}
             side = SPAWN_TEAMS.get((cls, str(e.get("TeamNum", "")).strip()))
+            if not side and cls == "info_player_teamspawn":
+                # a map that leaves TeamNum 0 and names its spawns (Team_red_player_spawn) still has sides
+                name = str(e.get("targetname", "")).lower()
+                side = "red" if name.startswith("team_red") else "blue" if name.startswith("team_blue") else None
             # Only a spawn the mapper gave a side carries one; the rest stay a shared pool.
             if side:
                 spot["team"] = side

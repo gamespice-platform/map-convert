@@ -104,6 +104,14 @@ def environment(bsp, scale=_units.VISUAL, y0=0.0):
                                           "fog_colour": _colour(_get(e, "fogcolor")),
                                           "fog_start": round(_num(_get(e, "fogstart")) * scale, 3),
                                           "fog_end": round(_num(_get(e, "fogend")) * scale, 3)})
+    if "sun" not in out and not any(w in str(out["sky"]["name"]).lower() for w in ("night", "dark", "black", "space", "star")) \
+            and str(out["sky"]["name"]):
+        # An outdoor map lit by its baked lightmap alone (no light_environment) would render with no sun and no ambient,
+        # near black: give it a neutral daylight (the env_sun's heading when it has one), marked so a game can tell.
+        heading = out.get("env_sun", {})
+        out["sun"] = {"entity": -1, "class": "synthesized", "pitch": heading.get("pitch", -50.0), "yaw": heading.get("yaw", 0.0),
+                      "colour": [1.0, 0.96, 0.9, 200.0], "ambient": [0.45, 0.47, 0.5, 100.0], "colour_hdr": None,
+                      "ambient_hdr": None, "spread": 0.0, "synthesized": True}
     if len(suns) > 1:
         out["suns"] = suns
     if cubes:

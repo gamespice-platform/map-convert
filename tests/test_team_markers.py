@@ -82,6 +82,12 @@ def side_spawns(doc, *extra):
 
 
 class ArenaSpawnSides(unittest.TestCase):
+    def setUp(self):
+        # these cases are about which spawns survive and their sides, not the padding settle_spawns adds
+        self._min = bsp_import.SPAWN_MIN_COUNT
+        bsp_import.SPAWN_MIN_COUNT = 0
+        self.addCleanup(setattr, bsp_import, "SPAWN_MIN_COUNT", self._min)
+
     def test_combat_map_tags_terrorists_red_and_counter_terrorists_blue(self):
         # The mapper's sides, not the game's positional split, decide a team's spawns.
         _, got = side_spawns({"kind": "arena"})

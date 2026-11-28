@@ -28,6 +28,9 @@ def extract(path, out):
     os.makedirs(out)
     if subprocess.run(["bsdtar", "-xf", path, "-C", out], stderr=subprocess.DEVNULL).returncode:
         subprocess.run(["7z", "x", "-y", "-o" + out, path], stdout=subprocess.DEVNULL)
+    # some rars extract as 0-byte files with bsdtar and 7z ("Unsupported Method"); unar reads them
+    if any(os.path.getsize(os.path.join(r, n)) == 0 for r, _, fs in os.walk(out) for n in fs):
+        subprocess.run(["unar", "-f", "-q", "-o", out, path], stdout=subprocess.DEVNULL)
 
 
 def fetch(mod, root):
@@ -105,7 +108,7 @@ def derive(man):
     return modes, flags
 
 
-def convert(mod, mapid, repo, bsp_name=None):
+def convert(mod, mapid, repo, bsp_name=None, surf=False):
     src = os.path.join(ROOT, str(mod))
     meta = json.load(open(os.path.join(src, "meta.json")))
     found = json.load(open(os.path.join(src, "found.json")))
@@ -125,14 +128,25 @@ def convert(mod, mapid, repo, bsp_name=None):
                     "and resupply are kept as markers. Textures and models are free replacements; published as a "
                     "credited community map with a removal offer.",
            "kind": "arena", "movement": "walk", "modes": BASE_MODES}
+    if surf:    # a combat surf map: kind arena without a movement key is surfed (FcImportedMaps.movement_of)
+        del doc["movement"]
+        doc["notes"] = ("Combat surf map for game-fatal-contact (owner's Surf Combat list): the map's own spawns; "
+                        "teleports that only a map event enables are not run; textures and models are free "
+                        "replacements; published as a credited community map with a removal offer.")
+        doc["kind_why"] = "A combat surf map: built to fight on rather than to time. 'arena' marks it for game-fatal-contact's deathmatch."
     zp = os.path.join(repo, "zones", mapid + ".json")
-    json.dump(doc, open(zp, "w"), indent=1)
+    if os.path.exists(zp):    # keep the per-map rules (conditional_teleports, round_teleports...) a re-run must not lose
+        for k, v in json.load(open(zp)).items():
+            doc.setdefault(k, v)
+    json.dump(doc, open(zp, "w"), indent=1, ensure_ascii=False)
     man = run_import(repo, mapid)
     modes, flags = derive(man)
+    if surf:
+        modes, flags = list(BASE_MODES), []
     doc["modes"] = modes
     if flags:
         doc["flag_spawns"] = flags
-    json.dump(doc, open(zp, "w"), indent=1)
+    json.dump(doc, open(zp, "w"), indent=1, ensure_ascii=False)
     man = run_import(repo, mapid)
     # maps.json and licence.json rows (the README credits rows are written by `readme`)
     mp = os.path.join(repo, "maps.json")
@@ -141,13 +155,13 @@ def convert(mod, mapid, repo, bsp_name=None):
         "id": mapid, "author": credit, "source": page,
         "licence": "credited-community-map exception, textures and models replaced with free ones",
         "published": True, "modes": modes}]
-    json.dump(mj, open(mp, "w"), indent=2)
+    json.dump(mj, open(mp, "w"), indent=2, ensure_ascii=False)
     lp = os.path.join(repo, "licence.json")
     lj = json.load(open(lp))
     lj = [e for e in lj if e.get("paths") != ["maps/" + mapid]] + [{
-        "paths": ["maps/" + mapid], "licence": "CC-BY-NC-ND-4.0", "exception": "credited-community-map",
+        "paths": ["maps/" + mapid], "licence": "none stated" if surf else "CC-BY-NC-ND-4.0", "exception": "credited-community-map",
         "title": meta["name"], "author": meta["author"], "source_url": page, "removal_contact": CONTACT}]
-    json.dump(lj, open(lp, "w"), indent=2)
+    json.dump(lj, open(lp, "w"), indent=2, ensure_ascii=False)
     print(mapid, "modes", modes, "points", len(man.get("control_points", [])), "spawns", len(man.get("spawns", [])))
 
 
@@ -159,6 +173,8 @@ def orig(mod, mapid, repo):
     out = os.path.join(ORIG_ROOT, mapid + "_orig")
     os.makedirs(out, exist_ok=True)
     stores = os.path.join(repo, ".stores")
+    if not os.path.isdir(stores):    # a maps repo without the lock-store layout keeps its libraries beside the maps
+        stores = repo
     cmd = ["heavy", "--", "timeout", "1800", sys.executable, "-P", os.path.join(CONVERT, "bsp.py"), "regen",
            "arena/" + mapid, "--out", os.path.join(out, mapid + "_orig"),
            "--pbr-store", os.path.join(stores, "pbr-library"), "--model-store", os.path.join(stores, "model-library"),
@@ -195,6 +211,7 @@ if __name__ == "__main__":
     ap.add_argument("ids", nargs="*", help="fetch: mod ids; convert/orig: <mod id> <map id>; readme: none")
     ap.add_argument("--root", default=ROOT)
     ap.add_argument("--repo", default="/home/gamedev/godot/fc-dm-maps", help="the fc-dm-maps checkout to write into")
+    ap.add_argument("--surf", action="store_true", help="convert: a combat surf map (surfed, not walked; fc-surf-dm-maps)")
     ap.add_argument("--bsp", default=None, help="BSP file name when an archive holds several")
     a = ap.parse_args()
     ROOT = a.root
@@ -207,7 +224,7 @@ if __name__ == "__main__":
                 shutil.rmtree(os.path.join(a.root, str(m)), ignore_errors=True)
                 print(m, "FAILED", err)
     elif a.cmd == "convert":
-        convert(a.ids[0], a.ids[1], a.repo, a.bsp)
+        convert(a.ids[0], a.ids[1], a.repo, a.bsp, a.surf)
     elif a.cmd == "orig":
         sys.exit(orig(a.ids[0], a.ids[1], a.repo))
     else:

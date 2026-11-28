@@ -3,6 +3,7 @@
 #   [SRC=dir] [GAME=arena] tools/regen_worlds.sh <maps repo> [map ids...]
 # Credit comes from <maps repo>/maps.json (id, author, source) or else maps/<id>/licence.json.
 # A map with a <maps repo>/rules/<id>/ directory (textures.tsv, free_textures.tsv ...) gets it as its map tier (--map-rules).
+# Run the arena import first when maps/<id>/<id>.json exists: its settled spawns replace the world's (tools/sync_world_spawns.py).
 # Default ids: every maps/<id>. Writes worlds/<id>/<id>.*; art stores are <repo>/.stores/{pbr,model}-library when
 # .stores exists (the GameSpice Bootstrap lock-store layout the committed manifests point at), else <repo>/{pbr,model}-library.
 set -u
@@ -34,6 +35,8 @@ print("unknown -")' "$ROOT" "$m")
     mkdir -p "$ROOT/worlds/$m"
     ${HEAVY-heavy --} timeout 1800 python3 -P "$BSP" regen "$(sha256sum "$f" | cut -c1-16)" --out "$ROOT/worlds/$m/$m" --pbr-store "$STORES/pbr-library" --model-store "$STORES/model-library" $([ -f "$ROOT/maps/$m/$m.json" ] && echo --tier-manifest "$ROOT/maps/$m/$m.json") $([ -d "$ROOT/rules/$m" ] && echo --map-rules "$ROOT/rules/$m") > "${TMPDIR:-/tmp}/regen-$m.log" 2>&1 < /dev/null
     r=$?; [ $r -ne 0 ] && rc=1
+    # the world's spawns are the arena importer's settled ones (on the floor, facing open space, 16 a team), not the raw BSP entities
+    [ $r -eq 0 ] && [ -f "$ROOT/maps/$m/$m.json" ] && python3 -P "$HERE/sync_world_spawns.py" "$ROOT/maps/$m/$m.json" "$ROOT/worlds/$m/$m.json" > /dev/null
     echo "$m exit $r"
 done
 exit $rc

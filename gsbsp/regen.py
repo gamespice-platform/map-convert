@@ -73,7 +73,7 @@ def build(path, name, sha, credit, out, rs, scale=units.VISUAL, y0=0.0, cat=None
         extra = {"movers": built, "movers_without_geometry": bare, "volumes": movers.volumes(bsp, scale, y0),
                  "destinations": movers.destinations(bsp, scale, y0), "spawns": movers.spawns(bsp, scale, y0), "pickups": movers.pickups(bsp, scale, y0), "entity_report": report,
                  "links": links, "entities": ents, "breakables": mesh.breakables(bsp, m),
-                 "environment": environment.environment(bsp, scale, y0), "sounds": environment.sounds(bsp, scale, y0),
+                 "environment": environment.apply_overrides(environment.environment(bsp, scale, y0), rs.environment_overrides()), "sounds": environment.sounds(bsp, scale, y0),
                  "settings": mapcfg.defaults(store.commands(bsp.entities)),
                  "scripts": scripts.analyse(bsp.entities), "roles": rs.roles_for(bsp.entities)}
     keep = mesh.crop_keep(crop)

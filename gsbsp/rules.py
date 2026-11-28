@@ -75,6 +75,7 @@ class Tier:
         self.classes = {}
         self.materials = {}
         self.roles = {}
+        self.environment = {}      # keys merged into the map's sun record (environment.json: ambient_chroma ...)
 
     def class_row(self, name):
         if name in self.classes:
@@ -131,7 +132,20 @@ def _from_json(tier, doc, where):
     tier.roles.update(doc.get("roles") or {})
 
 
+ENVIRONMENT_KEYS = ("ambient_chroma",)
+
+
+def _environment(tier, doc, where):
+    bad = set(doc) - set(ENVIRONMENT_KEYS)
+    if bad:
+        raise ValueError("%s: unknown environment keys %s (known: %s)" % (where, ", ".join(sorted(bad)), ", ".join(ENVIRONMENT_KEYS)))
+    tier.environment.update(doc)
+
+
 def _from_dir(tier, d):
+    p = os.path.join(d, "environment.json")
+    if os.path.isfile(p):
+        _environment(tier, _read_json(p), p)
     p = os.path.join(d, FILES["textures"])
     if os.path.isfile(p):
         tier.textures = texturemap.load(p)
@@ -207,6 +221,13 @@ class RuleSet:
         tiers.append(load_tier("game", game))
         tiers.append(load_tier("map", map_rules))
         return cls(tiers)
+
+    def environment_overrides(self):
+        """The environment keys the tiers set, the highest tier winning."""
+        out = {}
+        for t in self.tiers:
+            out.update(t.environment)
+        return out
 
     def _high_first(self):
         return reversed(self.tiers)

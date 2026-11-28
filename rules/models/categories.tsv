@@ -1,5 +1,9 @@
 # name regex (on the model's file name)	library id regexes, best first, joined by | (NONE = generated only)	default w	h	d (m, when no size is known)	generated shape if nothing fits: box|cyl	colour; an optional 8th column "fixed" ignores the measured size (a weapon header box is an idle-pose hull, not its shape) and uses the default w h d
 # Final pass (2026-11-17): the last placeholder props of the FC, surf, hide-and-seek and wipeout maps get own CC0 models (tools/models/fc_final.py) or an existing CC0 model; a crane's LOD body is the dock crane, a kitchen vent is a cooker hood (own model)
+# Forest props (2026-11-28, review-dm-1): the oaks, woods bushes and river rocks of the nature maps were untextured Kenney stand-ins (grey in fog); Poly Haven CC0 models read as the same thing
+^tree_oak\d*$	^ph_island_tree_0[123]$|^ph_jacaranda_tree$	6.0	12.0	6.0	cyl	3a5a28
+^(shrub_oak\d*|woods_bush)$	^ph_shrub_0[24]$|^ph_fern_02$	1.5	1.2	1.5	cyl	3a6a30
+^rock(big|river)_\w+$	^ph_boulder_01$|^ph_namaqualand_boulder_0[2-5]$	1.5	1.2	1.5	box	707068
 ^wirepipe$	^dm_wallpiperun$	0.2	3.3	0.83	box	5a5a58
 ^prodcables\d+$	^dm_cablerun$	2.44	0.21	0.03	box	101012
 ^powerwires$	^dm_powerlines$	33.5	11.2	6.6	box	202020

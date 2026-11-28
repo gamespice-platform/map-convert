@@ -47,5 +47,50 @@ class RegenWorldsSource(unittest.TestCase):
         self.assertIn("cp-orange-x3 NO SOURCE", p.stdout)
 
 
+REGEN_BSP = """import json, sys
+out = sys.argv[sys.argv.index('--out') + 1]
+json.dump({'spawns': [{'yaw': 0}], 'skin_materials': [], 'props': [{'model': 'new'}]}, open(out + '.json', 'w'))
+"""
+
+
+class RegenKeepsSettledFields(unittest.TestCase):
+    def run_world(self, importer):
+        import json
+        d = tempfile.mkdtemp()
+        repo, fake = os.path.join(d, "repo"), os.path.join(d, "fake")
+        os.makedirs(os.path.join(repo, "sources"))
+        os.makedirs(os.path.join(repo, "worlds", "w"))
+        os.makedirs(fake)
+        open(os.path.join(repo, "sources", "w.bsp"), "w").close()
+        open(os.path.join(fake, "bsp.py"), "w").write(REGEN_BSP)
+        json.dump({"spawns": [{"yaw": 90}], "skin_materials": ["tuned"], "props": [{"model": "old"}]},
+                  open(os.path.join(repo, "worlds", "w", "w.json"), "w"))
+        if importer:
+            os.makedirs(os.path.join(repo, "maps", "w"))
+            json.dump({}, open(os.path.join(repo, "maps", "w", "w.json"), "w"))
+        env = dict(os.environ, GSBSP_PATH=fake, HEAVY="", TMPDIR=d)
+        p = subprocess.run(["bash", SCRIPT, repo, "w"], env=env, capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
+        return json.load(open(os.path.join(repo, "worlds", "w", "w.json")))
+
+    def test_spawns_and_skins_survive_without_importer(self):
+        doc = self.run_world(importer=False)
+        self.assertEqual(doc["spawns"], [{"yaw": 90}])
+        self.assertEqual(doc["skin_materials"], ["tuned"])
+        self.assertEqual(doc["props"], [{"model": "new"}])
+
+    def test_importer_run_keeps_settled_spawns(self):
+        doc = self.run_world(importer=True)
+        self.assertEqual(doc["spawns"], [{"yaw": 90}])
+
+    def test_licence_models_regenerated_textures_kept(self):
+        from importlib.machinery import SourceFileLoader
+        mod = SourceFileLoader("kwf", os.path.join(os.path.dirname(HERE), "tools", "keep_world_fields.py")).load_module()
+        new = {"licence": {"models": [1], "textures": ["new"]}, "surfaces": ["n"]}
+        done = mod.keep({"licence": {"models": [0], "textures": ["old"]}, "surfaces": ["o"]}, new)
+        self.assertEqual(new, {"licence": {"models": [1], "textures": ["old"]}, "surfaces": ["o"]})
+        self.assertEqual(sorted(done), ["licence.textures", "surfaces"])
+
+
 if __name__ == "__main__":
     unittest.main()

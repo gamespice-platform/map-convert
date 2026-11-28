@@ -25,8 +25,12 @@ class RegenWorldsSource(unittest.TestCase):
             open(os.path.join(repo, "sources", name), "w").close()
         env = dict(os.environ, GSBSP_PATH=fake, HEAVY="", TMPDIR=d)
         p = subprocess.run(["bash", SCRIPT, repo] + ids, env=env, capture_output=True, text=True)
+        self.last_repo = repo
         calls = os.path.join(fake, "calls.log")
-        log = open(calls).read() if os.path.exists(calls) else ""
+        log = ""
+        if os.path.exists(calls):
+            with open(calls) as f:
+                log = f.read()
         return p, log
 
     def test_underscore_bsp_matches_hyphen_id(self):
@@ -34,7 +38,9 @@ class RegenWorldsSource(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
         self.assertNotIn("NO SOURCE", p.stdout)
         self.assertIn("cp-orange-x3 exit 0", p.stdout)
-        self.assertIn("regen arena/cp_orange_x3", log)
+        # the regen names the stored entry by the file's hash (sha256 of the empty fake source), not <game>/<name>
+        self.assertIn("store %s" % os.path.join(self.last_repo, "sources", "cp_orange_x3.bsp"), log)
+        self.assertIn("regen e3b0c44298fc1c14", log)
 
     def test_hyphen_bsp_still_matches(self):
         p, _ = self.run_regen(["gg-woods.bsp"], ["gg-woods"])

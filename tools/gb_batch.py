@@ -13,7 +13,8 @@ API = "https://gamebanana.com/apiv11/Mod/%s?_csvProperties=_aFiles,_sName,_aSubm
 ROOT = "/home/gamedev/projects/mapsrc/incoming/gb"
 
 
-def get(url, tries=4):
+def get(url, tries=8):
+    """GET with backoff (5, 10, 20 ... capped at 120 s): GameBanana answers 504 for a while now and then."""
     req = urllib.request.Request(url, headers={"User-Agent": "fc-map-batch/1.0"})
     for n in range(tries):
         try:
@@ -21,10 +22,11 @@ def get(url, tries=4):
         except OSError:
             if n == tries - 1:
                 raise
-            time.sleep(5 * (n + 1))
+            time.sleep(min(120, 5 * 2 ** n))
 
 
 def extract(path, out):
+    os.makedirs(os.path.dirname(out), exist_ok=True)
     """bsdtar, then 7z, then unzip, then python zipfile; stop at the first one that yields files."""
     os.makedirs(out)
     tries = [["bsdtar", "-xf", path, "-C", out], ["7z", "x", "-y", "-o" + out, path], ["unzip", "-o", "-q", path, "-d", out],
@@ -45,9 +47,16 @@ def extract(path, out):
 
 def fetch(mod, root):
     d = os.path.join(root, str(mod))
-    if os.path.exists(d):
+    if os.path.exists(os.path.join(d, "found.json")):
         print(mod, "exists, skipping")
         return
+    if os.path.exists(os.path.join(d, "meta.json")):      # downloaded before found.json existed: extract again
+        info = json.load(open(os.path.join(d, "meta.json")))
+        shutil.rmtree(os.path.join(d, "x"), ignore_errors=True)
+        for n in sorted(os.listdir(d)):
+            if n not in ("meta.json", "x"):
+                extract(os.path.join(d, n), os.path.join(d, "x", n + ".d"))
+        return scan(d, info)
     meta = json.loads(get(API % mod))
     os.makedirs(os.path.join(d, "x"))
     info = {"id": int(mod), "name": meta["_sName"], "author": meta["_aSubmitter"]["_sName"],
@@ -61,6 +70,15 @@ def fetch(mod, root):
             raise OSError("empty download for " + name)
         open(p, "wb").write(data)
         extract(p, os.path.join(d, "x", name + ".d"))
+    scan(d, info)
+
+
+def scan(d, info):
+    import bz2
+    for r, _, fs in os.walk(os.path.join(d, "x")):      # Source servers ship maps as .bsp.bz2
+        for n in fs:
+            if n.lower().endswith(".bsp.bz2") and not os.path.exists(os.path.join(r, n[:-4])):
+                open(os.path.join(r, n[:-4]), "wb").write(bz2.BZ2File(os.path.join(r, n)).read())
     bsps, content = [], set()
     for r, _, fs in os.walk(os.path.join(d, "x")):
         for n in fs:
@@ -72,7 +90,7 @@ def fetch(mod, root):
                     if k in parts:
                         content.add("/".join(parts[:len(parts) - parts[::-1].index(k)]))
     json.dump({"bsps": bsps, "content_roots": sorted(content)}, open(os.path.join(d, "found.json"), "w"), indent=1)
-    print(mod, info["name"], "|", info["author"], "|", len(bsps), "bsp", [os.path.basename(b) for b in bsps])
+    print(info["id"], info["name"], "|", info["author"], "|", len(bsps), "bsp", [os.path.basename(b) for b in bsps])
 
 
 
@@ -121,6 +139,40 @@ def derive(man):
     return modes, flags
 
 
+def flags_from_bsp(bsp_path):
+    """Flag layout from the map's own item_teamflag entities: TeamNum 2/3 is red/blue; a neutral flag goes
+    to the team whose spawns are nearer, and only the nearest per team is kept. [] when the map has none."""
+    sys.path.insert(0, CONVERT)
+    import gsbsp.reader as reader
+    b = reader.Bsp(path=bsp_path)
+    b.load()
+
+    def vec(v):
+        return ([float(x) for x in (v or "").split()] + [0.0] * 3)[:3]
+    spawns = {2: [], 3: []}
+    for e in b.entities:
+        t = int(e.get("TeamNum", 0) or 0)
+        if e.get("classname") == "info_player_teamspawn" and t in spawns:
+            spawns[t].append(vec(e.get("origin")))
+    cen = {t: [sum(p[i] for p in ps) / len(ps) for i in range(3)] if ps else None for t, ps in spawns.items()}
+
+    def d2(p, c):
+        return sum((p[i] - c[i]) ** 2 for i in range(3)) if c else 1e18
+    best = {}
+    for e in b.entities:
+        if e.get("classname") != "item_teamflag":
+            continue
+        o, team = vec(e.get("origin")), int(e.get("TeamNum", 0) or 0)
+        score = 0.0
+        if team not in (2, 3):
+            team = 2 if d2(o, cen[2]) < d2(o, cen[3]) else 3
+            score = min(d2(o, cen[2]), d2(o, cen[3]))
+        name = "red" if team == 2 else "blue"
+        if name not in best or score < best[name][0]:
+            best[name] = (score, {"team": name, "origin_src": o, "yaw_src": vec(e.get("angles"))[1]})
+    return [best[t][1] for t in ("red", "blue") if t in best]
+
+
 def convert(mod, mapid, repo, bsp_name=None):
     src = os.path.join(ROOT, str(mod))
     meta = json.load(open(os.path.join(src, "meta.json")))
@@ -137,14 +189,21 @@ def convert(mod, mapid, repo, bsp_name=None):
     doc = {"id": mapid, "author": credit,
            "attribution": {"author": meta["author"], "source": page, "archive": os.path.basename(bsps[0]),
                            "recorded": datetime.date.today().isoformat()},
-           "notes": "Control point map for game-fatal-contact: team spawns become red/blue spawns and control points "
-                    "and resupply are kept as markers. Textures and models are free replacements; published as a "
+           "notes": "Team map for game-fatal-contact: team spawns become red/blue spawns, control points and resupply are "
+                    "kept as markers, flags become the capture-the-flag layout. Textures and models are free replacements; published as a "
                     "credited community map with a removal offer.",
            "kind": "arena", "movement": "walk", "modes": BASE_MODES}
     zp = os.path.join(repo, "zones", mapid + ".json")
     json.dump(doc, open(zp, "w"), indent=1)
     man = run_import(repo, mapid)
     modes, flags = derive(man)
+    real = flags_from_bsp(bsps[0])
+    if len(real) == 2:                       # the map's own flags beat the spawn-distance guess
+        flags = real
+        if "ctf" not in modes:
+            modes.append("ctf")
+    elif "ctf" in modes and not real and not man.get("control_points"):
+        modes.remove("ctf"); flags = []      # no flags and no points to put them at
     doc["modes"] = modes
     if flags:
         doc["flag_spawns"] = flags

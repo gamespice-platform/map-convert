@@ -46,9 +46,21 @@ class TeamMarkers(unittest.TestCase):
         points, resupply, flags = bsp_import.objective_markers(bsp, doc)
         self.assertEqual([(p["index"], p["owner"]) for p in points], [(1, "red"), (2, "blue")])
         self.assertEqual(resupply, [])
+        # the control point mode's schema rides beside the first one
+        self.assertEqual([(p["id"], p["order"], p["radius"]) for p in points],
+                         [(1, 1, bsp_import.DEFAULT_CAPTURE_RADIUS), (2, 2, bsp_import.DEFAULT_CAPTURE_RADIUS)])
+        self.assertEqual(points[1]["position"], points[1]["origin"])
         self.assertEqual(len(flags), 1)
         self.assertEqual(flags[0]["team"], "red")
         self.assertEqual(flags[0]["origin"], list(bsp_import.to_godot([100.0, 200.0, 30.0])))
+
+    def test_round_lists_the_play_order(self):
+        bsp = types.SimpleNamespace(entities=[
+            {"classname": "team_control_point", "origin": "0 0 0", "point_index": "0", "targetname": "a"},
+            {"classname": "team_control_point", "origin": "9 0 0", "point_index": "1", "targetname": "b"},
+            {"classname": "team_control_point_round", "cpr_cp_names": "b a"}])
+        points, _, _ = bsp_import.objective_markers(bsp, {})
+        self.assertEqual([(p["targetname"] if "targetname" in p else p["index"], p["order"]) for p in points], [(1, 0), (0, 1)])
 
 
 if __name__ == "__main__":

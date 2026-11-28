@@ -892,7 +892,8 @@ def write(mesh, prefix, credit=None, name=None, extra=None):
             pages.append({"offset": len(blob), "width": _lightmap.PAGE, "height": height})
             blob += img.astype("<u4").tobytes()
         doc["lightmap"] = {"format": "rgbe9995", "page_width": _lightmap.PAGE, "pages": pages,
-                           "lit_faces": mesh.atlas.lit_faces, "texels": mesh.atlas.texels, "scale": 1.0}
+                           "lit_faces": mesh.atlas.lit_faces, "texels": mesh.atlas.texels, "scale": 1.0,
+                           "burnt_fraction": round(mesh.atlas.burnt, 4)}
     if mesh.ambient:
         aoff = len(blob)
         for x, y, z, cube in mesh.ambient:

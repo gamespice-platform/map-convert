@@ -70,6 +70,24 @@ class LightmapTest(unittest.TestCase):
         page, (u, v) = lightmap.uv2(a, other, b.texinfo[0], (5, 5, 5))
         self.assertEqual(unpack(a.pages[0][int(v * a.heights[0]), int(u * lightmap.PAGE)]), [1.0, 1.0, 1.0])
 
+    def test_burnt_bake_is_capped_with_hue_kept(self):
+        bsp = FakeBsp()
+        bsp.light = bytes((200, 100, 50, 4)) * 6    # 12.5, 6.2, 3.1 linear: far beyond the engine's range
+        atlas = lightmap.pack(bsp, bsp.faces)
+        self.assertEqual(atlas.burnt, 1.0)
+        page, x, y = atlas.place[id(bsp.faces[0])]
+        got = unpack(atlas.pages[page][y, x])
+        self.assertAlmostEqual(got[0], 1.0, delta=0.01)
+        self.assertAlmostEqual(got[1], 0.5, delta=0.01)
+
+    def test_ordinary_bake_is_untouched(self):
+        bsp = FakeBsp()
+        bsp.light = bytes((200, 100, 50, 1)) * 6    # 1.57 at the brightest: bright but in range
+        atlas = lightmap.pack(bsp, bsp.faces)
+        self.assertEqual(atlas.burnt, 0.0)
+        page, x, y = atlas.place[id(bsp.faces[0])]
+        self.assertAlmostEqual(unpack(atlas.pages[page][y, x])[0], 200 * 2 / 255, delta=0.02)
+
 
 if __name__ == "__main__":
     unittest.main()

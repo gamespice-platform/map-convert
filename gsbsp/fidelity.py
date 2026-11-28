@@ -219,10 +219,21 @@ def gameplay_class(cls):
     return cls.startswith(GAMEPLAY_PREFIXES)
 
 
+def runtime_component(cls):
+    """The component gs-map's GSMapIO builds for `cls` (gsbsp.inputs reads its registration), so a class the runtime
+    gained is not reported unsupported because classes.tsv's component column lags; the column when gs-map is absent."""
+    try:
+        from gsbsp import inputs
+        comp = inputs.component_of(cls)
+    except OSError:
+        return _classes.component(cls)
+    return comp if comp != "GSMapEntity" else _classes.component(cls)
+
+
 def class_status(cls, wired=False, recorded=False):
     """implemented | approximated | ignored | unknown, for one class (wired: it sends or receives outputs)."""
     t = _classes.treatment(cls)[0]
-    comp = _classes.component(cls)
+    comp = runtime_component(cls)
     if t is None:
         return "unknown"
     if comp != "GSMapEntity" or t in ("world", "drawn") or recorded:

@@ -310,5 +310,26 @@ class SendsOutOfSolid(unittest.TestCase):
             bsp_import.point_in_brush = inside
 
 
+class SwitchedTeleports(unittest.TestCase):
+    """A teleport that starts disabled is no pit unless the map's logic_auto leaves it on."""
+
+    def tele(self, name, off, target="d"):
+        return {"classname": "trigger_teleport", "targetname": name, "target": target,
+                "StartDisabled": "1" if off else "0", "spawnflags": "1", "model": "*1"}
+
+    def test_button_and_trigger_enabled_are_dropped_auto_enabled_kept(self):
+        ents = [dest("d", 0, 0, 0),
+                self.tele("tele_to_end", True), self.tele("tele_jail_top", True),
+                self.tele("always", False), self.tele("auto_on", True),
+                self.tele("auto_on_off", True),
+                {"classname": "logic_auto", "OnMapSpawn": "auto_on,Enable,,0,-1\n"
+                 "auto_on_off,Enable,,0,-1\nauto_on_off,Disable,,30,-1"},
+                {"classname": "func_button", "OnPressed": "tele_to_end,Enable,,0,-1"}]
+        z = zoner(ents)
+        self.assertEqual(bsp_import.switched_teleports(z), 3)
+        left = {e["targetname"] for _i, e in z.entities("trigger_teleport")}
+        self.assertEqual(left, {"always", "auto_on"})
+
+
 if __name__ == "__main__":
     unittest.main()

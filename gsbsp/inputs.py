@@ -33,6 +33,7 @@ def _match_inputs(text):
             continue
         if depth is not None and indent == depth + 1 and stripped.endswith(":"):
             out.update(re.findall(r'"([^"]+)"', stripped))
+        out.update(re.findall(r'\bname [!=]= "([^"]+)"', stripped))    # an input tested before or without a match (a button's Press, a command)
     return out
 
 

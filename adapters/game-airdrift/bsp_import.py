@@ -3484,6 +3484,30 @@ def round_teleports(z, rule):
     return dropped
 
 
+def switched_teleports(z):
+    """Drop every teleport that starts disabled and is not switched on as the round starts.
+
+    Not opt-in on a combat map (`"kind": "arena"`): a fact about the map's start state. A
+    `StartDisabled` teleport does nothing until map logic enables it, and this importer
+    runs none of a map's outputs, so imported as a pit it fired from the first second:
+    surf_forbidden_ways_reloaded's `tele_TO_END` and `tele_shortend` (a button's) and its
+    `tele_jail_top` (a `trigger_once`'s) sent every runner through them to the end or a
+    jail. One the map's `logic_auto` leaves on (gsbsp.movers.spawn_enabled, the rule
+    bsp_mechanics already holds its triggers to) runs all round and stays a pit. Race maps
+    keep [method round_teleports]: there a button-enabled teleport can be how the next
+    section opens.
+    """
+    names = []
+    for i, e in list(z.entities("trigger_teleport")):
+        if bsp_mechanics._starts_off(z.bsp, e):
+            z.claimed.add(i)
+            names.append(e.get("targetname", "") or "#%d" % i)
+    if names:
+        z.notes.append("%d teleports dropped that start disabled and only map events enable (%s)"
+                       % (len(names), ", ".join(sorted(set(names))[:12])))
+    return len(names)
+
+
 def floor_boxes(bsp, solids, props):
     """Everything a player can stand on, as boxes: the brushes, the solid props' hulls and
     each displacement triangle.
@@ -3508,6 +3532,18 @@ def floor_boxes(bsp, solids, props):
 
 # (class, TeamNum) to the FC team tag: TeamNum 2 is the first side and 3 the second.
 SPAWN_TEAMS = {("info_player_teamspawn", "2"): "red", ("info_player_teamspawn", "3"): "blue"}
+# An arena map's two-sided spawn classes. The mapper put each side's spawns at its own end, and
+# the game's positional split (FcMapImported.split_spawns_for_teams) disagreed with them on a fifth
+# of the combat surf maps (surf_pavilion 25 of 50, surf_xiv_v2a 16 of 30).
+ARENA_SPAWN_SIDES = {"info_player_terrorist": "red", "info_player_counterterrorist": "blue"}
+
+
+def spawn_disabled(bsp, e):
+    """A spawn point the map turns off (`enabled` 0, or StartDisabled 1) and does not switch on as
+    it spawns. The game picks from every spawn it is given, so a disabled one would be used."""
+    if str(e.get("enabled", "1")).strip() == "0":
+        return bsp_mechanics._starts_off(bsp, dict(e, StartDisabled="1"))
+    return bsp_mechanics._starts_off(bsp, e)
 
 
 DEFAULT_CAPTURE_RADIUS = 192.0  # map units, when a point has no trigger_capture_area
@@ -3591,10 +3627,24 @@ def classify_zones(bsp, min_thickness=MIN_ZONE_THICKNESS, doc=None, solids=None,
                 # a map that leaves TeamNum 0 and names its spawns (Team_red_player_spawn) still has sides
                 name = str(e.get("targetname", "")).lower()
                 side = "red" if name.startswith("team_red") else "blue" if name.startswith("team_blue") else None
+            if side is None and doc.get("kind") == "arena":
+                side = ARENA_SPAWN_SIDES.get(cls)
             # Only a spawn the mapper gave a side carries one; the rest stay a shared pool.
             if side:
                 spot["team"] = side
+            if spawn_disabled(bsp, e):
+                spot["disabled"] = True
             spawns.append(spot)
+
+    # A spawn the map switches off is never one a player starts at. If every spawn is off they
+    # all stay, so a map is never left with none (tools/check_spawns.py reports it).
+    live = [sp for sp in spawns if not sp.get("disabled")]
+    dropped_off = len(spawns) - len(live) if live else 0
+    if dropped_off:
+        spawns = live
+        z.notes.append("%d spawn point(s) dropped that the map switches off" % dropped_off)
+    for sp in spawns:
+        sp.pop("disabled", None)
 
     # A map with sides keeps only the spawns that have one: its lone `info_player_start` and
     # deathmatch spot are editor leftovers, and one of them stood outside the playable area.
@@ -3620,6 +3670,8 @@ def classify_zones(bsp, min_thickness=MIN_ZONE_THICKNESS, doc=None, solids=None,
         conditional_teleports(z, doc["conditional_teleports"])
     if "round_teleports" in doc:
         round_teleports(z, doc["round_teleports"])
+    if doc.get("kind") == "arena":
+        switched_teleports(z)
     # After the zones file's own lists, so one that names these teleports still resolves.
     parented_teleports(z)
     if "sealed_teleports" in doc:

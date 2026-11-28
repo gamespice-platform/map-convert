@@ -109,5 +109,25 @@ class ControlPoints(unittest.TestCase):
             self.assertEqual([p["owner"] for p in pts], want)
 
 
+class SnapToFloor(unittest.TestCase):
+    def snap(self, pos, floors):
+        from gsbsp import audit
+        real = audit.floors
+        audit.floors = lambda b: [(f, None) for f in floors]
+        try:
+            return controlpoints.snap_to_floor(None, [("t", 1, "", "", pos)])[0][4]
+        finally:
+            audit.floors = real
+
+    def test_point_with_floor_under_it_stays(self):
+        self.assertEqual(self.snap([100, 100, 40], [(100, 100, 0), (300, 100, 0)]), [100, 100, 40])
+
+    def test_floating_point_moves_to_nearest_floor(self):
+        self.assertEqual(self.snap([100, 100, 500], [(100, 100, 0), (300, 100, 480)]), [300, 100, 480])
+
+    def test_no_floor_in_radius_stays(self):
+        self.assertEqual(self.snap([100, 100, 500], [(5000, 100, 0)]), [100, 100, 500])
+
+
 if __name__ == "__main__":
     unittest.main()

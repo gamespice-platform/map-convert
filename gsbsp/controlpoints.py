@@ -19,6 +19,9 @@ DOD_OWNERS = {"1": "blue", "2": "red"}   # dod_control_point point_default_owner
 POINT_CLASSES = ("team_control_point", "dod_control_point")
 AREA_CLASSES = ("trigger_capture_area", "dod_capture_area")
 DEFAULT_CAPTURE_RADIUS = 192.0  # map units, when a point has no capture area
+SNAP_RADIUS = 384.0             # a point with no floor under it moves to the nearest standable floor within this many map units sideways
+SNAP_DOWN = 96.0                # a floor this far below the point (or less) counts as the point's own floor
+SNAP_UP = 24.0                  # ... and one this far above it (a marker sunk into the floor)
 MIN_CAPTURE_RADIUS = 96.0       # a capture trigger's own box can be a post (some maps measure 6 to 40): too small to stand in
 
 
@@ -132,7 +135,37 @@ def _area_boxes(bsp):
     return out
 
 
-def points(bsp, spawns=None, scale=units.VISUAL, y0=0.0):
+def snap_to_floor(bsp, found):
+    """`found` is [(target, index, name, owner, origin in map units)]: a point whose origin floats in a pit, sits in a wall or
+    hangs over nothing is moved to the nearest standable floor within SNAP_RADIUS (by construction, so the point is always
+    one a player can stand on); points that already have a floor under them are left where the mapper put them."""
+    from . import audit
+    tops = audit.floors(bsp)
+    cells = {}
+    for (x, y, z), *_ in tops:
+        cells.setdefault((int(x // 64), int(y // 64)), []).append((x, y, z))
+
+    def near(x, y, r):
+        reach = int(r // 64) + 1
+        for cx in range(int(x // 64) - reach, int(x // 64) + reach + 1):
+            for cy in range(int(y // 64) - reach, int(y // 64) + reach + 1):
+                for t in cells.get((cx, cy), ()):
+                    d = math.hypot(t[0] - x, t[1] - y)
+                    if d <= r:
+                        yield d, t
+
+    out = []
+    for target, index, name, owner, pos in found:
+        x, y, z = pos
+        if any(-SNAP_DOWN <= t[2] - z <= SNAP_UP for d, t in near(x, y, audit.GRID)):
+            out.append((target, index, name, owner, pos))
+            continue
+        best = min(near(x, y, SNAP_RADIUS), key=lambda dt: dt[0] + abs(dt[1][2] - z), default=None)
+        out.append((target, index, name, owner, list(best[1]) if best else pos))
+    return out
+
+
+def points(bsp, spawns=None, scale=units.VISUAL, y0=0.0, snap=None):
     """The map's control points, ordered from red's end: [{id, index, name, owner, position, origin, radius, order}], metres in
     Godot axes (`radius` too: at least MIN_CAPTURE_RADIUS map units). `spawns` is `team_spawns` by default."""
     areas = _area_boxes(bsp)
@@ -155,6 +188,10 @@ def points(bsp, spawns=None, scale=units.VISUAL, y0=0.0):
             name = e.get("point_printname", "")
         found.append((e.get("targetname", ""), index, name, owner, reader.entity_vec(e)))
     # a capture area that names no point entity is the point (area order)
+    if snap is None:
+        snap = hasattr(bsp, "brushes")
+    if snap and found:
+        found = snap_to_floor(bsp, found)
     named = {t for t, *_ in found}
     for target, (_r, centre) in areas.items():
         if target not in named:

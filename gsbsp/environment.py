@@ -147,3 +147,10 @@ def sounds(bsp, scale=_units.VISUAL, y0=0.0):
             out["triggers"].append({"entity": i, "soundscape": _get(e, "soundscape"), "model": _get(e, "model"),
                                     "start_disabled": _get(e, "startdisabled", "0") == "1"})
     return out
+
+
+def apply_overrides(env, overrides):
+    """Merge a rule tier's environment keys (rules.ENVIRONMENT_KEYS) into the sun record; a map with no sun has nothing to tune."""
+    if overrides and isinstance(env.get("sun"), dict):
+        env["sun"].update(overrides)
+    return env

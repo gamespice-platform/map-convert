@@ -51,6 +51,7 @@ import stock_archives  # noqa: E402
 import bsp_mechanics  # noqa: E402
 import bsp_props  # noqa: E402
 import stock_standins  # noqa: E402
+from gsbsp import controlpoints as _controlpoints  # noqa: E402
 from gsbsp import mood as _mood  # noqa: E402
 from gsbsp import docboxes as _docboxes, materials as _gsmaterials, props as _gsprops, ramps as _ramps  # noqa: E402
 
@@ -1328,14 +1329,14 @@ def merge_convex_brushes(bsp, brushes):
             if side[3]:
                 continue
             pl = bsp.planes[side[0]]
-            planes.append(((pl[0], pl[1], pl[2]), pl[3]))
+            planes.append(((pl[0], pl[1], pl[2]), pl[3], key((pl[0], pl[1], pl[2]), pl[3])))
         items.append({"pts": [tuple(p) for p in bsp.brush_hull(i)], "planes": planes,
                       "contents": contents, "alive": True,
                       "kind": _gsmaterials.hull_kind(_docboxes.brush_material_names(bsp, i), contents)})
 
     def behind(pts, planes, skip):
-        for n, d in planes:
-            if key(n, d) == skip:
+        for n, d, k in planes:
+            if k == skip:
                 continue
             for p in pts:
                 if n[0] * p[0] + n[1] * p[1] + n[2] * p[2] - d > MERGE_EPSILON:
@@ -1343,10 +1344,12 @@ def merge_convex_brushes(bsp, brushes):
         return True
 
     by_plane = collections.defaultdict(list)
+    by_plane_has = collections.defaultdict(set)    # who is in by_plane[q] already: a brush that grew is listed once, not once per merge
     for k, it in enumerate(items):
-        it["keys"] = {key(n, d) for n, d in it["planes"]}
+        it["keys"] = {q[2] for q in it["planes"]}
         for q in it["keys"]:
             by_plane[q].append(k)
+            by_plane_has[q].add(k)
     # A worklist rather than a restart after every merge: a brush that grew is asked
     # again, with the sides it gained, until nothing beside it will join it.
     pending = collections.deque(range(len(items)))
@@ -1356,8 +1359,7 @@ def merge_convex_brushes(bsp, brushes):
         grew = it["alive"]
         while grew:
             grew = False
-            for n, d in list(it["planes"]):
-                mine = key(n, d)
+            for n, d, mine in list(it["planes"]):
                 theirs = key((-n[0], -n[1], -n[2]), -d)
                 for b in by_plane.get(theirs, ()):
                     other = items[b]
@@ -1367,11 +1369,18 @@ def merge_convex_brushes(bsp, brushes):
                     if not (behind(other["pts"], it["planes"], mine)
                             and behind(it["pts"], other["planes"], theirs)):
                         continue
-                    it["planes"] = [q for q in it["planes"] if key(*q) != mine] + \
-                        [q for q in other["planes"] if key(*q) != theirs]
-                    it["keys"] = {key(*q) for q in it["planes"]}
+                    # One entry per plane: two brushes of a slab share their top and bottom, and the copies
+                    # only make every later test walk the same plane again.
+                    joined = {}
+                    for q in it["planes"] + other["planes"]:
+                        if q[2] != mine and q[2] != theirs:
+                            joined.setdefault(q[2], q)
+                    it["planes"] = list(joined.values())
+                    it["keys"] = {q[2] for q in it["planes"]}
                     for q in it["keys"]:
-                        by_plane[q].append(a)
+                        if a not in by_plane_has[q]:
+                            by_plane_has[q].add(a)
+                            by_plane[q].append(a)
                     # Keep the corners; the faces they shared are inside now and a convex
                     # shape built from these points is the merged hull regardless.
                     it["pts"] = list({(round(p[0], 3), round(p[1], 3), round(p[2], 3))
@@ -3705,7 +3714,7 @@ SPAWN_TEAMS = {("info_player_teamspawn", "2"): "red", ("info_player_teamspawn", 
 # of the combat surf maps (surf_pavilion 25 of 50, surf_xiv_v2a 16 of 30).
 ARENA_SPAWN_SIDES = {"info_player_terrorist": "red", "info_player_counterterrorist": "blue",
                      "info_player_axis": "red", "info_player_allies": "blue"}   # Day of Defeat: Source sides
-DOD_OWNERS = {"1": "blue", "2": "red"}   # dod_control_point point_default_owner: 1 Allies, 2 Axis, 0 neutral
+DOD_OWNERS = _controlpoints.DOD_OWNERS
 
 
 def spawn_disabled(bsp, e):
@@ -3716,10 +3725,14 @@ def spawn_disabled(bsp, e):
     return bsp_mechanics._starts_off(bsp, e)
 
 
-DEFAULT_CAPTURE_RADIUS = 192.0  # map units, when a point has no trigger_capture_area
+DEFAULT_CAPTURE_RADIUS = _controlpoints.DEFAULT_CAPTURE_RADIUS
+MIN_CAPTURE_RADIUS = _controlpoints.MIN_CAPTURE_RADIUS
+orient_points = _controlpoints.orient_points   # shared with the regen path (gsbsp.controlpoints)
 
 
-def objective_markers(bsp, doc):
+
+
+def objective_markers(bsp, doc, spawns=()):
     """Control points, resupply volumes and flag spawns, in Godot axes.
 
     Control points and resupply come from the map's own entities; flag spawns are authored
@@ -3733,8 +3746,13 @@ def objective_markers(bsp, doc):
             box = brush_box(bsp, e)
             if box is not None:
                 capture[e["area_cap_point"]] = max(box[1][0] - box[0][0], box[1][1] - box[0][1]) / 2.0
+    # a point that floats over nothing the importer draws moves to the nearest standable floor (the regen path's snap, shared)
+    cp_ents = [e for e in bsp.entities if e.get("classname") in ("team_control_point", "dod_control_point") and "origin" in e]
+    snapped = {id(e): pos for e, (*_, pos) in zip(cp_ents, _controlpoints.snap_to_floor(
+        bsp, [("", 0, "", "", list(entity_origin(e))) for e in cp_ents]))} if cp_ents and hasattr(bsp, "brushes") else {}
     for e in bsp.entities:
         if e.get("classname") in ("team_control_point", "dod_control_point") and "origin" in e:
+            moved = snapped.get(id(e))
             if e["classname"] == "dod_control_point":
                 owner = DOD_OWNERS.get(str(e.get("point_default_owner", "")).strip(), "")
                 index = len(points)   # DoD:S points have no index: entity order
@@ -3742,12 +3760,12 @@ def objective_markers(bsp, doc):
             else:
                 owner = SPAWN_TEAMS.get(("info_player_teamspawn", str(e.get("point_default_owner", "")))) or ""
                 index = int(float(e.get("point_index", 0) or 0))
-            origin = list(to_godot(entity_origin(e)))
+            origin = list(to_godot(moved or entity_origin(e)))
             # `index`/`name`/`origin` are the first schema; `id`/`position`/`radius`/`order` the
             # shared control point mode's (order is settled below from the map's master).
             points.append({"index": index, "name": e.get("point_printname", ""), "origin": origin, "owner": owner,
                            "id": index, "position": origin, "order": index,
-                           "radius": round(capture.get(e.get("targetname", ""), DEFAULT_CAPTURE_RADIUS), 2),
+                           "radius": round(max(capture.get(e.get("targetname", ""), DEFAULT_CAPTURE_RADIUS), MIN_CAPTURE_RADIUS), 2),
                            "_target": e.get("targetname", "")})
     # The master (or its round) lists the points in play order in `cpr_cp_names`; without a list the
     # order is the point index.
@@ -3760,6 +3778,7 @@ def objective_markers(bsp, doc):
         if p["_target"] in listed:
             p["order"] = listed.index(p["_target"])
         del p["_target"]
+    orient_points(points, spawns, by_axis=not listed and any(e.get("classname") == "dod_control_point" for e in bsp.entities))
     resupply = []
     for e in bsp.entities:
         if e.get("classname") == "func_regenerate":
@@ -3814,6 +3833,11 @@ def classify_zones(bsp, min_thickness=MIN_ZONE_THICKNESS, doc=None, solids=None,
     # A spawn the map switches off is never one a player starts at. If every spawn is off they
     # all stay, so a map is never left with none (tools/check_spawns.py reports it).
     live = [sp for sp in spawns if not sp.get("disabled")]
+    # ... and a side whose every spawn is off (attack/defend maps such as Gold Rush enable one side's by stage logic)
+    # keeps them, as gsbsp.controlpoints.team_spawns does for the regen path.
+    if live:
+        have = {sp.get("team") for sp in live}
+        live += [sp for sp in spawns if sp.get("disabled") and sp.get("team") and sp["team"] not in have]
     dropped_off = len(spawns) - len(live) if live else 0
     if dropped_off:
         spawns = live
@@ -4989,7 +5013,7 @@ def main(argv=None):
     switched = bsp_mechanics.switched_off(bsp, entity_origin)
     if dropped_ents or switched:
         manifest["not_run"] = {"classes": dict(sorted(dropped_ents.items())), "switched_off": switched}
-    points, resupply, flags = objective_markers(bsp, doc)
+    points, resupply, flags = objective_markers(bsp, doc, spawns)
     if points:
         manifest["control_points"] = points
     if resupply:

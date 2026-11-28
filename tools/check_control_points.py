@@ -13,7 +13,7 @@ followed) and adds each point's capture disc as a target. Per map it fails when:
     radius         the capture radius is below --min-radius (a player cannot stand in it) or above --max-radius
     unreachable    a team's spawns do not reach the point's disc on the walking graph (`unreachable_red`, `unreachable_blue`)
     wrong_side     a point owned by a team is over 1.25 times as far from its spawns as from the other team's
-    ends           both teams are nearest the same point, or blue (the low orders) is nearest a higher order than red
+    ends           both teams are nearest the same point, or red (the low orders) is nearest a higher order than blue
 
     tools/check_control_points.py                    every map with control points (what CI runs)
     tools/check_control_points.py cp_station ...     these maps
@@ -172,8 +172,8 @@ def check(m, a):
         first = {t: min(pts, key=lambda p: near[t][p["id"]])["id"] for t in team}
         if first["red"] == first["blue"]:
             problems.append(("ends", "both teams are nearest point %s" % first["red"], None))
-        elif rank[first["blue"]] > rank[first["red"]]:
-            problems.append(("ends", "blue spawns nearest point %s, past red's %s: the order runs the wrong way" % (first["blue"], first["red"]), None))
+        elif rank[first["red"]] > rank[first["blue"]]:
+            problems.append(("ends", "red spawns nearest point %s, past blue's %s: the order runs the wrong way" % (first["red"], first["blue"]), None))
     return problems, complete
 
 

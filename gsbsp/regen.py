@@ -10,7 +10,7 @@ import json
 import os
 import sys
 
-from . import classes, coverage, environment, licence, loose, mapcfg, mesh, movers, origtex, pbrmap, ramps, reader, rules, scripts, standins, store, units
+from . import classes, controlpoints, coverage, environment, licence, loose, mapcfg, mesh, movers, origtex, pbrmap, ramps, reader, rules, scripts, standins, store, units
 
 
 def _json(path):
@@ -76,6 +76,9 @@ def build(path, name, sha, credit, out, rs, scale=units.VISUAL, y0=0.0, cat=None
                  "environment": environment.apply_overrides(environment.environment(bsp, scale, y0), rs.environment_overrides()), "sounds": environment.sounds(bsp, scale, y0),
                  "settings": mapcfg.defaults(store.commands(bsp.entities)),
                  "scripts": scripts.analyse(bsp.entities), "roles": rs.roles_for(bsp.entities)}
+    cps = controlpoints.points(bsp, scale=scale, y0=y0)
+    if cps:
+        extra["control_points"] = cps
     keep = mesh.crop_keep(crop)
     if keep is not None:
         extra = _cropped(extra, keep)

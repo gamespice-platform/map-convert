@@ -51,6 +51,7 @@ import stock_archives  # noqa: E402
 import bsp_mechanics  # noqa: E402
 import bsp_props  # noqa: E402
 import stock_standins  # noqa: E402
+from gsbsp import controlpoints as _controlpoints  # noqa: E402
 from gsbsp import mood as _mood  # noqa: E402
 from gsbsp import docboxes as _docboxes, materials as _gsmaterials, props as _gsprops, ramps as _ramps  # noqa: E402
 
@@ -3705,7 +3706,7 @@ SPAWN_TEAMS = {("info_player_teamspawn", "2"): "red", ("info_player_teamspawn", 
 # of the combat surf maps (surf_pavilion 25 of 50, surf_xiv_v2a 16 of 30).
 ARENA_SPAWN_SIDES = {"info_player_terrorist": "red", "info_player_counterterrorist": "blue",
                      "info_player_axis": "red", "info_player_allies": "blue"}   # Day of Defeat: Source sides
-DOD_OWNERS = {"1": "blue", "2": "red"}   # dod_control_point point_default_owner: 1 Allies, 2 Axis, 0 neutral
+DOD_OWNERS = _controlpoints.DOD_OWNERS
 
 
 def spawn_disabled(bsp, e):
@@ -3716,47 +3717,11 @@ def spawn_disabled(bsp, e):
     return bsp_mechanics._starts_off(bsp, e)
 
 
-DEFAULT_CAPTURE_RADIUS = 192.0  # map units, when a point has no trigger_capture_area
-MIN_CAPTURE_RADIUS = 96.0       # a capture trigger's own box can be a post (Day of Defeat: Source maps measure 6 to 40): too small to stand in
+DEFAULT_CAPTURE_RADIUS = _controlpoints.DEFAULT_CAPTURE_RADIUS
+MIN_CAPTURE_RADIUS = _controlpoints.MIN_CAPTURE_RADIUS
+orient_points = _controlpoints.orient_points   # shared with the regen path (gsbsp.controlpoints)
 
 
-def orient_points(points, spawns, by_axis=False):
-    """Number the points from blue's end to red's, as the control point mode expects (blue takes the
-    low orders). The map's own order is the entity order (Day of Defeat: Source) or its master's
-    list, and either runs from whichever end the mapper started at, so a map where the blue
-    spawns are nearest a higher order than the red spawns has its order reversed. Maps without
-    spawns of both teams keep the order they have. `by_axis` (Day of Defeat: Source, whose order is
-    only the entity order) numbers the points along the line from the blue spawns to the red ones."""
-    team = {t: [s["origin"] for s in spawns if s.get("team") == t] for t in ("red", "blue")}
-    if len(points) < 2 or not team["red"] or not team["blue"]:
-        return
-
-    if by_axis:
-        # The map's default owner says which side starts with the point; where most owned points sit
-        # nearer the other side's spawns the owner numbers are the other way round from the spawn
-        # classes (24 of 29 owned points on the 25 Day of Defeat: Source maps), so they are swapped.
-        near = lambda p, t: min(math.hypot(o[0] - p["position"][0], o[2] - p["position"][2]) for o in team[t])
-        owned = [p for p in points if p.get("owner") in team]
-        own = sum(1 for p in owned if near(p, p["owner"]) <= near(p, "blue" if p["owner"] == "red" else "red"))
-        if own * 2 < len(owned):
-            for p in owned:
-                p["owner"] = "blue" if p["owner"] == "red" else "red"
-        b = [sum(o[i] for o in team["blue"]) / len(team["blue"]) for i in (0, 2)]
-        r = [sum(o[i] for o in team["red"]) / len(team["red"]) for i in (0, 2)]
-        along = lambda p: (p["position"][0] - b[0]) * (r[0] - b[0]) + (p["position"][2] - b[1]) * (r[1] - b[1])
-        for rank, p in enumerate(sorted(points, key=along)):
-            p["order"] = rank
-        return
-
-    def nearest(t):
-        return min(points, key=lambda p: min(math.hypot(o[0] - p["position"][0], o[2] - p["position"][2]) for o in team[t]))
-
-    red, blue = nearest("red"), nearest("blue")
-    if blue is not red and blue["order"] > red["order"]:
-        top = max(p["order"] for p in points)
-        low = min(p["order"] for p in points)
-        for p in points:
-            p["order"] = top + low - p["order"]
 
 
 def objective_markers(bsp, doc, spawns=()):

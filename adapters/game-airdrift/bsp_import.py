@@ -3717,9 +3717,49 @@ def spawn_disabled(bsp, e):
 
 
 DEFAULT_CAPTURE_RADIUS = 192.0  # map units, when a point has no trigger_capture_area
+MIN_CAPTURE_RADIUS = 96.0       # a capture trigger's own box can be a post (Day of Defeat: Source maps measure 6 to 40): too small to stand in
 
 
-def objective_markers(bsp, doc):
+def orient_points(points, spawns, by_axis=False):
+    """Number the points from blue's end to red's, as the control point mode expects (blue takes the
+    low orders). The map's own order is the entity order (Day of Defeat: Source) or its master's
+    list, and either runs from whichever end the mapper started at, so a map where the blue
+    spawns are nearest a higher order than the red spawns has its order reversed. Maps without
+    spawns of both teams keep the order they have. `by_axis` (Day of Defeat: Source, whose order is
+    only the entity order) numbers the points along the line from the blue spawns to the red ones."""
+    team = {t: [s["origin"] for s in spawns if s.get("team") == t] for t in ("red", "blue")}
+    if len(points) < 2 or not team["red"] or not team["blue"]:
+        return
+
+    if by_axis:
+        # The map's default owner says which side starts with the point; where most owned points sit
+        # nearer the other side's spawns the owner numbers are the other way round from the spawn
+        # classes (24 of 29 owned points on the 25 Day of Defeat: Source maps), so they are swapped.
+        near = lambda p, t: min(math.hypot(o[0] - p["position"][0], o[2] - p["position"][2]) for o in team[t])
+        owned = [p for p in points if p.get("owner") in team]
+        own = sum(1 for p in owned if near(p, p["owner"]) <= near(p, "blue" if p["owner"] == "red" else "red"))
+        if own * 2 < len(owned):
+            for p in owned:
+                p["owner"] = "blue" if p["owner"] == "red" else "red"
+        b = [sum(o[i] for o in team["blue"]) / len(team["blue"]) for i in (0, 2)]
+        r = [sum(o[i] for o in team["red"]) / len(team["red"]) for i in (0, 2)]
+        along = lambda p: (p["position"][0] - b[0]) * (r[0] - b[0]) + (p["position"][2] - b[1]) * (r[1] - b[1])
+        for rank, p in enumerate(sorted(points, key=along)):
+            p["order"] = rank
+        return
+
+    def nearest(t):
+        return min(points, key=lambda p: min(math.hypot(o[0] - p["position"][0], o[2] - p["position"][2]) for o in team[t]))
+
+    red, blue = nearest("red"), nearest("blue")
+    if blue is not red and blue["order"] > red["order"]:
+        top = max(p["order"] for p in points)
+        low = min(p["order"] for p in points)
+        for p in points:
+            p["order"] = top + low - p["order"]
+
+
+def objective_markers(bsp, doc, spawns=()):
     """Control points, resupply volumes and flag spawns, in Godot axes.
 
     Control points and resupply come from the map's own entities; flag spawns are authored
@@ -3747,7 +3787,7 @@ def objective_markers(bsp, doc):
             # shared control point mode's (order is settled below from the map's master).
             points.append({"index": index, "name": e.get("point_printname", ""), "origin": origin, "owner": owner,
                            "id": index, "position": origin, "order": index,
-                           "radius": round(capture.get(e.get("targetname", ""), DEFAULT_CAPTURE_RADIUS), 2),
+                           "radius": round(max(capture.get(e.get("targetname", ""), DEFAULT_CAPTURE_RADIUS), MIN_CAPTURE_RADIUS), 2),
                            "_target": e.get("targetname", "")})
     # The master (or its round) lists the points in play order in `cpr_cp_names`; without a list the
     # order is the point index.
@@ -3760,6 +3800,7 @@ def objective_markers(bsp, doc):
         if p["_target"] in listed:
             p["order"] = listed.index(p["_target"])
         del p["_target"]
+    orient_points(points, spawns, by_axis=not listed and any(e.get("classname") == "dod_control_point" for e in bsp.entities))
     resupply = []
     for e in bsp.entities:
         if e.get("classname") == "func_regenerate":
@@ -4989,7 +5030,7 @@ def main(argv=None):
     switched = bsp_mechanics.switched_off(bsp, entity_origin)
     if dropped_ents or switched:
         manifest["not_run"] = {"classes": dict(sorted(dropped_ents.items())), "switched_off": switched}
-    points, resupply, flags = objective_markers(bsp, doc)
+    points, resupply, flags = objective_markers(bsp, doc, spawns)
     if points:
         manifest["control_points"] = points
     if resupply:

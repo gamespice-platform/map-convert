@@ -115,6 +115,28 @@ class ArenaSpawnSides(unittest.TestCase):
             spawns = bsp_import.classify_zones(Bsp(fh.name).load(), doc={"kind": "arena"})[1]
         self.assertEqual(len(spawns), 1)
 
+    def test_points_are_numbered_from_blues_end(self):
+        def pts():
+            return [{"position": [x, 0, 0], "order": i} for i, x in enumerate((0, 500, 1000))]
+        sp = lambda red, blue: [{"team": "red", "origin": [red, 0, 0]}, {"team": "blue", "origin": [blue, 0, 0]}]
+        wrong = pts()
+        bsp_import.orient_points(wrong, sp(0, 1000))   # blue nearest the highest order: reversed
+        self.assertEqual([p["order"] for p in wrong], [2, 1, 0])
+        right = pts()
+        bsp_import.orient_points(right, sp(1000, 0))
+        self.assertEqual([p["order"] for p in right], [0, 1, 2])
+        axis = [{"position": [x, 0, 0], "order": i} for i, x in enumerate((500, 1000, 0))]   # entity order, not geographic
+        bsp_import.orient_points(axis, sp(1000, 0), by_axis=True)
+        self.assertEqual([p["order"] for p in axis], [1, 2, 0])
+        owned = pts()
+        for p, o in zip(owned, ("red", "", "blue")):
+            p["owner"] = o
+        bsp_import.orient_points(owned, sp(1000, 0), by_axis=True)   # red owns the point at blue's end: swapped
+        self.assertEqual([p["owner"] for p in owned], ["blue", "", "red"])
+        alone = pts()
+        bsp_import.orient_points(alone, [{"team": "blue", "origin": [0, 0, 0]}])   # no red spawns: untouched
+        self.assertEqual([p["order"] for p in alone], [0, 1, 2])
+
 
 if __name__ == "__main__":
     unittest.main()

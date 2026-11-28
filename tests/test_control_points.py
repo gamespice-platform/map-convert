@@ -29,6 +29,17 @@ def cp(index, origin, name="", owner="", target=None):
 
 
 class ControlPoints(unittest.TestCase):
+    def test_stage_disabled_spawns_still_orient_the_points(self):
+        # Gold Rush style: red's spawns all start disabled (stage logic enables them); blue's are on
+        red = dict(spawn("2", "0 0 0"), StartDisabled="1")
+        ents = [red, spawn("3", "1000 0 0"), cp(1, "900 0 0", "near blue"), cp(2, "100 0 0", "near red")]
+        pts = controlpoints.points(bsp(ents))
+        self.assertEqual([p["name"] for p in pts], ["near red", "near blue"])
+        self.assertEqual([p["order"] for p in pts], [0, 1])
+        # a team with an enabled spawn keeps ignoring its disabled ones
+        spawns = controlpoints.team_spawns(bsp([red, spawn("2", "5 0 0"), spawn("3", "1 0 0")]))
+        self.assertEqual(len([x for x in spawns if x["team"] == "red"]), 1)
+
     def test_fields_and_metres(self):
         pts = controlpoints.points(bsp([cp(1, "100 200 300", "A", "2"), cp(2, "0 0 0", "B", "3")]))
         self.assertEqual([p["id"] for p in pts], [1, 2])
@@ -79,7 +90,8 @@ class ControlPoints(unittest.TestCase):
     def test_disabled_and_one_sided_spawns_keep_the_map_order(self):
         ents = [cp(0, "0 0 0"), cp(1, "9 0 0"), spawn("3", "0 0 0")]
         self.assertEqual([p["index"] for p in controlpoints.points(bsp(ents))], [0, 1])
-        self.assertEqual(controlpoints.team_spawns(bsp([dict(spawn("2", "0 0 0"), StartDisabled="1")])), [])
+        # a team with only disabled spawns keeps them (stage logic enables them); the other team has none
+        self.assertEqual(len(controlpoints.team_spawns(bsp([dict(spawn("2", "0 0 0"), StartDisabled="1")]))), 1)
 
     def test_no_points(self):
         self.assertEqual(controlpoints.points(bsp([spawn("2", "0 0 0")])), [])

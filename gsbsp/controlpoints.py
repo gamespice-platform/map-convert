@@ -96,15 +96,19 @@ def fit_owners(points):
 
 def team_spawns(bsp, scale=units.VISUAL, y0=0.0):
     """The map's two-sided player spawns, {origin (Godot axes, metres), team}: `info_player_teamspawn` by
-    TeamNum and the terrorist/counter-terrorist and axis/allies classes. A spawn the map starts disabled is left out."""
-    out = []
+    TeamNum and the terrorist/counter-terrorist and axis/allies classes. A spawn the map starts disabled is left out,
+    unless that would leave a team with none (attack/defend maps such as Gold Rush enable one side's spawns by
+    stage logic; the disabled ones still say where that side starts)."""
+    on, off = [], []
     for e in bsp.entities:
         c = e.get("classname", "")
         side = TEAMSPAWN_TEAMS.get(str(e.get("TeamNum", "")).strip()) if c == "info_player_teamspawn" else SPAWN_SIDES.get(c)
-        if side is None or str(e.get("StartDisabled", "0")).strip() == "1":
+        if side is None:
             continue
-        out.append({"origin": _at(reader.entity_vec(e), scale, y0), "team": side})
-    return out
+        spawn = {"origin": _at(reader.entity_vec(e), scale, y0), "team": side}
+        (off if str(e.get("StartDisabled", "0")).strip() == "1" else on).append(spawn)
+    have = {s["team"] for s in on}
+    return on + [s for s in off if s["team"] not in have]
 
 
 def _at(p, scale, y0):
@@ -170,4 +174,7 @@ def points(bsp, spawns=None, scale=units.VISUAL, y0=0.0):
         for n, p in enumerate(out):
             p["id"] = p["index"] = p["order"] = n
     orient_points(out, team_spawns(bsp, scale, y0) if spawns is None else spawns, by_axis=not listed and dod)
-    return sorted(out, key=lambda p: (p["order"], p["index"]))
+    out.sort(key=lambda p: (p["order"], p["index"]))
+    for rank, p in enumerate(out):   # orders from several rounds' lists and indices leave gaps: rank them
+        p["order"] = rank
+    return out

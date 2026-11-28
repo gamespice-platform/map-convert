@@ -34,7 +34,10 @@ def orient_points(points, spawns, by_axis=False):
     only the entity order) numbers the points along the line from the red spawns to the blue ones.
     Points have `position` and spawns `origin` (+ `team`) in Godot axes."""
     team = {t: [s["origin"] for s in spawns if s.get("team") == t] for t in ("red", "blue")}
-    if len(points) < 2 or not team["red"] or not team["blue"]:
+    if len(points) < 2:
+        return
+    if not team["red"] or not team["blue"]:
+        fit_owners(points)   # no two-sided spawns to orient by (an any-team spawn map): the owners alone must still not give the far end away
         return
 
     if by_axis:

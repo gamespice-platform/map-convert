@@ -3828,6 +3828,11 @@ def classify_zones(bsp, min_thickness=MIN_ZONE_THICKNESS, doc=None, solids=None,
     # A spawn the map switches off is never one a player starts at. If every spawn is off they
     # all stay, so a map is never left with none (tools/check_spawns.py reports it).
     live = [sp for sp in spawns if not sp.get("disabled")]
+    # ... and a side whose every spawn is off (attack/defend maps such as Gold Rush enable one side's by stage logic)
+    # keeps them, as gsbsp.controlpoints.team_spawns does for the regen path.
+    if live:
+        have = {sp.get("team") for sp in live}
+        live += [sp for sp in spawns if sp.get("disabled") and sp.get("team") and sp["team"] not in have]
     dropped_off = len(spawns) - len(live) if live else 0
     if dropped_off:
         spawns = live

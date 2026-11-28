@@ -93,6 +93,12 @@ class ControlPoints(unittest.TestCase):
         # a team with only disabled spawns keeps them (stage logic enables them); the other team has none
         self.assertEqual(len(controlpoints.team_spawns(bsp([dict(spawn("2", "0 0 0"), StartDisabled="1")]))), 1)
 
+    def test_attack_map_without_two_sided_spawns_still_leaves_the_last_point_neutral(self):
+        # Corporation style: every point red's, the spawns are team 0: the owners alone must not give the far end to red
+        ents = [cp(1, "0 0 0", owner="2"), cp(2, "9 0 0", owner="2"), cp(3, "99 0 0", owner="2"), spawn("0", "0 0 0")]
+        pts = controlpoints.points(bsp(ents))
+        self.assertEqual([p["owner"] for p in pts], ["red", "red", ""])
+
     def test_no_points(self):
         self.assertEqual(controlpoints.points(bsp([spawn("2", "0 0 0")])), [])
 

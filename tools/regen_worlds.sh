@@ -29,9 +29,10 @@ try:
         if e.get("author") and e.get("source_url"): print(e["author"].replace(" ","_"), e["source_url"]); sys.exit()
 except Exception: pass
 print("unknown -")' "$ROOT" "$m")
+    # The regen below names the entry by the file's hash, not <game>/<name>: a second, different file of the same name (a cut-off first extraction) keeps the name in the store and made a whole map convert empty.
     python3 -P "$BSP" store "$f" --game "$GAME" --author "${author//_/ }" --page "${page//_/ }" --licence "none stated" --no-share-check "credited with removal on request" > /dev/null 2>&1
     mkdir -p "$ROOT/worlds/$m"
-    ${HEAVY-heavy --} timeout 1800 python3 -P "$BSP" regen "$GAME/$(basename "$f" .bsp | tr A-Z a-z)" --out "$ROOT/worlds/$m/$m" --pbr-store "$STORES/pbr-library" --model-store "$STORES/model-library" $([ -f "$ROOT/maps/$m/$m.json" ] && echo --tier-manifest "$ROOT/maps/$m/$m.json") $([ -d "$ROOT/rules/$m" ] && echo --map-rules "$ROOT/rules/$m") > "${TMPDIR:-/tmp}/regen-$m.log" 2>&1 < /dev/null
+    ${HEAVY-heavy --} timeout 1800 python3 -P "$BSP" regen "$(sha256sum "$f" | cut -c1-16)" --out "$ROOT/worlds/$m/$m" --pbr-store "$STORES/pbr-library" --model-store "$STORES/model-library" $([ -f "$ROOT/maps/$m/$m.json" ] && echo --tier-manifest "$ROOT/maps/$m/$m.json") $([ -d "$ROOT/rules/$m" ] && echo --map-rules "$ROOT/rules/$m") > "${TMPDIR:-/tmp}/regen-$m.log" 2>&1 < /dev/null
     r=$?; [ $r -ne 0 ] && rc=1
     echo "$m exit $r"
 done
